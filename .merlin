@@ -1,0 +1,8 @@
+PKG lwt lwt.unix lwt.syntax oUnit
+EXT lwt
+
+S example
+S lib
+
+B _build/example
+B _build/lib

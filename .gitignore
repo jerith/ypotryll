@@ -7,3 +7,10 @@
 *.cmx
 *.cmxs
 *.cmxa
+
+_build
+oUnit-anon.cache
+setup.data
+setup.log
+
+*.byte

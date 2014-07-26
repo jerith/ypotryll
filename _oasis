@@ -1,0 +1,19 @@
+OASISFormat: 0.4
+Name:        ypotryll
+Version:     0.0.1
+Synopsis:    AMQP client library
+Authors:     Jeremy Thurgood
+License:     MIT
+
+Library ypotryll
+  Path:         lib
+  BuildTools:   ocamlbuild
+  Modules:      Client
+  BuildDepends: lwt, lwt.syntax, lwt.unix
+
+Executable foo
+  Path:       example
+  BuildTools: ocamlbuild
+  MainIs:     foo.ml
+  BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll
+

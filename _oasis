@@ -8,7 +8,7 @@ License:     MIT
 Library ypotryll
   Path:         lib
   BuildTools:   ocamlbuild
-  Modules:      Client
+  Modules:      Client, Frame, Method, Methods
   BuildDepends: lwt, lwt.syntax, lwt.unix
 
 Executable foo

@@ -6,46 +6,10 @@ type frame_type =
   | Body
   | Heartbeat
 
-type field_table = (string * field_value) list
-
-and field_value =
-  (* TODO: overflows? *)
-  | (* t *) Boolean of bool
-  | (* b *) Shortshort_int of int
-  | (* B *) Shortshort_uint of int
-  | (* U *) Short_int of int
-  | (* u *) Short_uint of int
-  | (* I *) Long_int of int
-  | (* i *) Long_uint of int
-  | (* L *) Longlong_int of int
-  | (* l *) Longlong_uint of int
-  | (* f *) Float of float
-  | (* d *) Double of float
-  (* | (\* D *\) Decimal of ??? *)
-  | (* s *) Short_string of string
-  | (* S *) Long_string of string
-  (* | (\* A *\) Field_array of ??? *)
-  | (* T *) Timestamp of int
-  | (* F *) Field_table of field_table
-  | (* V *) No_value
-
-type amqp_field =
-  (* TODO: overflows? *)
-  | Octet of int
-  | Short of int
-  | Long of int
-  | Longlong of int
-  | Bit of bool
-  | Shortstring of string
-  | Longstring of string
-  | Timestamp of int
-  | Table of field_table
-  | Unparsed of string (* TODO: Kill this when we parse all payloads. *)
-
 type method_payload = {
   class_id : int;
   method_id : int;
-  arguments : (string * amqp_field) list; (* TODO: Determine if this is what we want. *)
+  arguments : (string * Method.Amqp_field.t) list; (* TODO: Determine if this is what we want. *)
 }
 
 type frame_payload =
@@ -78,6 +42,7 @@ let rec field_table_to_string field_table =
   Printf.sprintf "{%s}" @@ String.concat "; " (List.map field_entry_to_string field_table)
 
 and field_entry_to_string (name, field_value) =
+  let open Method.Amqp_field in
   match field_value with
   | Boolean value         -> Printf.sprintf "<Boolean %s=%b>" name value
   | Shortshort_int value  -> Printf.sprintf "<Shortshort_int %s=%d>" name value
@@ -99,6 +64,7 @@ and field_entry_to_string (name, field_value) =
   | No_value              -> Printf.sprintf "<No_value %s>" name
 
 let amqp_field_to_string (name, field) =
+  let open Method.Amqp_field in
   match field with
   | Octet value       -> Printf.sprintf "<Octet %s %d>" name value
   | Short value       -> Printf.sprintf "<Short %s %d>" name value
@@ -126,94 +92,20 @@ let frame_to_string frame =
     (frame_type_to_string frame.frame_type) frame.channel frame.size (frame_payload_to_string frame.payload)
 
 
-(* amqp_field parsers *)
-
-let consume_octet buf =
-  Octet (consume_byte buf)
-
-let _consume_short_str buf =
-  let size = consume_byte buf in
-  consume_str buf size
-
-let consume_short_str buf =
-  Shortstring (_consume_short_str buf)
-
-let _consume_long_str buf =
-  let size = consume_long buf in
-  consume_str buf size
-
-let consume_long_str buf =
-  Longstring (_consume_long_str buf)
-
-let rec consume_table_entry buf =
-  let name = _consume_short_str buf in
-  let field = match consume_char buf with
-    | 't' -> Boolean (consume_byte buf = 0)
-    | 'b' -> Shortshort_int (consume_byte buf)
-    | 'B' -> Shortshort_uint (consume_byte buf)
-    | 'U' -> Short_int (consume_short buf)
-    | 'u' -> Short_uint (consume_short buf)
-    | 'I' -> Long_int (consume_long buf)
-    | 'i' -> Long_uint (consume_long buf)
-    | 'L' -> Longlong_int (consume_long_long buf)
-    | 'l' -> Longlong_uint (consume_long_long buf)
-    | 'f' -> Float (consume_float buf)
-    | 'd' -> Double (consume_double buf)
-    (* | 'D' -> Decimal (???) *)
-    | 's' -> Short_string (_consume_short_str buf)
-    | 'S' -> Long_string (_consume_long_str buf)
-    (* | 'A' -> Field_array (???) *)
-    | 'T' -> Timestamp (consume_long_long buf)
-    | 'F' -> Field_table (consume_table buf)
-    | 'V' -> No_value
-    | field_type -> failwith @@ Printf.sprintf "Unknown field type %C" field_type
-  in
-  name, field
-
-and consume_table_entries buf =
-  if Parse_buf.length buf = 0
-  then []
-  else let table_entry = consume_table_entry buf in
-    table_entry :: consume_table_entries buf
-
-and consume_table buf =
-  let size = Parse_utils.consume_long buf in
-  let table_buf = Parse_utils.consume_buf buf size in
-  let table = consume_table_entries table_buf in
-  assert (Parse_buf.length table_buf = 0);
-  table
-
-let consume_amqp_table buf =
-  Table (consume_table buf)
-
-(* TODO: Autogenerate some of these *)
-
-let parse_args_connection_start buf =
-  let version_major = consume_octet buf in
-  let version_minor = consume_octet buf in
-  let server_properties = consume_amqp_table buf in
-  let mechanisms = consume_long_str buf in
-  let locales = consume_long_str buf in
-  [
-    "version-major", version_major;
-    "version-minor", version_minor;
-    "server-properties", server_properties;
-    "mechanisms", mechanisms;
-    "locales", locales;
-  ]
-
-(* END Autogenerate *)
-
 let parse_method_args buf class_id method_id =
-  match class_id, method_id with
-  | 10, 10 -> parse_args_connection_start buf
-  | _ -> [ ("unparsed", Unparsed (consume_str buf @@ Parse_buf.length buf)) ]
+  try
+    let (module M : Method.Amqp_method_payload) = List.assoc (class_id, method_id) Methods.method_modules in
+    M.buf_to_list buf
+  with
+  | Not_found -> Methods.parse_unknown_payload buf
 
 let parse_method_payload buf =
   let class_id = consume_short buf in
   let method_id = consume_short buf in
   let arguments = parse_method_args buf class_id method_id in
-  assert (Parse_buf.length buf = 0);
+  let unconsumed = Parse_buf.length buf in
+  if unconsumed > 0
+  then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed);
   { class_id; method_id; arguments }
 
 let consume_payload buf method_type =

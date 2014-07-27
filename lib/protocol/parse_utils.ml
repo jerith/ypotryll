@@ -67,3 +67,11 @@ let consume_float buf =
 
 let consume_double buf =
   Int64.float_of_bits @@ consume_int64 buf
+
+let consume_short_str buf =
+  let size = consume_byte buf in
+  consume_str buf size
+
+let consume_long_str buf =
+  let size = consume_long buf in
+  consume_str buf size

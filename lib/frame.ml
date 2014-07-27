@@ -9,7 +9,7 @@ type frame_type =
 type method_payload = {
   class_id : int;
   method_id : int;
-  arguments : (string * Method.Amqp_field.t) list; (* TODO: Determine if this is what we want. *)
+  arguments : (string * Protocol.Amqp_field.t) list; (* TODO: Determine if this is what we want. *)
 }
 
 type frame_payload =
@@ -42,7 +42,7 @@ let rec field_table_to_string field_table =
   Printf.sprintf "{%s}" @@ String.concat "; " (List.map field_entry_to_string field_table)
 
 and field_entry_to_string (name, field_value) =
-  let open Method.Amqp_field in
+  let open Protocol.Amqp_table in
   match field_value with
   | Boolean value         -> Printf.sprintf "<Boolean %s=%b>" name value
   | Shortshort_int value  -> Printf.sprintf "<Shortshort_int %s=%d>" name value
@@ -64,7 +64,7 @@ and field_entry_to_string (name, field_value) =
   | No_value              -> Printf.sprintf "<No_value %s>" name
 
 let amqp_field_to_string (name, field) =
-  let open Method.Amqp_field in
+  let open Protocol.Amqp_field in
   match field with
   | Octet value       -> Printf.sprintf "<Octet %s %d>" name value
   | Short value       -> Printf.sprintf "<Short %s %d>" name value
@@ -94,8 +94,8 @@ let frame_to_string frame =
 
 let parse_method_args buf class_id method_id =
   try
-    let (module M : Method.Amqp_method_payload) = List.assoc (class_id, method_id) Methods.method_modules in
-    M.buf_to_list buf
+    let (module P: Stubs.Method_instance) = Generated_methods.build_method_instance (class_id, method_id) buf in
+    P.Method.list_of_t P.this
   with
   | Not_found -> Methods.parse_unknown_payload buf
 

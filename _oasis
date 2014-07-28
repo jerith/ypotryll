@@ -5,6 +5,12 @@ Synopsis:    AMQP client library
 Authors:     Jeremy Thurgood
 License:     MIT
 
+Executable ypotryll_code_gen
+  Path:         code_gen
+  BuildTools:   ocamlbuild
+  MainIs:       code_gen.ml
+  BuildDepends: xmlm
+
 Library ypotryll_proto
   Path:         lib/protocol
   BuildTools:   ocamlbuild

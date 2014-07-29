@@ -1,20 +1,15 @@
 
-let fmt_list formatter list =
-  Printf.sprintf "[%s]" @@ String.concat "; " @@ List.map formatter list
-
-let _fmt_list_nl_depth = ref 0
-
-let fmt_list_nl formatter list =
-  match list with
-  | [] -> "[]"
-  | _ -> begin
-      let indent = String.make (!_fmt_list_nl_depth * 2) ' ' in
-      _fmt_list_nl_depth := !_fmt_list_nl_depth + 1;
-      let items = String.concat (";\n  " ^ indent) @@ List.map formatter list in
-      let str = Printf.sprintf "[\n  %s%s;\n%s]" indent items indent in
-      _fmt_list_nl_depth := !_fmt_list_nl_depth - 1;
-      str
-    end
+let fmt_list name formatter ppf list =
+  let rec fmt_items = function
+    | [] -> ()
+    | item :: items -> begin
+        Format.fprintf ppf "@;<1 0>%a;" formatter item;
+        fmt_items items
+      end
+  in
+  Format.fprintf ppf "@[<hv 2>%s=[" name;
+  fmt_items list;
+  Format.fprintf ppf "@;<1 -2>@]]"
 
 
 type constant = {
@@ -26,12 +21,12 @@ type constant = {
 let make_constant name value cls =
   { name; value; cls }
 
-let fmt_constant constant =
+let fmt_constant ppf constant =
   let cls = match constant.cls with
     | None -> ""
     | Some cls -> Printf.sprintf " (%s)" cls
   in
-  Printf.sprintf "%s = %d%s" constant.name constant.value cls
+  Format.fprintf ppf "@[<4>%s =@ %d%s@]" constant.name constant.value cls
 
 
 type assertion = {
@@ -42,12 +37,12 @@ type assertion = {
 let make_assertion check value =
   { check; value }
 
-let fmt_assertion assertion =
+let fmt_assertion ppf assertion =
   let value = match assertion.value with
     | None -> ""
     | Some value -> Printf.sprintf " %S" value
   in
-  Printf.sprintf "<assert %s%s>" assertion.check value
+  Format.fprintf ppf "<assert %s%s>" assertion.check value
 
 
 type rule = {
@@ -57,8 +52,8 @@ type rule = {
 let make_rule name =
   { name }
 
-let fmt_rule rule =
-  Printf.sprintf "%S" rule.name
+let fmt_rule ppf rule =
+  Format.fprintf ppf "%S" rule.name
 
 
 type domain = {
@@ -72,15 +67,15 @@ type domain = {
 let make_domain name data_type label rules assertions =
   { name; data_type; label; rules; assertions }
 
-let fmt_domain domain =
+let fmt_domain ppf domain =
   let label = match domain.label with
     | None -> ""
     | Some label -> Printf.sprintf " (label=%S)" label
   in
-  Printf.sprintf "%s : %s%s   rules=%s   assertions=%s"
+  Format.fprintf ppf "@[<4>%s : %s%s@ @ %a@ @ %a@]"
     domain.name domain.data_type label
-    (fmt_list fmt_rule domain.rules)
-    (fmt_list fmt_assertion domain.assertions)
+    (fmt_list "rules" fmt_rule) domain.rules
+    (fmt_list "assertions" fmt_assertion) domain.assertions
 
 
 type chassis = {
@@ -91,8 +86,8 @@ type chassis = {
 let make_chassis name implement =
   { name; implement }
 
-let fmt_chassis chassis =
-  Printf.sprintf "%s implement %s" chassis.implement chassis.name
+let fmt_chassis ppf chassis =
+  Format.fprintf ppf "%s implement %s" chassis.implement chassis.name
 
 
 type field = {
@@ -102,8 +97,8 @@ type field = {
 let make_field str =
   { str }
 
-let fmt_field field =
-  field.str
+let fmt_field ppf field =
+  Format.fprintf ppf "%s" field.str
 
 
 type meth = {
@@ -113,8 +108,8 @@ type meth = {
 let make_meth str =
   { str }
 
-let fmt_meth meth =
-  meth.str
+let fmt_meth ppf meth =
+  Format.fprintf ppf "%s" meth.str
 
 
 type cls = {
@@ -131,12 +126,13 @@ type cls = {
 let make_cls name handler index label chassiss methods rules fields =
   { name; handler; index; label; chassiss; methods; rules; fields }
 
-let fmt_cls cls =
-  Printf.sprintf "<%s (%s) %d label=%S chassis=%s methods=%s rules=%s fields=%s>"
-    cls.name cls.handler cls.index cls.label (fmt_list fmt_chassis cls.chassiss)
-    (fmt_list_nl fmt_meth cls.methods)
-    (fmt_list_nl fmt_rule cls.rules)
-    (fmt_list_nl fmt_field cls.fields)
+let fmt_cls ppf cls =
+  Format.fprintf ppf  "@[<hv 4><%s (%s) %d@ label=%S@ %a@ %a@ %a@ %a>@]"
+    cls.name cls.handler cls.index cls.label
+    (fmt_list "chassis" fmt_chassis) cls.chassiss
+    (fmt_list "methods" fmt_meth) cls.methods
+    (fmt_list "rules" fmt_rule) cls.rules
+    (fmt_list "fields" fmt_field) cls.fields
 
 
 type spec = {
@@ -150,12 +146,12 @@ type spec = {
 let make_spec version comment constants domains classes =
   { version; comment; constants; domains; classes }
 
-let fmt_spec spec =
+let fmt_spec ppf spec =
   let fmt_version (major, minor, revision) =
     Printf.sprintf "%d.%d.%d" major minor revision
   in
-  Printf.sprintf "AMQP %s : %s\nconstants: %s\ndomains: %s\nclasses: %s\n"
+  Format.fprintf ppf "@[<hv 2>AMQP %s : %s@ %a@ %a@ %a"
     (fmt_version spec.version) spec.comment
-    (fmt_list_nl fmt_constant spec.constants)
-    (fmt_list_nl fmt_domain spec.domains)
-    (fmt_list_nl fmt_cls spec.classes)
+    (fmt_list "constants" fmt_constant) spec.constants
+    (fmt_list "domains" fmt_domain) spec.domains
+    (fmt_list "classes" fmt_cls) spec.classes

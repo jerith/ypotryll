@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 1f7ff97b6844f10966d8fdbd8df9c1eb) *)
+(* DO NOT EDIT (digest: 103128fb41a53b398b678ab085dd5672) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -597,6 +597,7 @@ let package_default =
   {
      MyOCamlbuildBase.lib_ocaml =
        [
+          ("ypotryll_code_gen_lib", ["code_gen"], []);
           ("ypotryll_proto", ["lib/protocol"], []);
           ("ypotryll_gen_code", ["lib/gen"], []);
           ("ypotryll", ["lib"], [])
@@ -614,6 +615,6 @@ let package_default =
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;
 
-# 618 "myocamlbuild.ml"
+# 619 "myocamlbuild.ml"
 (* OASIS_STOP *)
 Ocamlbuild_plugin.dispatch dispatch_default;;

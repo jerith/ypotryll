@@ -40,17 +40,14 @@ let fmt_tag name attrs =
   in
   Printf.sprintf "<%s%s>" name (fmt_attrs attrs)
 
-let swallow_element f collected elems = function
-  | D _ -> f collected elems
-  | E ("doc", _, _) -> f collected elems
+let swallow_element = function
+  | D _ -> ()
+  | E ("doc", _, _) -> ()
   | E (tag, attrs, _) -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
 
-let rec consume_children children =
-  let rec parse_children () = function
-    | [] -> ()
-    | elem :: elems -> swallow_element parse_children () elems elem
-  in
-  parse_children () children
+let rec consume_children = function
+  | [] -> ()
+  | elem :: elems -> swallow_element elem; consume_children elems
 
 
 let parse_constant attrs children =
@@ -83,7 +80,7 @@ let parse_domain attrs children =
       parse_children (add_rule domain @@ parse_rule attrs children) elems
     | E ("assert", attrs, children) :: elems ->
       parse_children (add_assert domain @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element parse_children domain elems elem
+    | elem :: elems -> swallow_element elem; parse_children domain elems
   in
   parse_children domain @@ List.rev children
 
@@ -106,7 +103,7 @@ let parse_field attrs children =
       parse_children (add_rule field @@ parse_rule attrs children) elems
     | E ("assert", attrs, children) :: elems ->
       parse_children (add_assert field @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element parse_children field elems elem
+    | elem :: elems -> swallow_element elem; parse_children field elems
   in
   parse_children field @@ List.rev children
 
@@ -135,7 +132,7 @@ let parse_method attrs children =
       parse_children (add_field meth @@ parse_field attrs children) elems
     | E ("assert", attrs, children) :: elems ->
       parse_children (add_assert meth @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element parse_children meth elems elem
+    | elem :: elems -> swallow_element elem; parse_children meth elems
   in
   parse_children meth @@ List.rev children
 
@@ -156,7 +153,7 @@ let parse_class attrs children =
       parse_children (add_rule cls @@ parse_rule attrs children) elems
     | E ("field", attrs, children) :: elems ->
       parse_children (add_field cls @@ parse_field attrs children) elems
-    | elem :: elems -> swallow_element parse_children cls elems elem
+    | elem :: elems -> swallow_element elem; parse_children cls elems
   in
   parse_children cls @@ List.rev children
 
@@ -175,7 +172,7 @@ let parse_amqp attrs children =
       parse_children (add_domain spec @@ parse_domain attrs children) elems
     | E ("class", attrs, children) :: elems ->
       parse_children (add_class spec @@ parse_class attrs children) elems
-    | elem :: elems -> swallow_element parse_children spec elems elem
+    | elem :: elems -> swallow_element elem; parse_children spec elems
   in
   parse_children spec @@ List.rev children
 

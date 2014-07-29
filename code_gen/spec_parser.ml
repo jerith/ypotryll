@@ -1,9 +1,9 @@
 type xml_tree =
-  | E of Xmlm.tag * xml_tree list
+  | E of string * Xmlm.attribute list * xml_tree list
   | D of string
 
 let in_tree i =
-  let el tag children = E (tag, children)  in
+  let el ((_, name), attrs) children = E (name, attrs, children)  in
   let data d = D d in
   Xmlm.input_doc_tree ~el ~data i
 
@@ -35,24 +35,14 @@ let fmt_attrs = function
   | [] -> ""
   | attrs -> " " ^ String.concat " " @@ List.map fmt_attr attrs
 
-let fmt_tag ((_, name), attrs) =
+let fmt_tag name attrs =
   Printf.sprintf "<%s%s>" name (fmt_attrs attrs)
-
-let print_tag tag =
-  print_endline @@ fmt_tag tag
-
-let fmt_elem = function
-  | E (tag, _) -> fmt_tag tag
-  | D string -> Printf.sprintf "%S" string
-
-let print_elem elem =
-  print_endline @@ fmt_elem elem
 
 let rec consume_children = function
   | [] -> ()
   | D _ :: elems -> consume_children elems
-  | E (((_, "doc"), _), _) :: elems -> consume_children elems
-  | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+  | E ("doc", _, _) :: elems -> consume_children elems
+  | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
 
 
 let parse_constant attrs children =
@@ -77,12 +67,12 @@ let parse_domain_children elems =
   let rec inner rules assertions = function
     | [] -> (List.rev rules, List.rev assertions)
     | D _ :: elems -> inner rules assertions elems
-    | E (((_, "doc"), _), _) :: elems -> inner rules assertions elems
-    | E (((_, "rule"), attrs), children) :: elems ->
+    | E ("doc", _, _) :: elems -> inner rules assertions elems
+    | E ("rule", attrs, children) :: elems ->
       inner ((parse_rule attrs children) :: rules) assertions elems
-    | E (((_, "assert"), attrs), children) :: elems ->
+    | E ("assert", attrs, children) :: elems ->
       inner rules ((parse_assertion attrs children) :: assertions) elems
-    | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+    | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
   in
   inner [] [] elems
 
@@ -103,12 +93,12 @@ let parse_field_children elems =
   let rec inner rules assertions = function
     | [] -> (List.rev rules, List.rev assertions)
     | D _ :: elems -> inner rules assertions elems
-    | E (((_, "doc"), _), _) :: elems -> inner rules assertions elems
-    | E (((_, "rule"), attrs), children) :: elems ->
+    | E ("doc", _, _) :: elems -> inner rules assertions elems
+    | E ("rule", attrs, children) :: elems ->
       inner ((parse_rule attrs children) :: rules) assertions elems
-    | E (((_, "assert"), attrs), children) :: elems ->
+    | E ("assert", attrs, children) :: elems ->
       inner rules ((parse_assertion attrs children) :: assertions) elems
-    | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+    | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
   in
   inner [] [] elems
 
@@ -130,19 +120,18 @@ let parse_method_children elems =
     | [] -> (List.rev rules, List.rev chassiss, List.rev responses, List.rev fields,
              List.rev assertions)
     | D _ :: elems -> inner rules chassiss responses fields assertions elems
-    | E (((_, "doc"), _), _) :: elems -> inner rules chassiss responses fields assertions elems
-    | E (((_, "rule"), attrs), children) :: elems ->
+    | E ("doc", _, _) :: elems -> inner rules chassiss responses fields assertions elems
+    | E ("rule", attrs, children) :: elems ->
       inner ((parse_rule attrs children) :: rules) chassiss responses fields assertions elems
-    | E (((_, "chassis"), attrs), children) :: elems ->
+    | E ("chassis", attrs, children) :: elems ->
       inner rules ((parse_chassis attrs children) :: chassiss) responses fields assertions elems
-    | E (((_, "response"), attrs), children) :: elems ->
+    | E ("response", attrs, children) :: elems ->
       inner rules chassiss ((parse_response attrs children) :: responses) fields assertions elems
-    | E (((_, "field"), attrs), children) :: elems ->
+    | E ("field", attrs, children) :: elems ->
       inner rules chassiss responses ((parse_field attrs children) :: fields) assertions elems
-    | E (((_, "assert"), attrs), children) :: elems ->
+    | E ("assert", attrs, children) :: elems ->
       inner rules chassiss responses fields ((parse_assertion attrs children) :: assertions) elems
-
-    | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+    | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
   in
   inner [] [] [] [] [] elems
 
@@ -160,16 +149,16 @@ let parse_cls_children elems =
   let rec inner chassiss methods rules fields = function
     | [] -> (List.rev chassiss, List.rev methods, List.rev rules, List.rev fields)
     | D _ :: elems -> inner chassiss methods rules fields elems
-    | E (((_, "doc"), _), _) :: elems -> inner chassiss methods rules fields elems
-    | E (((_, "chassis"), attrs), children) :: elems ->
+    | E ("doc", _, _) :: elems -> inner chassiss methods rules fields elems
+    | E ("chassis", attrs, children) :: elems ->
       inner ((parse_chassis attrs children) :: chassiss) methods rules fields elems
-    | E (((_, "method"), attrs), children) :: elems ->
+    | E ("method", attrs, children) :: elems ->
       inner chassiss ((parse_method attrs children) :: methods) rules fields elems
-    | E (((_, "rule"), attrs), children) :: elems ->
+    | E ("rule", attrs, children) :: elems ->
       inner chassiss methods ((parse_rule attrs children) :: rules) fields elems
-    | E (((_, "field"), attrs), children) :: elems ->
+    | E ("field", attrs, children) :: elems ->
       inner chassiss methods rules ((parse_field attrs children) :: fields) elems
-    | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+    | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
   in
   inner [] [] [] [] elems
 
@@ -185,13 +174,13 @@ let parse_amqp_children elems =
   let rec inner constants domains classes = function
     | [] -> (List.rev constants, List.rev domains, List.rev classes)
     | D _ :: elems -> inner constants domains classes elems
-    | E (((_, "constant"), attrs), children) :: elems ->
+    | E ("constant", attrs, children) :: elems ->
       inner ((parse_constant attrs children) :: constants) domains classes elems
-    | E (((_, "domain"), attrs), children) :: elems ->
+    | E ("domain", attrs, children) :: elems ->
       inner constants ((parse_domain attrs children) :: domains) classes elems
-    | E (((_, "class"), attrs), children) :: elems ->
+    | E ("class", attrs, children) :: elems ->
       inner constants domains ((parse_cls attrs children) :: classes) elems
-    | E (tag, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag))
+    | E (tag, attrs, _) :: elems -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
   in
   inner [] [] [] elems
 
@@ -205,7 +194,7 @@ let parse_amqp attrs children =
 
 let parse_spec (_dtd, tree) =
   match tree with
-  | E (((_, "amqp"), attrs), children) -> parse_amqp attrs children
+  | E ("amqp", attrs, children) -> parse_amqp attrs children
   | _ -> assert false
 
 let parse_spec_from_channel input =

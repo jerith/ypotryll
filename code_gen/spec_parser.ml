@@ -49,7 +49,6 @@ let swallow_element = function
     if String.trim text = ""
     then ()
     else failwith (Printf.sprintf "Unexpected text: %S" text)
-  | E ("doc", _, _) -> ()
   | E (tag, attrs, _) -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
 
 let consume_children children =
@@ -60,20 +59,43 @@ let assert_no_attrs = function
   | attrs -> failwith ("Expected empty attr list, got <" ^ (fmt_attrs attrs) ^ ">")
 
 
+let parse_doc attrs children =
+  let attrs, doc_type = consume_attr_option "type" attrs in
+  assert_no_attrs attrs;
+  let text = match children with
+    | [D text] -> text
+    | _ -> failwith "Unexpected children in doc tag."
+  in
+  Doc.make doc_type text
+
 let parse_constant attrs children =
   let attrs, name = consume_attr "name" attrs in
   let attrs, value = consume_int_attr "value" attrs in
   let attrs, cls = consume_attr_option "class" attrs in
   assert_no_attrs attrs;
-  let () = consume_children children in
-  Constant.make name value cls
+  let me = Constant.make name value cls in
+  let open Constant in
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
+  in
+  parse_children me @@ List.rev children
 
 let parse_rule attrs children =
   let attrs, name = consume_attr "name" attrs in
   let attrs, on_failure = consume_attr_option "on-failure" attrs in
   assert_no_attrs attrs;
-  let () = consume_children children in
-  Rule.make name on_failure
+  let me = Rule.make name on_failure in
+  let open Rule in
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
+  in
+  parse_children me @@ List.rev children
 
 let parse_assert attrs children =
   let attrs, check = consume_attr "check" attrs in
@@ -88,17 +110,19 @@ let parse_domain attrs children =
   let attrs, name = consume_attr "name" attrs in
   let attrs, data_type = consume_attr "type" attrs in
   let attrs, label = consume_attr_option "label" attrs in
-  let domain = Domain.make name data_type label in
+  let me = Domain.make name data_type label in
   let open Domain in
-  let rec parse_children domain = function
-    | [] -> domain
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
     | E ("rule", attrs, children) :: elems ->
-      parse_children (add_rule domain @@ parse_rule attrs children) elems
+      parse_children (add_rule me @@ parse_rule attrs children) elems
     | E ("assert", attrs, children) :: elems ->
-      parse_children (add_assert domain @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element elem; parse_children domain elems
+      parse_children (add_assert me @@ parse_assert attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
   in
-  parse_children domain @@ List.rev children
+  parse_children me @@ List.rev children
 
 let parse_chassis attrs children =
   let attrs, name = consume_attr "name" attrs in
@@ -114,17 +138,19 @@ let parse_field attrs children =
   let attrs, label = consume_attr_option "label" attrs in
   let attrs, reserved = consume_bool_attr "reserved" attrs in
   assert_no_attrs attrs;
-  let field = Field.make name domain data_type label reserved in
+  let me = Field.make name domain data_type label reserved in
   let open Field in
-  let rec parse_children field = function
-    | [] -> field
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
     | E ("rule", attrs, children) :: elems ->
-      parse_children (add_rule field @@ parse_rule attrs children) elems
+      parse_children (add_rule me @@ parse_rule attrs children) elems
     | E ("assert", attrs, children) :: elems ->
-      parse_children (add_assert field @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element elem; parse_children field elems
+      parse_children (add_assert me @@ parse_assert attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
   in
-  parse_children field @@ List.rev children
+  parse_children me @@ List.rev children
 
 let parse_response attrs children =
   let attrs, name = consume_attr "name" attrs in
@@ -140,23 +166,25 @@ let parse_method attrs children =
   let attrs, label = consume_attr_option "label" attrs in
   let attrs, deprecated = consume_bool_attr "deprecated" attrs in
   assert_no_attrs attrs;
-  let meth = Method.make name index synchronous content label deprecated in
+  let me = Method.make name index synchronous content label deprecated in
   let open Method in
-  let rec parse_children meth = function
-    | [] -> meth
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
     | E ("rule", attrs, children) :: elems ->
-      parse_children (add_rule meth @@ parse_rule attrs children) elems
+      parse_children (add_rule me @@ parse_rule attrs children) elems
     | E ("chassis", attrs, children) :: elems ->
-      parse_children (add_chassis meth @@ parse_chassis attrs children) elems
+      parse_children (add_chassis me @@ parse_chassis attrs children) elems
     | E ("response", attrs, children) :: elems ->
-      parse_children (add_response meth @@ parse_response attrs children) elems
+      parse_children (add_response me @@ parse_response attrs children) elems
     | E ("field", attrs, children) :: elems ->
-      parse_children (add_field meth @@ parse_field attrs children) elems
+      parse_children (add_field me @@ parse_field attrs children) elems
     | E ("assert", attrs, children) :: elems ->
-      parse_children (add_assert meth @@ parse_assert attrs children) elems
-    | elem :: elems -> swallow_element elem; parse_children meth elems
+      parse_children (add_assert me @@ parse_assert attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
   in
-  parse_children meth @@ List.rev children
+  parse_children me @@ List.rev children
 
 let parse_class attrs children =
   let attrs, name = consume_attr "name" attrs in
@@ -164,21 +192,23 @@ let parse_class attrs children =
   let attrs, index = consume_int_attr "index" attrs in
   let attrs, label = consume_attr "label" attrs in
   assert_no_attrs attrs;
-  let cls = Class.make name handler index label in
+  let me = Class.make name handler index label in
   let open Class in
-  let rec parse_children cls = function
-    | [] -> cls
+  let rec parse_children me = function
+    | [] -> me
+    | E ("doc", attrs, children) :: elems ->
+      parse_children (add_doc me @@ parse_doc attrs children) elems
     | E ("chassis", attrs, children) :: elems ->
-      parse_children (add_chassis cls @@ parse_chassis attrs children) elems
+      parse_children (add_chassis me @@ parse_chassis attrs children) elems
     | E ("method", attrs, children) :: elems ->
-      parse_children (add_method cls @@ parse_method attrs children) elems
+      parse_children (add_method me @@ parse_method attrs children) elems
     | E ("rule", attrs, children) :: elems ->
-      parse_children (add_rule cls @@ parse_rule attrs children) elems
+      parse_children (add_rule me @@ parse_rule attrs children) elems
     | E ("field", attrs, children) :: elems ->
-      parse_children (add_field cls @@ parse_field attrs children) elems
-    | elem :: elems -> swallow_element elem; parse_children cls elems
+      parse_children (add_field me @@ parse_field attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
   in
-  parse_children cls @@ List.rev children
+  parse_children me @@ List.rev children
 
 let parse_amqp attrs children =
   let attrs, major = consume_int_attr "major" attrs in
@@ -187,19 +217,19 @@ let parse_amqp attrs children =
   let attrs, port = consume_int_attr "port" attrs in
   let attrs, comment = consume_attr "comment" attrs in
   assert_no_attrs attrs;
-  let spec = Spec.make (major, minor, revision) port comment in
+  let me = Spec.make (major, minor, revision) port comment in
   let open Spec in
-  let rec parse_children spec = function
-    | [] -> spec
+  let rec parse_children me = function
+    | [] -> me
     | E ("constant", attrs, children) :: elems ->
-      parse_children (add_constant spec @@ parse_constant attrs children) elems
+      parse_children (add_constant me @@ parse_constant attrs children) elems
     | E ("domain", attrs, children) :: elems ->
-      parse_children (add_domain spec @@ parse_domain attrs children) elems
+      parse_children (add_domain me @@ parse_domain attrs children) elems
     | E ("class", attrs, children) :: elems ->
-      parse_children (add_class spec @@ parse_class attrs children) elems
-    | elem :: elems -> swallow_element elem; parse_children spec elems
+      parse_children (add_class me @@ parse_class attrs children) elems
+    | elem :: elems -> swallow_element elem; parse_children me elems
   in
-  parse_children spec @@ List.rev children
+  parse_children me @@ List.rev children
 
 let parse_spec (_dtd, tree) =
   match tree with

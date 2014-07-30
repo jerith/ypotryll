@@ -39,14 +39,19 @@ module Assert = struct
   type t = {
     check : string;
     value : string option;
+    meth : string option;
+    field : string option;
   }
 
-  let make check value =
-    { check; value }
+  let make check value meth field =
+    { check; value; meth; field }
 
   let fmt ppf assertion =
-    Format.fprintf ppf "@[<h><assert %s%a>@]"
-      assertion.check (Fmt_utils.fmt_optional_str "value") assertion.value
+    Format.fprintf ppf "@[<h><assert %s%a%a%a>@]"
+      assertion.check
+      (Fmt_utils.fmt_optional_str "value") assertion.value
+      (Fmt_utils.fmt_optional_str "method") assertion.meth
+      (Fmt_utils.fmt_optional_str "field") assertion.field
 
   let fmt_list = Fmt_utils.fmt_list "asserts" fmt
 end
@@ -55,13 +60,15 @@ end
 module Rule = struct
   type t = {
     name : string;
+    on_failure : string option;
   }
 
-  let make name =
-    { name }
+  let make name on_failure =
+    { name; on_failure }
 
   let fmt ppf rule =
-    Format.fprintf ppf "%S" rule.name
+    Format.fprintf ppf "@[<h><rule %S%a>@]"
+      rule.name (Fmt_utils.fmt_optional_str "on-failure") rule.on_failure
 
   let fmt_list = Fmt_utils.fmt_list "rules" fmt
 end
@@ -119,12 +126,13 @@ module Field = struct
     domain : string option;
     data_type : string option;
     label : string option;
+    reserved : bool;
     rules : Rule.t list;
     asserts : Assert.t list;
   }
 
-  let make name domain data_type label =
-    { name; domain; data_type; label; rules = []; asserts = [] }
+  let make name domain data_type label reserved =
+    { name; domain; data_type; label; reserved; rules = []; asserts = [] }
 
   let add_rule field item =
     { field with rules = item :: field.rules }
@@ -133,11 +141,12 @@ module Field = struct
     { field with asserts = item :: field.asserts }
 
   let fmt ppf field =
-    Format.fprintf ppf "@[<hv 4><field %s%a%a%a@ %a@ %a>@]"
+    Format.fprintf ppf "@[<hv 4><field %s%a%a%a@ reserved=%B@ %a@ %a>@]"
       field.name
       (Fmt_utils.fmt_optional_str "domain") field.domain
       (Fmt_utils.fmt_optional_str "type") field.data_type
       (Fmt_utils.fmt_optional_str "label") field.label
+      field.reserved
       Rule.fmt_list field.rules
       Assert.fmt_list field.asserts
 
@@ -167,6 +176,7 @@ module Method = struct
     synchronous : bool;
     content : bool;
     label : string option;
+    deprecated : bool;
     rules : Rule.t list;
     chassis : Chassis.t list;
     responses : Response.t list;
@@ -174,9 +184,9 @@ module Method = struct
     asserts : Assert.t list;
   }
 
-  let make name index synchronous content label =
-    { name; index; synchronous; content; label; rules = []; chassis = []; responses = [];
-      fields = []; asserts = [] }
+  let make name index synchronous content label deprecated =
+    { name; index; synchronous; content; label; deprecated;
+      rules = []; chassis = []; responses = []; fields = []; asserts = [] }
 
   let add_rule meth item =
     { meth with rules = item :: meth.rules }
@@ -195,9 +205,9 @@ module Method = struct
 
   let fmt ppf meth =
     Format.fprintf ppf
-      "@[<hv 4><method %s %d@ synchronous=%B@ content=%B%a@ %a@ %a@ %a@ %a@ %a>@]"
+      "@[<hv 4><method %s %d@ synchronous=%B@ content=%B%a@ deprecated=%B@ %a@ %a@ %a@ %a@ %a>@]"
       meth.name meth.index meth.synchronous meth.content
-      (Fmt_utils.fmt_optional_str "label") meth.label
+      (Fmt_utils.fmt_optional_str "label") meth.label meth.deprecated
       Rule.fmt_list meth.rules
       Chassis.fmt_list meth.chassis
       Response.fmt_list meth.responses
@@ -250,6 +260,7 @@ end
 module Spec = struct
   type spec = {
     version : (int * int * int);
+    port : int;
     comment : string;
     constants : Constant.t list;
     domains : Domain.t list;
@@ -265,8 +276,8 @@ module Spec = struct
   let add_class spec item =
     { spec with classes = item :: spec.classes }
 
-  let make version comment =
-    { version; comment; constants = []; domains = []; classes = [] }
+  let make version port comment =
+    { version; port; comment; constants = []; domains = []; classes = [] }
 
   let fmt ppf spec =
     let fmt_version (major, minor, revision) =

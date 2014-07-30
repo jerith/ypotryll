@@ -45,7 +45,10 @@ let fmt_tag name attrs =
   Printf.sprintf "<%s%s>" name (fmt_attrs attrs)
 
 let swallow_element = function
-  | D _ -> ()
+  | D text ->
+    if String.trim text = ""
+    then ()
+    else failwith (Printf.sprintf "Unexpected text: %S" text)
   | E ("doc", _, _) -> ()
   | E (tag, attrs, _) -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag tag attrs))
 

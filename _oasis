@@ -8,7 +8,7 @@ License:     MIT
 Library ypotryll_code_gen_lib
   Path:         code_gen
   BuildTools:   ocamlbuild
-  Modules:      Amqp_spec, Spec_parser
+  Modules:      Amqp_spec, Spec_parser, Module_builder
   BuildDepends: xmlm
 
 Executable ypotryll_code_gen

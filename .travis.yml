@@ -12,7 +12,7 @@ before_install:
   - "eval `opam config env`"
 
 install:
-  - "opam install lwt lwt.unix xmlm ounit"
+  - "opam install lwt lwt_unix xmlm ounit"
 
 script:
   - "ocaml setup.ml -configure --enable-tests"

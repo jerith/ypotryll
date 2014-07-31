@@ -7,7 +7,7 @@ License:     MIT
 Plugins:     META (0.4), DevFiles (0.4)
 BuildTools:  ocamlbuild
 
-Library ypotryll_code_gen_lib
+Library ypotryll_code_gen
   Path:         code_gen
   Modules:      Amqp_spec, Spec_parser, Module_builder
   BuildDepends: xmlm
@@ -15,7 +15,7 @@ Library ypotryll_code_gen_lib
 Executable ypotryll_code_gen
   Path:         code_gen
   MainIs:       code_gen.ml
-  BuildDepends: ypotryll_code_gen_lib
+  BuildDepends: ypotryll_code_gen
 
 Library ypotryll_proto
   Path:         lib/protocol
@@ -36,3 +36,14 @@ Executable foo
   MainIs:     foo.ml
   BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll
 
+Executable test_ypotryll_code_gen
+  Path:               code_gen_test
+  MainIs:             test.ml
+  Build$:             flag(tests)
+  Install:            false
+  BuildDepends:       ypotryll_code_gen
+
+Test test_ypotryll_code_gen
+  Run$:               flag(tests)
+  Command:            $test_ypotryll_code_gen -q
+  WorkingDirectory:   code_gen_test

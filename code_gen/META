@@ -1,12 +1,12 @@
 # OASIS_START
-# DO NOT EDIT (digest: 66858e5790f1e8fd0bd2f869b2dc78c8)
+# DO NOT EDIT (digest: 712426b5ab17334b320a2fa7167d3741)
 version = "0.0.1"
 description = "AMQP client library"
 requires = "xmlm"
-archive(byte) = "ypotryll_code_gen_lib.cma"
-archive(byte, plugin) = "ypotryll_code_gen_lib.cma"
-archive(native) = "ypotryll_code_gen_lib.cmxa"
-archive(native, plugin) = "ypotryll_code_gen_lib.cmxs"
-exists_if = "ypotryll_code_gen_lib.cma"
+archive(byte) = "ypotryll_code_gen.cma"
+archive(byte, plugin) = "ypotryll_code_gen.cma"
+archive(native) = "ypotryll_code_gen.cmxa"
+archive(native, plugin) = "ypotryll_code_gen.cmxs"
+exists_if = "ypotryll_code_gen.cma"
 # OASIS_STOP
 

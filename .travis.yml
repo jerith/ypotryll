@@ -1,8 +1,8 @@
 language: c  # Not really, but Travis doesn't do OCaml.
 
 env:
-  - PPA="avsm/ocaml40+opam11"
-  - PPA="avsm/ocaml41+opam11"
+  - PPA="avsm/ocaml40+opam11" OPAMYES="1"
+  - PPA="avsm/ocaml41+opam11" OPAMYES="1"
 
 before_install:
   - "echo 'yes' | sudo add-apt-repository ppa:$PPA"

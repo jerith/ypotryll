@@ -1,18 +1,18 @@
-(* TODO: Generate this code. *)
-
-open Protocol
+(* This is generated code. *)
 
 
 module Connection_start = struct
+  open Protocol
+
   let class_id = 10
   let method_id = 10
 
   type record = {
-    version_major : int;
-    version_minor : int;
-    server_properties : Amqp_table.table;
-    mechanisms : string;
-    locales : string;
+    version_major : int (* octet : octet *);
+    version_minor : int (* octet : octet *);
+    server_properties : Amqp_table.table (* peer-properties : table *);
+    mechanisms : string (* longstr : longstr *);
+    locales : string (* longstr : longstr *);
   }
 
   let arguments = [

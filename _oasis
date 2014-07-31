@@ -4,39 +4,35 @@ Version:     0.0.1
 Synopsis:    AMQP client library
 Authors:     Jeremy Thurgood
 License:     MIT
+Plugins:     META (0.4), DevFiles (0.4)
+BuildTools:  ocamlbuild
 
 Library ypotryll_code_gen_lib
   Path:         code_gen
-  BuildTools:   ocamlbuild
   Modules:      Amqp_spec, Spec_parser, Module_builder
   BuildDepends: xmlm
 
 Executable ypotryll_code_gen
   Path:         code_gen
-  BuildTools:   ocamlbuild
   MainIs:       code_gen.ml
   BuildDepends: ypotryll_code_gen_lib
 
 Library ypotryll_proto
   Path:         lib/protocol
-  BuildTools:   ocamlbuild
   Modules:      Parse_utils, Protocol
 
 Library ypotryll_gen_code
   Path:         lib/gen
-  BuildTools:   ocamlbuild
   Modules:      Generated_method_types, Stubs, Generated_methods
   BuildDepends: ypotryll_proto
 
 Library ypotryll
   Path:         lib
-  BuildTools:   ocamlbuild
   Modules:      Frame, Client
   BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll_gen_code
 
 Executable foo
   Path:       example
-  BuildTools: ocamlbuild
   MainIs:     foo.ml
   BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll
 

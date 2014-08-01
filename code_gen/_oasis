@@ -23,9 +23,9 @@ Executable test_ypotryll_code_gen
   MainIs:       test.ml
   Build$:       flag(tests)
   Install:      false
-  BuildDepends: ypotryll_code_gen
+  BuildDepends: ypotryll_code_gen, oUnit
 
 Test test_ypotryll_code_gen
   Run$:             flag(tests)
-  Command:          $test_ypotryll_code_gen -q
+  Command:          $test_ypotryll_code_gen
   WorkingDirectory: test

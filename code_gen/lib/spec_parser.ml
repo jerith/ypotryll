@@ -39,7 +39,7 @@ let fmt_attrs attrs =
   let fmt_attr ((_, name), value) =
     Printf.sprintf "%s=%S" name value
   in
-  String.concat " " (List.map fmt_attr attrs)
+  " " ^ String.concat " " (List.map fmt_attr attrs)
 
 let fmt_tag name (attrs, _children) =
   Printf.sprintf "<%s%s>" name (fmt_attrs attrs)
@@ -212,7 +212,11 @@ let parse_amqp (attrs, children) =
 let parse_spec (_dtd, tree) =
   match tree with
   | E ("amqp", elem) -> parse_amqp elem
-  | _ -> assert false
+  | _ -> failwith "Root element is not <amqp> tag. Is this an AMQP spec?"
 
 let parse_spec_from_channel input =
-  parse_spec (in_tree (Xmlm.make_input (`Channel input)))
+  try
+    parse_spec (in_tree (Xmlm.make_input (`Channel input)))
+  with
+  | Xmlm.Error ((x, y), err) -> failwith (
+      Printf.sprintf "XML error at line %d char %d: %s" x y (Xmlm.error_message err))

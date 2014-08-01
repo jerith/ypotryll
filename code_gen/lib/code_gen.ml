@@ -1,9 +1,39 @@
 
+let gen_ml_filename name =
+  let gen_dir = Filename.concat "lib" "gen" in
+  Filename.concat gen_dir (name ^ ".ml")
 
-let spec = Spec_parser.parse_spec_from_channel stdin
+let write_to_file filename data =
+  let open Unix in
+  let fd = openfile filename [O_WRONLY; O_CREAT; O_TRUNC] 0o644 in
+  let written = write fd data 0 (String.length data) in
+  close fd;
+  assert (written = String.length data)
 
-let () = Module_builder.build_methods spec
+let write_module_file method_module =
+  let open Module_builder.Method_module in
+  let filename = gen_ml_filename ("gen_" ^ method_module.name) in
+  write_to_file filename method_module.text
 
-let () = print_endline (Stub_builder.build_stubs ())
+let write_stubs_file () =
+  let filename = gen_ml_filename "stubs" in
+  write_to_file filename (Stub_builder.build_stubs ())
 
-let () = Module_builder.build_method_wrappers spec
+let write_generated_methods_file spec =
+  let filename = gen_ml_filename "generated_methods" in
+  let wrappers = String.concat "\n\n" (Module_builder.build_method_wrappers spec) in
+  let builders = Module_builder.build_method_builders spec in
+  write_to_file filename (wrappers ^ "\n\n" ^ builders)
+
+let write_generated_types_file spec =
+  let filename = gen_ml_filename "generated_method_types" in
+  write_to_file filename (Module_builder.build_method_types spec)
+
+let write_all_files channel =
+  let spec = Spec_parser.parse_spec_from_channel channel in
+  List.iter write_module_file (Module_builder.build_methods spec);
+  write_stubs_file ();
+  write_generated_methods_file spec;
+  write_generated_types_file spec
+
+let () = write_all_files stdin

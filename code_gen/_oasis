@@ -11,7 +11,7 @@ Library ypotryll_code_gen
   Install:      false
   Path:         lib
   Modules:      Amqp_spec, Spec_parser, Module_builder
-  BuildDepends: xmlm
+  BuildDepends: xmlm, unix
 
 Executable ypotryll_code_gen
   Path:         lib

@@ -10,11 +10,11 @@ let fmt_in_vbox ppf offset start fmt_func finish =
    | None -> ());
   pp_close_box ppf ()
 
-let fmt_list_in_vbox ppf offset start finish fmt_item list =
+let fmt_list_in_vbox ppf start finish fmt_item list =
   let fmt_list ppf =
     List.iter (fun item -> Format.pp_print_cut ppf (); fmt_item ppf item) list
   in
-  fmt_in_vbox ppf offset start fmt_list (Some finish)
+  fmt_in_vbox ppf 2 start fmt_list (Some finish)
 
 let fmt_function ppf start fmt_func =
   fmt_in_vbox ppf 2 (start ^ "@,") fmt_func None
@@ -28,9 +28,23 @@ let name_to_ocaml = String.map (function
     | c -> c
   )
 
+let map_methods spec func =
+  List.rev (List.fold_left (fun acc cls -> List.fold_left (fun acc meth ->
+      func (spec, cls, meth) :: acc
+    ) acc cls.Class.methods) [] spec.Spec.classes)
+
+let iter_methods spec func =
+  List.iter (fun cls -> List.iter (fun meth ->
+      func (spec, cls, meth)
+    ) cls.Class.methods) spec.Spec.classes
+
 let make_method_name cls meth =
   name_to_ocaml (Printf.sprintf "%s_%s" cls.Class.name meth.Method.name)
 
+let make_field_name field =
+  match name_to_ocaml field.Field.name with
+  | "type" -> "type_"
+  | name -> name
 
 module Method_module = struct
 
@@ -77,11 +91,13 @@ module Method_module = struct
       | _ -> assert false
     in
     Format.fprintf ppf "%s : %s (* %s *);"
-      (name_to_ocaml field.Field.name) ocaml_type amqp_type
+      (make_field_name field) ocaml_type amqp_type
 
   let fmt_method_record ppf (spec, cls, meth) =
-    fmt_list_in_vbox ppf 2 "type record = {" "}"
-      (fmt_method_record_field spec) meth.Method.fields
+    match meth.Method.fields with
+    | [] -> Format.fprintf ppf "type record = ()"
+    | fields -> fmt_list_in_vbox ppf "type record = {" "}"
+                  (fmt_method_record_field spec) fields
 
   (* arguments list *)
 
@@ -114,11 +130,11 @@ module Method_module = struct
       | _ -> assert false
     in
     Format.fprintf ppf "%S, %s;" field.Field.name
-      (fmt_arg amqp_type (name_to_ocaml field.Field.name))
+      (fmt_arg amqp_type (make_field_name field))
 
   let fmt_argument_list ppf (spec, cls, meth) =
     let fmt_arg amqp_type name = Printf.sprintf "Field_type.%s" amqp_type in
-    fmt_list_in_vbox ppf 2 "let arguments = [" "]"
+    fmt_list_in_vbox ppf "let arguments = [" "]"
       (fmt_argument_field spec fmt_arg) meth.Method.fields
 
   (* t_to_list *)
@@ -126,7 +142,7 @@ module Method_module = struct
   let fmt_t_to_list ppf (spec, cls, meth) =
     let fmt_arg amqp_type name = Printf.sprintf "Amqp_field.%s payload.%s" amqp_type name in
     fmt_function ppf "let t_to_list payload =" (fun ppf ->
-        fmt_list_in_vbox ppf 2 "[" "]"
+        fmt_list_in_vbox ppf "[" "]"
           (fmt_argument_field spec fmt_arg) meth.Method.fields
       )
 
@@ -136,11 +152,14 @@ module Method_module = struct
     let fmt_arg amqp_type name = Printf.sprintf "Amqp_field.%s %s" amqp_type name in
     fmt_function ppf "let t_from_list fields =" (fun ppf ->
         Format.fprintf ppf "match fields with@,";
-        fmt_list_in_vbox ppf 2 "| [" "] "
+        fmt_list_in_vbox ppf "| [" "] "
           (fmt_argument_field spec fmt_arg) meth.Method.fields;
-        fmt_list_in_vbox ppf 2 "-> {" "}"
-          (fun ppf field -> Format.fprintf ppf "%s;" (name_to_ocaml field.Field.name))
-          meth.Method.fields;
+        (match meth.Method.fields with
+         | [] -> Format.fprintf ppf "-> ()"
+         | fields ->
+           fmt_list_in_vbox ppf "-> {" "}"
+             (fun ppf field -> Format.fprintf ppf "%s;" (make_field_name field))
+             fields);
         Format.pp_print_cut ppf ();
         Format.fprintf ppf "| _ -> failwith \"Unexpected fields.\""
       )
@@ -158,13 +177,14 @@ module Method_module = struct
         fmt_line ppf fmt_argument_list (spec, cls, meth);
         fmt_line ppf fmt_t_to_list (spec, cls, meth);
         fmt_line ppf fmt_t_from_list (spec, cls, meth);
-      )
+      );
+    Format.fprintf ppf "@."
 
   let make_method_text spec cls meth =
     Format.fprintf Format.str_formatter "%a" fmt_method_text (spec, cls, meth);
     Format.flush_str_formatter ()
 
-  let build spec cls meth =
+  let build (spec, cls, meth) =
     let module_name = make_method_name cls meth in
     {
       name = module_name;
@@ -200,18 +220,57 @@ module Method_module_wrapper = struct
               module_name);
       )
 
-  let build spec cls meth =
+  let build (spec, cls, meth) =
     Format.fprintf Format.str_formatter "%a" fmt_method_text (spec, cls, meth);
     Format.flush_str_formatter ()
 end
 
 
+module Method_builder_list = struct
+
+  let fmt_builder ppf (spec, cls, meth) =
+    Format.fprintf ppf "| (%d, %d) -> (Stubs.build_payload (module %s))@,"
+      cls.Class.index meth.Method.index (String.capitalize (make_method_name cls meth))
+
+  let fmt_builder_list ppf spec =
+    fmt_function ppf "let build_method_instance = function" (fun ppf ->
+        iter_methods spec (fmt_builder ppf);
+        Format.fprintf ppf "| (class_id, method_id) ->@,%s@."
+          "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
+
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
+    Format.flush_str_formatter ()
+end
+
+
+module Method_type_list = struct
+
+  let fmt_type ppf (spec, cls, meth) =
+    let method_name = make_method_name cls meth in
+    let module_name = String.capitalize method_name in
+    Format.fprintf ppf "| `%s of Gen_%s.%s.record"
+      module_name method_name module_name
+
+  let fmt_type_list ppf spec =
+    fmt_list_in_vbox ppf "type method_payload = [" "]"
+      fmt_type (map_methods spec (fun x -> x))
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_type_list spec;
+    Format.flush_str_formatter ()
+end
+
+
 let build_methods spec =
-  let cls = List.hd spec.Spec.classes in
-  let meth = List.hd cls.Class.methods in
-  print_endline (Method_module.build spec cls meth).Method_module.text
+  map_methods spec Method_module.build
 
 let build_method_wrappers spec =
-  let cls = List.hd spec.Spec.classes in
-  let meth = List.hd cls.Class.methods in
-  print_endline (Method_module_wrapper.build spec cls meth)
+  map_methods spec Method_module_wrapper.build
+
+let build_method_builders spec =
+  Method_builder_list.build spec
+
+let build_method_types spec =
+  Method_type_list.build spec

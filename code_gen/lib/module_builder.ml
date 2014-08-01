@@ -201,7 +201,8 @@ module Method_module_wrapper = struct
       )
 
   let build spec cls meth =
-    Format.asprintf "%a" fmt_method_text (spec, cls, meth)
+    Format.fprintf Format.str_formatter "%a" fmt_method_text (spec, cls, meth);
+    Format.flush_str_formatter ()
 end
 
 

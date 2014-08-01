@@ -1,6 +1,8 @@
 Ypotryll
 ========
 
+[![Build Status](https://travis-ci.org/jerith/ypotryll.svg?branch=master)](https://travis-ci.org/jerith/ypotryll)
+
 OCaml AMQP client build on `lwt`.
 
 This is a work in progress, and currently nowhere near ready to use.

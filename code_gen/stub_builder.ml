@@ -1,4 +1,5 @@
 
+let stub_text = "
 module type Method = sig
   type t
 
@@ -24,3 +25,7 @@ let build_payload (module P : Method) buf =
      module Method = P
      let this = P.parse_method buf
    end : Method_instance)
+"
+
+let build_stubs () =
+  stub_text

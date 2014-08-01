@@ -159,7 +159,8 @@ module Method_module = struct
       ) (Some "end")
 
   let make_method_text spec cls meth =
-    Format.asprintf "%a" fmt_method_text (spec, cls, meth)
+    Format.fprintf Format.str_formatter "%a" fmt_method_text (spec, cls, meth);
+    Format.flush_str_formatter ()
 
   let build_method spec cls meth =
     let module_name = make_module_name cls meth in

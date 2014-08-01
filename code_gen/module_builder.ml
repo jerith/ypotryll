@@ -31,7 +31,7 @@ module Method_module = struct
     )
 
   let make_module_name cls meth =
-    name_to_ocaml @@ Printf.sprintf "%s_%s" cls.Class.name meth.Method.name
+    name_to_ocaml (Printf.sprintf "%s_%s" cls.Class.name meth.Method.name)
 
   let fmt_index_vals ppf (cls, meth) =
     Format.fprintf ppf "@[<v>let class_id = %d@;let method_id = %d@]"
@@ -107,7 +107,7 @@ module Method_module = struct
       | _ -> assert false
     in
     Format.fprintf ppf "%S, %s;" field.Field.name
-      (fmt_arg amqp_type @@ name_to_ocaml field.Field.name)
+      (fmt_arg amqp_type (name_to_ocaml field.Field.name))
 
   let fmt_argument_list ppf (spec, cls, meth) =
     let fmt_arg amqp_type name = Printf.sprintf "Field_type.%s" amqp_type in
@@ -146,7 +146,7 @@ module Method_module = struct
   (* method module *)
 
   let fmt_method_text ppf (spec, cls, meth) =
-    let module_name = String.capitalize @@ make_module_name cls meth in
+    let module_name = String.capitalize (make_module_name cls meth) in
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     Format.fprintf ppf "@[<v>(* This is generated code. *)@,@,@,@]";
     fmt_in_vbox ppf 2 ("module " ^ module_name ^ " = struct") (fun ppf ->
@@ -179,4 +179,4 @@ let build_methods spec =
   (*   ) spec.Spec.classes; *)
   let cls = List.hd spec.Spec.classes in
   let meth = List.hd cls.Class.methods in
-  print_endline @@ (Method_module.build_method spec cls meth).Method_module.text
+  print_endline (Method_module.build_method spec cls meth).Method_module.text

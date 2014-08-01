@@ -39,7 +39,7 @@ let frame_type_to_string = function
   | Heartbeat -> "Heartbeat"
 
 let rec field_table_to_string field_table =
-  Printf.sprintf "{%s}" @@ String.concat "; " (List.map field_entry_to_string field_table)
+  "{" ^ (String.concat "; " (List.map field_entry_to_string field_table)) ^ "}"
 
 and field_entry_to_string (name, field_value) =
   let open Protocol.Amqp_table in
@@ -78,7 +78,7 @@ let amqp_field_to_string (name, field) =
   | Unparsed value    -> Printf.sprintf "<Unparsed %s %S>" name value (* TODO: Kill this when we parse all payloads. *)
 
 let method_args_to_string args =
-  Printf.sprintf "[%s]" @@ String.concat "; " (List.map amqp_field_to_string args)
+  "[" ^ (String.concat "; " (List.map amqp_field_to_string args)) ^ "]"
 
 let frame_payload_to_string = function
   | Method_p payload -> Printf.sprintf "<class=%d method=%d %s>"
@@ -111,9 +111,9 @@ let parse_method_payload buf =
 let consume_payload buf method_type =
   match method_type with
   | Method -> Method_p (parse_method_payload buf)
-  | Header -> Header_p (consume_str buf @@ Parse_buf.length buf)
-  | Body -> Body_p (consume_str buf @@ Parse_buf.length buf)
-  | Heartbeat -> Heartbeat_p (consume_str buf @@ Parse_buf.length buf)
+  | Header -> Header_p (consume_str buf (Parse_buf.length buf))
+  | Body -> Body_p (consume_str buf (Parse_buf.length buf))
+  | Heartbeat -> Heartbeat_p (consume_str buf (Parse_buf.length buf))
 
 
 let byte_to_frame_type = function
@@ -124,7 +124,7 @@ let byte_to_frame_type = function
   | _ -> assert false
 
 let consume_frame_type buf =
-  byte_to_frame_type @@ consume_byte buf
+  byte_to_frame_type (consume_byte buf)
 
 
 let consume_frame str =

@@ -24,7 +24,7 @@ let consume_char buf =
   value
 
 let consume_byte buf =
-  int_of_char @@ consume_char buf
+  int_of_char (consume_char buf)
 
 let consume_short buf =
   let high = consume_byte buf in
@@ -49,24 +49,24 @@ let consume_str buf length =
   value
 
 let consume_buf buf length =
-  Parse_buf.from_string @@ consume_str buf length
+  Parse_buf.from_string (consume_str buf length)
 
 
 let consume_int32 buf =
-  let high = Int32.of_int @@ consume_short buf in
-  let low = Int32.of_int @@ consume_short buf in
+  let high = Int32.of_int (consume_short buf) in
+  let low = Int32.of_int (consume_short buf) in
   Int32.add (Int32.shift_left high 16) low
 
 let consume_int64 buf =
-  let high = Int64.of_int32 @@ consume_int32 buf in
-  let low = Int64.of_int32 @@ consume_int32 buf in
+  let high = Int64.of_int32 (consume_int32 buf) in
+  let low = Int64.of_int32 (consume_int32 buf) in
   Int64.add (Int64.shift_left high 32) low
 
 let consume_float buf =
-  Int32.float_of_bits @@ consume_int32 buf
+  Int32.float_of_bits (consume_int32 buf)
 
 let consume_double buf =
-  Int64.float_of_bits @@ consume_int64 buf
+  Int64.float_of_bits (consume_int64 buf)
 
 let consume_short_str buf =
   let size = consume_byte buf in

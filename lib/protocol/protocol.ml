@@ -56,7 +56,7 @@ module Amqp_table = struct
       | 'T' -> Timestamp (Parse_utils.consume_long_long buf)
       | 'F' -> Field_table (consume_table buf)
       | 'V' -> No_value
-      | field_type -> failwith @@ Printf.sprintf "Unknown field type %C" field_type
+      | field_type -> failwith (Printf.sprintf "Unknown field type %C" field_type)
     in
     name, table_field
 

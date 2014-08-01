@@ -8,10 +8,10 @@ module Connection_start = struct
   let string_of_list = Protocol.Method_utils.string_of_list arguments
 
   let parse_method buf =
-    (`Connection_start (t_from_list @@ buf_to_list buf) :> Generated_method_types.method_payload)
+    (`Connection_start (t_from_list (buf_to_list buf)) :> Generated_method_types.method_payload)
 
   let build_method = function
-    | `Connection_start payload -> string_of_list @@ t_to_list payload
+    | `Connection_start payload -> string_of_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function

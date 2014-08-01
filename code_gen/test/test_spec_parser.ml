@@ -10,7 +10,7 @@ let tmpfile_of_string ctx data =
 let channel_of_string ctx data =
   open_in_bin (tmpfile_of_string ctx data)
 
-let valid_root_tag =
+let valid_amqp_tag =
   "<amqp major=\"1\" minor=\"2\" revision=\"3\" port=\"4\" comment=\"(* foo *)\">"
 
 
@@ -39,17 +39,19 @@ let tests =
       );
 
     "test_empty_spec" >:: (fun ctx ->
-        let spec_channel = channel_of_string ctx (valid_root_tag ^ "</amqp>") in
+        let spec_channel = channel_of_string ctx (valid_amqp_tag ^ "</amqp>") in
         assert_equal
           (Amqp_spec.Spec.make (1, 2, 3) 4 "(* foo *)")
           (Spec_parser.parse_spec_from_channel spec_channel)
       );
 
     "test_bad_tag" >:: (fun ctx ->
-        let spec_channel = channel_of_string ctx (valid_root_tag ^ "<foo bar=\"baz\"/></amqp>") in
+        let spec_channel = channel_of_string ctx (valid_amqp_tag ^ "<foo bar=\"baz\"/></amqp>") in
         assert_raises
           (Failure "bad tag: <foo bar=\"baz\">")
           (fun () -> Spec_parser.parse_spec_from_channel spec_channel)
       );
+
+    (* TODO: More tests. *)
 
   ]

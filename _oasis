@@ -28,3 +28,15 @@ Executable foo
   Path:       example
   MainIs:     foo.ml
   BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll
+
+Executable test_ypotryll
+  Path:         test
+  MainIs:       test.ml
+  Build$:       flag(tests)
+  Install:      false
+  BuildDepends: ypotryll, oUnit
+
+Test test_ypotryll_code_gen
+  Run$:             flag(tests)
+  Command:          $test_ypotryll
+  WorkingDirectory: test

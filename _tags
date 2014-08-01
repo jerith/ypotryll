@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 78435356839ac3d13872aae3ad26f5ed)
+# DO NOT EDIT (digest: 615ec8468070ba43ee72b4aff2f9798f)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -38,4 +38,19 @@
 <example/*.ml{,i}>: use_ypotryll
 <example/*.ml{,i}>: use_ypotryll_gen_code
 <example/*.ml{,i}>: use_ypotryll_proto
+# Executable test_ypotryll
+"test/test.byte": pkg_lwt
+"test/test.byte": pkg_lwt.syntax
+"test/test.byte": pkg_lwt.unix
+"test/test.byte": pkg_oUnit
+"test/test.byte": use_ypotryll
+"test/test.byte": use_ypotryll_gen_code
+"test/test.byte": use_ypotryll_proto
+<test/*.ml{,i}>: pkg_lwt
+<test/*.ml{,i}>: pkg_lwt.syntax
+<test/*.ml{,i}>: pkg_lwt.unix
+<test/*.ml{,i}>: pkg_oUnit
+<test/*.ml{,i}>: use_ypotryll
+<test/*.ml{,i}>: use_ypotryll_gen_code
+<test/*.ml{,i}>: use_ypotryll_proto
 # OASIS_STOP

@@ -1,13 +1,11 @@
-PKG lwt lwt.unix lwt.syntax oUnit xmlm
+PKG lwt lwt.unix lwt.syntax oUnit
 EXT lwt
 
-S code_gen
 S lib/protocol
 S lib/gen
 S lib
 S example
 
-B _build/code_gen
 B _build/lib/protocol
 B _build/lib/gen
 B _build/lib

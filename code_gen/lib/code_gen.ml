@@ -1,10 +1,13 @@
 
+let generated_header = "(* This file is generated. See the code_gen dir for details. *)"
+
 let gen_ml_filename name =
   let gen_dir = Filename.concat "lib" "gen" in
   Filename.concat gen_dir (name ^ ".ml")
 
 let write_to_file filename data =
   let open Unix in
+  let data = generated_header ^ "\n\n\n" ^ data in
   let fd = openfile filename [O_WRONLY; O_CREAT; O_TRUNC] 0o644 in
   let written = write fd data 0 (String.length data) in
   close fd;

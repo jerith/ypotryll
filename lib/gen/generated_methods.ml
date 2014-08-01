@@ -1,3 +1,6 @@
+(* This file is generated. See the code_gen dir for details. *)
+
+
 module Connection_start = struct
   include Gen_connection_start.Connection_start
 

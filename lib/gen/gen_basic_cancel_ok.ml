@@ -1,4 +1,4 @@
-(* This is generated code. *)
+(* This file is generated. See the code_gen dir for details. *)
 
 
 module Basic_cancel_ok = struct

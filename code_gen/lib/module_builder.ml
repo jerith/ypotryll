@@ -169,7 +169,6 @@ module Method_module = struct
   let fmt_method_text ppf (spec, cls, meth) =
     let module_name = String.capitalize (make_method_name cls meth) in
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
-    Format.fprintf ppf "@[<v>(* This is generated code. *)@,@,@,@]";
     fmt_module ppf module_name (fun ppf ->
         Format.fprintf ppf "@,open Protocol";
         fmt_line ppf fmt_index_vals (cls, meth);

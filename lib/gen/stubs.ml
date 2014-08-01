@@ -1,3 +1,6 @@
+(* This file is generated. See the code_gen dir for details. *)
+
+
 
 module type Method = sig
   type t

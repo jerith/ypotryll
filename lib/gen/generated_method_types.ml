@@ -1,3 +1,6 @@
+(* This file is generated. See the code_gen dir for details. *)
+
+
 type method_payload = [
   | `Connection_start of Gen_connection_start.Connection_start.record
   | `Connection_start_ok of Gen_connection_start_ok.Connection_start_ok.record

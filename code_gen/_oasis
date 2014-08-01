@@ -1,0 +1,31 @@
+OASISFormat: 0.4
+Name:        ypotryll-code-gen
+Version:     0.0.1
+Synopsis:    AMQP method code generator for ypotryll
+Authors:     Jeremy Thurgood
+License:     MIT
+Plugins:     DevFiles (0.4)
+BuildTools:  ocamlbuild
+
+Library ypotryll_code_gen
+  Install:      false
+  Path:         lib
+  Modules:      Amqp_spec, Spec_parser, Module_builder
+  BuildDepends: xmlm
+
+Executable ypotryll_code_gen
+  Path:         lib
+  MainIs:       code_gen.ml
+  BuildDepends: ypotryll_code_gen
+
+Executable test_ypotryll_code_gen
+  Path:         test
+  MainIs:       test.ml
+  Build$:       flag(tests)
+  Install:      false
+  BuildDepends: ypotryll_code_gen
+
+Test test_ypotryll_code_gen
+  Run$:             flag(tests)
+  Command:          $test_ypotryll_code_gen -q
+  WorkingDirectory: test

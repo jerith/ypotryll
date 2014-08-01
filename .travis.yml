@@ -15,6 +15,13 @@ install:
   - "opam install lwt xmlm ounit"
 
 script:
-  - "ocaml setup.ml -configure --enable-tests"
+  # Code generator
+  - "pushd code_gen"
   - "make"
+  - "ocaml setup.ml -configure --enable-tests"
+  - "make test"
+  - "popd"
+  # Other stuff
+  - "make"
+  - "ocaml setup.ml -configure --enable-tests"
   - "make test"

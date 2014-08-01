@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 1f7ff97b6844f10966d8fdbd8df9c1eb) *)
+(* DO NOT EDIT (digest: 8bb092584ccb4850bd883509a70cd45f) *)
 module OASISGettext = struct
 (* # 22 "src/oasis/OASISGettext.ml" *)
 
@@ -595,25 +595,15 @@ end
 open Ocamlbuild_plugin;;
 let package_default =
   {
-     MyOCamlbuildBase.lib_ocaml =
-       [
-          ("ypotryll_proto", ["lib/protocol"], []);
-          ("ypotryll_gen_code", ["lib/gen"], []);
-          ("ypotryll", ["lib"], [])
-       ];
+     MyOCamlbuildBase.lib_ocaml = [("ypotryll_code_gen", ["lib"], [])];
      lib_c = [];
      flags = [];
-     includes =
-       [
-          ("lib/gen", ["lib/protocol"]);
-          ("lib", ["lib/gen"]);
-          ("example", ["lib"])
-       ]
+     includes = [("test", ["lib"])]
   }
   ;;
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;
 
-# 618 "myocamlbuild.ml"
+# 608 "myocamlbuild.ml"
 (* OASIS_STOP *)
 Ocamlbuild_plugin.dispatch dispatch_default;;

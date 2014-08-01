@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: c0d17fd3beb7a18ef3bbcddc894ae191)
+# DO NOT EDIT (digest: 78435356839ac3d13872aae3ad26f5ed)
 # Ignore VCS directories, you can use the same kind of rule outside
 # OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
@@ -13,13 +13,6 @@
 ".git": not_hygienic
 "_darcs": -traverse
 "_darcs": not_hygienic
-# Library ypotryll_code_gen
-"code_gen/ypotryll_code_gen.cmxs": use_ypotryll_code_gen
-# Executable ypotryll_code_gen
-"code_gen/code_gen.byte": pkg_xmlm
-"code_gen/code_gen.byte": use_ypotryll_code_gen
-<code_gen/*.ml{,i}>: pkg_xmlm
-<code_gen/*.ml{,i}>: use_ypotryll_code_gen
 # Library ypotryll_proto
 "lib/protocol/ypotryll_proto.cmxs": use_ypotryll_proto
 # Library ypotryll_gen_code
@@ -45,9 +38,4 @@
 <example/*.ml{,i}>: use_ypotryll
 <example/*.ml{,i}>: use_ypotryll_gen_code
 <example/*.ml{,i}>: use_ypotryll_proto
-# Executable test_ypotryll_code_gen
-"code_gen_test/test.byte": pkg_xmlm
-"code_gen_test/test.byte": use_ypotryll_code_gen
-<code_gen_test/*.ml{,i}>: pkg_xmlm
-<code_gen_test/*.ml{,i}>: use_ypotryll_code_gen
 # OASIS_STOP

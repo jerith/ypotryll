@@ -1,14 +1,15 @@
 open Generated_frame_constants
+open Generated_method_types
 
 
-type method_payload = {
+type method_body = {
   class_id : int;
   method_id : int;
-  payload : Generated_method_types.method_payload;
+  payload : method_payload;
 }
 
 type frame_payload =
-  | Method_p of method_payload
+  | Method_p of method_body
   | Header_p of string
   | Body_p of string
   | Heartbeat_p of string
@@ -72,7 +73,7 @@ let amqp_field_to_string (name, field) =
   | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
 
 let method_args_to_string payload =
-  let (module P : Generated_method_types.Method) = Generated_methods.rebuild_method_instance payload in
+  let (module P : Method) = Generated_methods.rebuild_method_instance payload in
   let args = P.list_of_t payload in
   "[" ^ (String.concat "; " (List.map amqp_field_to_string args)) ^ "]"
 

@@ -5,7 +5,7 @@ open Generated_method_types
 type method_body = {
   class_id : int;
   method_id : int;
-  payload : method_payload;
+  fields : method_payload;
 }
 
 type frame_payload =
@@ -80,7 +80,7 @@ let method_args_to_string payload =
 let frame_payload_to_string = function
   | Method_p payload -> Printf.sprintf "<class=%d method=%d %s>"
                           payload.class_id payload.method_id
-                          (method_args_to_string payload.payload)
+                          (method_args_to_string payload.fields)
   | Header_p payload -> Printf.sprintf "%S" payload
   | Body_p payload -> Printf.sprintf "%S" payload
   | Heartbeat_p payload -> Printf.sprintf "%S" payload
@@ -102,11 +102,11 @@ let parse_method_args buf class_id method_id =
 let parse_method_payload buf =
   let class_id = consume_short buf in
   let method_id = consume_short buf in
-  let payload = parse_method_args buf class_id method_id in
+  let fields = parse_method_args buf class_id method_id in
   let unconsumed = Parse_buf.length buf in
   if unconsumed > 0
   then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed);
-  { class_id; method_id; payload }
+  { class_id; method_id; fields }
 
 let consume_payload buf method_type =
   match method_type with

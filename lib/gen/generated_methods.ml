@@ -3,13 +3,14 @@
 
 module Connection_start = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_start.Connection_start
 
   type t = [`Connection_start of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_start (t_from_list (buf_to_list buf)) :> method_payload)
@@ -26,13 +27,14 @@ end
 
 module Connection_start_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_start_ok.Connection_start_ok
 
   type t = [`Connection_start_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_start_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -49,13 +51,14 @@ end
 
 module Connection_secure = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_secure.Connection_secure
 
   type t = [`Connection_secure of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_secure (t_from_list (buf_to_list buf)) :> method_payload)
@@ -72,13 +75,14 @@ end
 
 module Connection_secure_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_secure_ok.Connection_secure_ok
 
   type t = [`Connection_secure_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_secure_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -95,13 +99,14 @@ end
 
 module Connection_tune = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_tune.Connection_tune
 
   type t = [`Connection_tune of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_tune (t_from_list (buf_to_list buf)) :> method_payload)
@@ -118,13 +123,14 @@ end
 
 module Connection_tune_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_tune_ok.Connection_tune_ok
 
   type t = [`Connection_tune_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_tune_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -141,13 +147,14 @@ end
 
 module Connection_open = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_open.Connection_open
 
   type t = [`Connection_open of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_open (t_from_list (buf_to_list buf)) :> method_payload)
@@ -164,13 +171,14 @@ end
 
 module Connection_open_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_open_ok.Connection_open_ok
 
   type t = [`Connection_open_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -187,13 +195,14 @@ end
 
 module Connection_close = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_close.Connection_close
 
   type t = [`Connection_close of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_close (t_from_list (buf_to_list buf)) :> method_payload)
@@ -210,13 +219,14 @@ end
 
 module Connection_close_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_connection_close_ok.Connection_close_ok
 
   type t = [`Connection_close_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Connection_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -233,13 +243,14 @@ end
 
 module Channel_open = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_open.Channel_open
 
   type t = [`Channel_open of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_open (t_from_list (buf_to_list buf)) :> method_payload)
@@ -256,13 +267,14 @@ end
 
 module Channel_open_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_open_ok.Channel_open_ok
 
   type t = [`Channel_open_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -279,13 +291,14 @@ end
 
 module Channel_flow = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_flow.Channel_flow
 
   type t = [`Channel_flow of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_flow (t_from_list (buf_to_list buf)) :> method_payload)
@@ -302,13 +315,14 @@ end
 
 module Channel_flow_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_flow_ok.Channel_flow_ok
 
   type t = [`Channel_flow_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_flow_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -325,13 +339,14 @@ end
 
 module Channel_close = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_close.Channel_close
 
   type t = [`Channel_close of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_close (t_from_list (buf_to_list buf)) :> method_payload)
@@ -348,13 +363,14 @@ end
 
 module Channel_close_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_channel_close_ok.Channel_close_ok
 
   type t = [`Channel_close_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Channel_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -371,13 +387,14 @@ end
 
 module Exchange_declare = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_exchange_declare.Exchange_declare
 
   type t = [`Exchange_declare of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Exchange_declare (t_from_list (buf_to_list buf)) :> method_payload)
@@ -394,13 +411,14 @@ end
 
 module Exchange_declare_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_exchange_declare_ok.Exchange_declare_ok
 
   type t = [`Exchange_declare_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Exchange_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -417,13 +435,14 @@ end
 
 module Exchange_delete = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_exchange_delete.Exchange_delete
 
   type t = [`Exchange_delete of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Exchange_delete (t_from_list (buf_to_list buf)) :> method_payload)
@@ -440,13 +459,14 @@ end
 
 module Exchange_delete_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_exchange_delete_ok.Exchange_delete_ok
 
   type t = [`Exchange_delete_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Exchange_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -463,13 +483,14 @@ end
 
 module Queue_declare = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_declare.Queue_declare
 
   type t = [`Queue_declare of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_declare (t_from_list (buf_to_list buf)) :> method_payload)
@@ -486,13 +507,14 @@ end
 
 module Queue_declare_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_declare_ok.Queue_declare_ok
 
   type t = [`Queue_declare_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -509,13 +531,14 @@ end
 
 module Queue_bind = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_bind.Queue_bind
 
   type t = [`Queue_bind of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_bind (t_from_list (buf_to_list buf)) :> method_payload)
@@ -532,13 +555,14 @@ end
 
 module Queue_bind_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_bind_ok.Queue_bind_ok
 
   type t = [`Queue_bind_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_bind_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -555,13 +579,14 @@ end
 
 module Queue_unbind = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_unbind.Queue_unbind
 
   type t = [`Queue_unbind of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_unbind (t_from_list (buf_to_list buf)) :> method_payload)
@@ -578,13 +603,14 @@ end
 
 module Queue_unbind_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_unbind_ok.Queue_unbind_ok
 
   type t = [`Queue_unbind_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_unbind_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -601,13 +627,14 @@ end
 
 module Queue_purge = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_purge.Queue_purge
 
   type t = [`Queue_purge of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_purge (t_from_list (buf_to_list buf)) :> method_payload)
@@ -624,13 +651,14 @@ end
 
 module Queue_purge_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_purge_ok.Queue_purge_ok
 
   type t = [`Queue_purge_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_purge_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -647,13 +675,14 @@ end
 
 module Queue_delete = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_delete.Queue_delete
 
   type t = [`Queue_delete of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_delete (t_from_list (buf_to_list buf)) :> method_payload)
@@ -670,13 +699,14 @@ end
 
 module Queue_delete_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_queue_delete_ok.Queue_delete_ok
 
   type t = [`Queue_delete_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Queue_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -693,13 +723,14 @@ end
 
 module Basic_qos = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_qos.Basic_qos
 
   type t = [`Basic_qos of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_qos (t_from_list (buf_to_list buf)) :> method_payload)
@@ -716,13 +747,14 @@ end
 
 module Basic_qos_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_qos_ok.Basic_qos_ok
 
   type t = [`Basic_qos_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_qos_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -739,13 +771,14 @@ end
 
 module Basic_consume = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_consume.Basic_consume
 
   type t = [`Basic_consume of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_consume (t_from_list (buf_to_list buf)) :> method_payload)
@@ -762,13 +795,14 @@ end
 
 module Basic_consume_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_consume_ok.Basic_consume_ok
 
   type t = [`Basic_consume_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_consume_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -785,13 +819,14 @@ end
 
 module Basic_cancel = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_cancel.Basic_cancel
 
   type t = [`Basic_cancel of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_cancel (t_from_list (buf_to_list buf)) :> method_payload)
@@ -808,13 +843,14 @@ end
 
 module Basic_cancel_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_cancel_ok.Basic_cancel_ok
 
   type t = [`Basic_cancel_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_cancel_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -831,13 +867,14 @@ end
 
 module Basic_publish = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_publish.Basic_publish
 
   type t = [`Basic_publish of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_publish (t_from_list (buf_to_list buf)) :> method_payload)
@@ -854,13 +891,14 @@ end
 
 module Basic_return = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_return.Basic_return
 
   type t = [`Basic_return of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_return (t_from_list (buf_to_list buf)) :> method_payload)
@@ -877,13 +915,14 @@ end
 
 module Basic_deliver = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_deliver.Basic_deliver
 
   type t = [`Basic_deliver of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_deliver (t_from_list (buf_to_list buf)) :> method_payload)
@@ -900,13 +939,14 @@ end
 
 module Basic_get = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_get.Basic_get
 
   type t = [`Basic_get of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_get (t_from_list (buf_to_list buf)) :> method_payload)
@@ -923,13 +963,14 @@ end
 
 module Basic_get_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_get_ok.Basic_get_ok
 
   type t = [`Basic_get_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_get_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -946,13 +987,14 @@ end
 
 module Basic_get_empty = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_get_empty.Basic_get_empty
 
   type t = [`Basic_get_empty of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_get_empty (t_from_list (buf_to_list buf)) :> method_payload)
@@ -969,13 +1011,14 @@ end
 
 module Basic_ack = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_ack.Basic_ack
 
   type t = [`Basic_ack of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_ack (t_from_list (buf_to_list buf)) :> method_payload)
@@ -992,13 +1035,14 @@ end
 
 module Basic_reject = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_reject.Basic_reject
 
   type t = [`Basic_reject of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_reject (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1015,13 +1059,14 @@ end
 
 module Basic_recover_async = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_recover_async.Basic_recover_async
 
   type t = [`Basic_recover_async of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_recover_async (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1038,13 +1083,14 @@ end
 
 module Basic_recover = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_recover.Basic_recover
 
   type t = [`Basic_recover of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_recover (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1061,13 +1107,14 @@ end
 
 module Basic_recover_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_basic_recover_ok.Basic_recover_ok
 
   type t = [`Basic_recover_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Basic_recover_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1084,13 +1131,14 @@ end
 
 module Tx_select = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_select.Tx_select
 
   type t = [`Tx_select of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_select (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1107,13 +1155,14 @@ end
 
 module Tx_select_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_select_ok.Tx_select_ok
 
   type t = [`Tx_select_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_select_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1130,13 +1179,14 @@ end
 
 module Tx_commit = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_commit.Tx_commit
 
   type t = [`Tx_commit of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_commit (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1153,13 +1203,14 @@ end
 
 module Tx_commit_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_commit_ok.Tx_commit_ok
 
   type t = [`Tx_commit_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_commit_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1176,13 +1227,14 @@ end
 
 module Tx_rollback = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_rollback.Tx_rollback
 
   type t = [`Tx_rollback of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_rollback (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1199,13 +1251,14 @@ end
 
 module Tx_rollback_ok = struct
   open Generated_method_types
+  open Protocol.Method_utils
   include Gen_tx_rollback_ok.Tx_rollback_ok
 
   type t = [`Tx_rollback_ok of record]
 
-  let buf_to_list = Protocol.Method_utils.buf_to_list arguments
+  let buf_to_list = buf_to_list arguments
 
-  let string_of_list = Protocol.Method_utils.string_of_list arguments
+  let string_of_list = string_of_list class_id method_id
 
   let parse_method buf =
     (`Tx_rollback_ok (t_from_list (buf_to_list buf)) :> method_payload)

@@ -58,6 +58,7 @@ type protocol_state =
   | Connection_tune
   | Connection_open
   | Connected
+  | Disconnected
 
 
 let str_rpartition str ch =
@@ -91,17 +92,39 @@ let choose_locale body =
   else failwith ("en_US not found in locales: " ^ String.concat " " locales)
 
 
-let process_start_frame frame =
+let send_frame connection frame =
+  let frame_str = "foo" in
+  Lwt_unix.write connection.sock frame_str 0 (String.length frame_str)
+
+
+let process_start_frame connection frame =
   (* TODO: Assert channel 0 *)
   let body = match Frame.extract_method frame.Frame.payload with
     | `Connection_start body -> body
     | _ -> failwith ("Expected Connection_start, got: " ^ Frame.frame_to_string frame)
   in
   let mechanism = choose_auth_mechanism body in
+  let response = "\000guest\000guest" in
   let locale = choose_locale body in
   Lwt_io.printlf "<<< START %s" (Frame.frame_to_string frame)
   >> Lwt_io.printlf "Auth mechanism: %S" mechanism
   >> Lwt_io.printlf "Locales: %S" locale
+  >> begin
+    let frame_ok_str = Frame.emit_method_frame 0 (`Connection_start_ok {
+        Connection_start_ok.client_properties = [
+          "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
+          "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
+          "platform", Protocol.Amqp_table.Long_string "OCaml";
+          "product", Protocol.Amqp_table.Long_string "ypotryll";
+          "version", Protocol.Amqp_table.Long_string "0.0.1";
+        ];
+        Connection_start_ok.mechanism;
+        Connection_start_ok.response;
+        Connection_start_ok.locale;
+      })
+    in
+    write_data connection frame_ok_str
+  end
   >> return Connected
 
 
@@ -110,22 +133,23 @@ let vomit_frame frame state =
   >> return state
 
 
-let process_frame callback frame = function
-  | Connection_start -> process_start_frame frame
+let process_frame connection callback frame = function
+  | Connection_start -> process_start_frame connection frame
   | Connection_start_challenge -> failwith "Unexpected Connection_start_challenge state."
   | Connection_tune -> vomit_frame frame Connection_open
   | Connection_open -> vomit_frame frame Connected
   | Connected -> callback frame >> return Connected
+  | Disconnected -> failwith "Disconnected."
 
 
-let rec process_frames callback str state =
+let rec process_frames connection callback str state =
   (* TODO: Avoid waiting here. *)
   let frame, str = Frame.consume_frame str in
   match frame with
   | None -> return (str, state)
   | Some frame -> begin
-      process_frame callback frame state
-      >>= process_frames callback str
+      process_frame connection callback frame state
+      >>= process_frames connection callback str
     end
 
 
@@ -136,18 +160,20 @@ let listen connection callback =
     (* Read some data into our string. *)
     Lwt_unix.read connection.sock read_data 0 read_length
     >>= (fun chars_read ->
+        Lwt_io.printlf "Read bytes: %d" chars_read >>
         if chars_read = 0 (* EOF from server - we have quit or been kicked. *)
-        then return state
+        then return Disconnected
         else begin
           let input = String.sub read_data 0 chars_read in
           Buffer.add_string buffer input;
-          process_frames callback (Buffer.contents buffer) state
+          process_frames connection callback (Buffer.contents buffer) state
           >>= (fun (remaining_data, state) ->
               Buffer.reset buffer;
               Buffer.add_string buffer remaining_data;
               return state)
         end)
-    >>= (fun state -> listen' ~state ~buffer)
+    >>= function
+    | Disconnected -> return ()
+    | state -> listen' ~state ~buffer
   in
-  let buffer = Buffer.create 0 in
-  listen' ~state:Connection_start ~buffer
+  listen' ~state:Connection_start ~buffer:(Buffer.create 0)

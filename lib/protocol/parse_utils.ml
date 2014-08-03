@@ -75,3 +75,38 @@ let consume_short_str buf =
 let consume_long_str buf =
   let size = consume_long buf in
   consume_str buf size
+
+
+let emit_octet value =
+  Printf.sprintf "%c" (char_of_int value)
+
+let emit_short value =
+  (emit_octet (value lsr 8)) ^ (emit_octet (value land 0xFF))
+
+let emit_long value =
+  (emit_short (value lsr 16)) ^ (emit_short (value land 0xFFFF))
+
+let emit_long_long value =
+  (emit_long (value lsr 32)) ^ (emit_long (value land 0xFFFFFFFF))
+
+let emit_int32 value =
+  let high = Int32.(to_int (shift_right value 16)) in
+  let low = Int32.(to_int (logand value (of_int 0xFFFF))) in
+  (emit_short high) ^ (emit_short low)
+
+let emit_int64 value =
+  let high = Int64.(to_int32 (shift_right value 32)) in
+  let low = Int64.(to_int32 (logand value (of_int 0xFFFFFFFF))) in
+  (emit_int32 high) ^ (emit_int32 low)
+
+let emit_float value =
+  emit_int32 (Int32.bits_of_float value)
+
+let emit_double value =
+  emit_int64 (Int64.bits_of_float value)
+
+let emit_short_str value =
+  (emit_octet (String.length value)) ^ value
+
+let emit_long_str value =
+  (emit_long (String.length value)) ^ value

@@ -213,11 +213,12 @@ module Method_module_wrapper = struct
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     let fmt_function ppf = fmt_line_str ppf ""; fmt_function ppf in
     fmt_module ppf module_name (fun ppf ->
-        Format.fprintf ppf "@,open Generated_method_types@,include Gen_%s.%s"
+        Format.fprintf ppf "@,%s@,%s@,include Gen_%s.%s"
+          "open Generated_method_types" "open Protocol.Method_utils"
           method_name module_name;
         fmt_line ppf (fun ppf -> Format.fprintf ppf "type t = [`%s of record]") module_name;
-        fmt_line_str ppf "let buf_to_list = Protocol.Method_utils.buf_to_list arguments";
-        fmt_line_str ppf "let string_of_list = Protocol.Method_utils.string_of_list arguments";
+        fmt_line_str ppf "let buf_to_list = buf_to_list arguments";
+        fmt_line_str ppf "let string_of_list = string_of_list class_id method_id";
         fmt_function ppf "let parse_method buf =" (fun ppf ->
             Format.fprintf ppf
               "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
@@ -328,17 +329,30 @@ module Frame_constants = struct
   let fmt_byte_to_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
     fmt_function ppf "let byte_to_frame_type = function" (fun ppf ->
-        Format.fprintf ppf "| %d -> Method@," (get_constant "frame-method");
-        Format.fprintf ppf "| %d -> Header@," (get_constant "frame-header");
-        Format.fprintf ppf "| %d -> Body@," (get_constant "frame-body");
-        Format.fprintf ppf "| %d -> Heartbeat@," (get_constant "frame-heartbeat");
-        Format.fprintf ppf "| i -> failwith (Printf.sprintf %S i)" "Unexpected frame type: %d")
+        Format.fprintf ppf "@,| %d -> Method" (get_constant "frame-method");
+        Format.fprintf ppf "@,| %d -> Header" (get_constant "frame-header");
+        Format.fprintf ppf "@,| %d -> Body" (get_constant "frame-body");
+        Format.fprintf ppf "@,| %d -> Heartbeat" (get_constant "frame-heartbeat");
+        Format.fprintf ppf "@,| i -> failwith (Printf.sprintf %S i)" "Unexpected frame type: %d")
+
+  let fmt_emit_frame_type ppf spec =
+    let get_constant name = get_constant_value name spec.Spec.constants in
+    fmt_function ppf "let emit_frame_type = function" (fun ppf ->
+        Format.fprintf ppf "@,| Method -> String.make 1 (char_of_int %d)"
+          (get_constant "frame-method");
+        Format.fprintf ppf "@,| Header -> String.make 1 (char_of_int %d)"
+          (get_constant "frame-header");
+        Format.fprintf ppf "@,| Body -> String.make 1 (char_of_int %d)"
+          (get_constant "frame-body");
+        Format.fprintf ppf "@,| Heartbeat -> String.make 1 (char_of_int %d)"
+          (get_constant "frame-heartbeat"))
 
   let fmt_frame_constants ppf spec =
     Format.fprintf ppf "@[<v>";
     Format.fprintf ppf "%a@,@," fmt_frame_end spec;
     Format.fprintf ppf "%a@,@," fmt_frame_type ();
-    Format.fprintf ppf "%a@," fmt_byte_to_frame_type spec;
+    Format.fprintf ppf "%a@,@," fmt_byte_to_frame_type spec;
+    Format.fprintf ppf "%a@," fmt_emit_frame_type spec;
     Format.fprintf ppf "@]"
 
   let build spec =

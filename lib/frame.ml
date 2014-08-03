@@ -136,3 +136,10 @@ let consume_frame str =
       let frame_end = consume_byte buf in
       assert (frame_end = Generated_frame_constants.frame_end);
       Some { frame_type; channel; size; payload }, Parse_buf.to_string buf
+
+
+let extract_method = function
+  | Method_p { fields; _ } -> fields
+  | Header_p _ -> failwith "Expected method frame, got header frame."
+  | Body_p _ -> failwith "Expected method frame, got body frame."
+  | Heartbeat_p _ -> failwith "Expected method frame, got heartbead frame."

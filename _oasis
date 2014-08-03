@@ -15,7 +15,6 @@ Library ypotryll_proto
 Library ypotryll_gen_code
   Path:         lib/gen
   Install:      false
-  InternalModules: Stubs
   Modules:      Generated_method_types, Generated_methods
   BuildDepends: ypotryll_proto
 

@@ -4,7 +4,7 @@ open Generated_frame_constants
 type method_payload = {
   class_id : int;
   method_id : int;
-  arguments : (string * Protocol.Amqp_field.t) list; (* TODO: Determine if this is what we want. *)
+  payload : Generated_method_types.method_payload;
 }
 
 type frame_payload =
@@ -71,13 +71,15 @@ let amqp_field_to_string (name, field) =
   | Timestamp value   -> Printf.sprintf "<Timestamp %s %d>" name value
   | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
 
-let method_args_to_string args =
+let method_args_to_string payload =
+  let (module P : Generated_method_types.Method) = Generated_methods.rebuild_method_instance payload in
+  let args = P.list_of_t payload in
   "[" ^ (String.concat "; " (List.map amqp_field_to_string args)) ^ "]"
 
 let frame_payload_to_string = function
   | Method_p payload -> Printf.sprintf "<class=%d method=%d %s>"
                           payload.class_id payload.method_id
-                          (method_args_to_string payload.arguments)
+                          (method_args_to_string payload.payload)
   | Header_p payload -> Printf.sprintf "%S" payload
   | Body_p payload -> Printf.sprintf "%S" payload
   | Heartbeat_p payload -> Printf.sprintf "%S" payload
@@ -90,10 +92,7 @@ let frame_to_string frame =
 
 let parse_method_args buf class_id method_id =
   try
-    let (module P: Stubs.Method_instance) =
-      Generated_methods.build_method_instance (class_id, method_id) buf
-    in
-    P.Method.list_of_t P.this
+    Generated_methods.build_method_instance (class_id, method_id) buf
   with
   | Not_found -> failwith (
       Printf.sprintf "Unknown method (%d, %d) with payload: %S"
@@ -102,11 +101,11 @@ let parse_method_args buf class_id method_id =
 let parse_method_payload buf =
   let class_id = consume_short buf in
   let method_id = consume_short buf in
-  let arguments = parse_method_args buf class_id method_id in
+  let payload = parse_method_args buf class_id method_id in
   let unconsumed = Parse_buf.length buf in
   if unconsumed > 0
   then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed);
-  { class_id; method_id; arguments }
+  { class_id; method_id; payload }
 
 let consume_payload buf method_type =
   match method_type with

@@ -18,19 +18,18 @@ let write_module_file method_module =
   let filename = gen_ml_filename ("gen_" ^ method_module.name) in
   write_to_file filename method_module.text
 
-let write_stubs_file () =
-  let filename = gen_ml_filename "stubs" in
-  write_to_file filename (Stub_builder.build_stubs ())
-
 let write_generated_methods_file spec =
   let filename = gen_ml_filename "generated_methods" in
-  let wrappers = String.concat "\n\n" (Module_builder.build_method_wrappers spec) in
+  let wrappers = String.concat "\n\n\n" (Module_builder.build_method_wrappers spec) in
   let builders = Module_builder.build_method_builders spec in
-  write_to_file filename (wrappers ^ "\n\n" ^ builders)
+  let rebuilders = Module_builder.build_method_rebuilders spec in
+  write_to_file filename (wrappers ^ "\n\n\n" ^ builders ^ "\n\n" ^ rebuilders)
 
 let write_generated_types_file spec =
   let filename = gen_ml_filename "generated_method_types" in
-  write_to_file filename (Module_builder.build_method_types spec)
+  let method_types = Module_builder.build_method_types spec in
+  let stubs = Module_builder.build_method_module_type () in
+  write_to_file filename (method_types ^ "\n\n" ^ stubs)
 
 let write_generated_frame_constants_file spec =
   let filename = gen_ml_filename "generated_frame_constants" in
@@ -39,7 +38,6 @@ let write_generated_frame_constants_file spec =
 let write_all_files channel =
   let spec = Spec_parser.parse_spec_from_channel channel in
   List.iter write_module_file (Module_builder.build_methods spec);
-  write_stubs_file ();
   write_generated_methods_file spec;
   write_generated_types_file spec;
   write_generated_frame_constants_file spec

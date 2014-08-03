@@ -9,8 +9,7 @@ type frame_type =
   | Body
   | Heartbeat
 
-let byte_to_frame_type = function
-  | 1 -> Method
+let byte_to_frame_type = function| 1 -> Method
   | 2 -> Header
   | 3 -> Body
   | 8 -> Heartbeat

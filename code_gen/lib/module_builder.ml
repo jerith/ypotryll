@@ -17,10 +17,14 @@ let fmt_list_in_vbox ppf start finish fmt_item list =
   fmt_in_vbox ppf 2 start fmt_list (Some finish)
 
 let fmt_function ppf start fmt_func =
-  fmt_in_vbox ppf 2 (start ^ "@,") fmt_func None
+  fmt_in_vbox ppf 2 start fmt_func None
 
 let fmt_module ppf module_name fmt_func =
   let start = "module " ^ module_name ^ " = struct" in
+  fmt_in_vbox ppf 2 start fmt_func (Some "end")
+
+let fmt_module_type ppf module_name fmt_func =
+  let start = "module type " ^ module_name ^ " = sig" in
   fmt_in_vbox ppf 2 start fmt_func (Some "end")
 
 let name_to_ocaml = String.map (function
@@ -149,7 +153,7 @@ module Method_module = struct
 
   let fmt_t_to_list ppf (spec, cls, meth) =
     let fmt_arg amqp_type name = Printf.sprintf "Amqp_field.%s payload.%s" amqp_type name in
-    fmt_function ppf "let t_to_list payload =" (fun ppf ->
+    fmt_function ppf "let t_to_list payload =@," (fun ppf ->
         fmt_list_in_vbox ppf "[" "]"
           (fmt_argument_field spec fmt_arg) meth.Method.fields
       )
@@ -159,7 +163,7 @@ module Method_module = struct
   let fmt_t_from_list ppf (spec, cls, meth) =
     let fmt_arg amqp_type name = Printf.sprintf "Amqp_field.%s %s" amqp_type name in
     fmt_function ppf "let t_from_list fields =" (fun ppf ->
-        Format.fprintf ppf "match fields with@,";
+        Format.fprintf ppf "@,match fields with@,";
         fmt_list_in_vbox ppf "| [" "] "
           (fmt_argument_field spec fmt_arg) meth.Method.fields;
         (match meth.Method.fields with
@@ -209,21 +213,22 @@ module Method_module_wrapper = struct
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     let fmt_function ppf = fmt_line_str ppf ""; fmt_function ppf in
     fmt_module ppf module_name (fun ppf ->
-        Format.fprintf ppf "@,include Gen_%s.%s" method_name module_name;
+        Format.fprintf ppf "@,open Generated_method_types@,include Gen_%s.%s"
+          method_name module_name;
         fmt_line ppf (fun ppf -> Format.fprintf ppf "type t = [`%s of record]") module_name;
         fmt_line_str ppf "let buf_to_list = Protocol.Method_utils.buf_to_list arguments";
         fmt_line_str ppf "let string_of_list = Protocol.Method_utils.string_of_list arguments";
         fmt_function ppf "let parse_method buf =" (fun ppf ->
             Format.fprintf ppf
-              "(`%s (t_from_list (buf_to_list buf)) :> Generated_method_types.method_payload)"
+              "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
               module_name);
         fmt_function ppf "let build_method = function" (fun ppf ->
             Format.fprintf ppf
-              "| `%s payload -> string_of_list (t_to_list payload)@,| _ -> assert false"
+              "@,| `%s payload -> string_of_list (t_to_list payload)@,| _ -> assert false"
               module_name);
         fmt_function ppf "let list_of_t = function" (fun ppf ->
             Format.fprintf ppf
-              "| `%s payload -> t_to_list payload@,| _ -> assert false"
+              "@,| `%s payload -> t_to_list payload@,| _ -> assert false"
               module_name);
       )
 
@@ -236,14 +241,32 @@ end
 module Method_builder_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
-    Format.fprintf ppf "| (%d, %d) -> (Stubs.build_payload (module %s))@,"
+    Format.fprintf ppf "@,| (%d, %d) -> %s.parse_method"
       cls.Class.index meth.Method.index (String.capitalize (make_method_name cls meth))
 
   let fmt_builder_list ppf spec =
     fmt_function ppf "let build_method_instance = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
-        Format.fprintf ppf "| (class_id, method_id) ->@,%s@."
+        Format.fprintf ppf "@,| (class_id, method_id) ->@,%s@."
           "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
+    Format.flush_str_formatter ()
+end
+
+
+module Method_rebuilder_list = struct
+
+  let fmt_builder ppf (spec, cls, meth) =
+    Format.fprintf ppf "@,| `%s _ -> (module %s : Generated_method_types.Method)"
+      (String.capitalize (make_method_name cls meth))
+      (String.capitalize (make_method_name cls meth))
+
+  let fmt_builder_list ppf spec =
+    fmt_function ppf "let rebuild_method_instance = function" (fun ppf ->
+        iter_methods spec (fmt_builder ppf);
+        Format.fprintf ppf "@.")
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
@@ -269,6 +292,26 @@ module Method_type_list = struct
 end
 
 
+module Method_module_type = struct
+
+  let fmt_method_type ppf () =
+    let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
+    let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
+    fmt_module_type ppf "Method" (fun ppf ->
+        Format.fprintf ppf "@,type t";
+        fmt_line_str ppf "val parse_method : Parse_utils.Parse_buf.t -> method_payload";
+        fmt_line_str ppf "val build_method : method_payload -> string";
+        fmt_line_str ppf "(* temporary? *)";
+        fmt_line_str ppf "val buf_to_list : Parse_utils.Parse_buf.t -> (string * Protocol.Amqp_field.t) list";
+        fmt_line_str ppf "val string_of_list : (string * Protocol.Amqp_field.t) list -> string";
+        fmt_line_str ppf "val list_of_t : method_payload -> (string * Protocol.Amqp_field.t) list")
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_method_type ();
+    Format.flush_str_formatter ()
+end
+
+
 module Frame_constants = struct
 
   let fmt_frame_end ppf spec =
@@ -277,10 +320,10 @@ module Frame_constants = struct
   let fmt_frame_type ppf () =
     (* Not a function, but it looks like one. *)
     fmt_function ppf "type frame_type =" (fun ppf ->
-        Format.fprintf ppf "| Method@,";
-        Format.fprintf ppf "| Header@,";
-        Format.fprintf ppf "| Body@,";
-        Format.fprintf ppf "| Heartbeat")
+        Format.fprintf ppf "@,| Method";
+        Format.fprintf ppf "@,| Header";
+        Format.fprintf ppf "@,| Body";
+        Format.fprintf ppf "@,| Heartbeat")
 
   let fmt_byte_to_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
@@ -313,8 +356,14 @@ let build_method_wrappers spec =
 let build_method_builders spec =
   Method_builder_list.build spec
 
+let build_method_rebuilders spec =
+  Method_rebuilder_list.build spec
+
 let build_method_types spec =
   Method_type_list.build spec
+
+let build_method_module_type spec =
+  Method_module_type.build spec
 
 let build_frame_constants spec =
   Frame_constants.build spec

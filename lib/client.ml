@@ -22,26 +22,20 @@ let gethostbyname name =
 
 (* Client stuff *)
 type connection_t = {
-  sock: Lwt_unix.file_descr;
+  inch : Lwt_io.input_channel;
+  ouch : Lwt_io.output_channel;
 }
 
-let rec really_write ~connection ~data ~offset ~length =
-  if length = 0 then return () else
-    Lwt_unix.write connection.sock data offset length
-    >>= (fun chars_written ->
-        really_write ~connection ~data
-          ~offset:(offset + chars_written)
-          ~length:(length - chars_written))
-
 let write_data connection data =
-  Lwt_io.printlf ">>> %S" data >>
-  really_write ~connection ~data ~offset:0 ~length:(String.length data)
+  Printf.printf ">>> %S\n%!" data;
+  Lwt_io.write connection.ouch data
 
 let connect ~addr ?(port=5672) () =
-  open_socket addr port >>= (fun sock ->
-      let connection = {sock = sock} in
+  Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
+  >>= (fun (inch, ouch) ->
+      let connection = { inch; ouch } in
       write_data connection "AMQP\x00\x00\x09\x01"
-      >>= (fun () -> return connection))
+      >> return connection)
 
 let connect_by_name ~server ?port () =
   gethostbyname server
@@ -92,11 +86,6 @@ let choose_locale body =
   else failwith ("en_US not found in locales: " ^ String.concat " " locales)
 
 
-let send_frame connection frame =
-  let frame_str = "foo" in
-  Lwt_unix.write connection.sock frame_str 0 (String.length frame_str)
-
-
 let process_start_frame connection frame =
   (* TODO: Assert channel 0 *)
   let body = match Frame.extract_method frame.Frame.payload with
@@ -106,10 +95,10 @@ let process_start_frame connection frame =
   let mechanism = choose_auth_mechanism body in
   let response = "\000guest\000guest" in
   let locale = choose_locale body in
-  Lwt_io.printlf "<<< START %s" (Frame.frame_to_string frame)
-  >> Lwt_io.printlf "Auth mechanism: %S" mechanism
-  >> Lwt_io.printlf "Locales: %S" locale
-  >> begin
+  Printf.printf "<<< START %s\n%!" (Frame.frame_to_string frame);
+  Printf.printf "Auth mechanism: %S\n%!" mechanism;
+  Printf.printf "Locales: %S\n%!" locale;
+  begin
     let frame_ok_str = Frame.emit_method_frame 0 (`Connection_start_ok {
         Connection_start_ok.client_properties = [
           "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
@@ -129,8 +118,8 @@ let process_start_frame connection frame =
 
 
 let vomit_frame frame state =
-  Lwt_io.printlf "<<< %s" (Frame.frame_to_string frame)
-  >> return state
+  Printf.printf "<<< %s\n%!" (Frame.frame_to_string frame);
+  return state
 
 
 let process_frame connection callback frame = function
@@ -154,17 +143,14 @@ let rec process_frames connection callback str state =
 
 
 let listen connection callback =
-  let read_length = 1024 in
-  let read_data = String.create read_length in
   let rec listen' ~state ~buffer =
     (* Read some data into our string. *)
-    Lwt_unix.read connection.sock read_data 0 read_length
-    >>= (fun chars_read ->
-        Lwt_io.printlf "Read bytes: %d" chars_read >>
-        if chars_read = 0 (* EOF from server - we have quit or been kicked. *)
+    Lwt_io.read ~count:1024 connection.inch
+    >>= (fun input ->
+        Lwt_io.printlf "Read bytes: %d" (String.length input) >>
+        if String.length input = 0 (* EOF from server - we have quit or been kicked. *)
         then return Disconnected
         else begin
-          let input = String.sub read_data 0 chars_read in
           Buffer.add_string buffer input;
           process_frames connection callback (Buffer.contents buffer) state
           >>= (fun (remaining_data, state) ->

@@ -46,6 +46,14 @@ let make_field_name field =
   | "type" -> "type_"
   | name -> name
 
+let rec get_constant_value name = function
+  | [] -> failwith ("Undefined constant: " ^ name)
+  | const :: constants ->
+    if const.Constant.name = name
+    then const.Constant.value
+    else get_constant_value name constants
+
+
 module Method_module = struct
 
   (* stuff for building method modules *)
@@ -237,7 +245,6 @@ module Method_builder_list = struct
         Format.fprintf ppf "| (class_id, method_id) ->@,%s@."
           "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
 
-
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
     Format.flush_str_formatter ()
@@ -262,6 +269,41 @@ module Method_type_list = struct
 end
 
 
+module Frame_constants = struct
+
+  let fmt_frame_end ppf spec =
+    Format.fprintf ppf "let frame_end = %d" (get_constant_value "frame-end" spec.Spec.constants)
+
+  let fmt_frame_type ppf () =
+    (* Not a function, but it looks like one. *)
+    fmt_function ppf "type frame_type =" (fun ppf ->
+        Format.fprintf ppf "| Method@,";
+        Format.fprintf ppf "| Header@,";
+        Format.fprintf ppf "| Body@,";
+        Format.fprintf ppf "| Heartbeat")
+
+  let fmt_byte_to_frame_type ppf spec =
+    let get_constant name = get_constant_value name spec.Spec.constants in
+    fmt_function ppf "let byte_to_frame_type = function" (fun ppf ->
+        Format.fprintf ppf "| %d -> Method@," (get_constant "frame-method");
+        Format.fprintf ppf "| %d -> Header@," (get_constant "frame-header");
+        Format.fprintf ppf "| %d -> Body@," (get_constant "frame-body");
+        Format.fprintf ppf "| %d -> Heartbeat@," (get_constant "frame-heartbeat");
+        Format.fprintf ppf "| i -> failwith (Printf.sprintf %S i)" "Unexpected frame type: %d")
+
+  let fmt_frame_constants ppf spec =
+    Format.fprintf ppf "@[<v>";
+    Format.fprintf ppf "%a@,@," fmt_frame_end spec;
+    Format.fprintf ppf "%a@,@," fmt_frame_type ();
+    Format.fprintf ppf "%a@," fmt_byte_to_frame_type spec;
+    Format.fprintf ppf "@]"
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_frame_constants spec;
+    Format.flush_str_formatter ()
+end
+
+
 let build_methods spec =
   map_methods spec Method_module.build
 
@@ -273,3 +315,6 @@ let build_method_builders spec =
 
 let build_method_types spec =
   Method_type_list.build spec
+
+let build_frame_constants spec =
+  Frame_constants.build spec

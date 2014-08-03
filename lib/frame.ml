@@ -1,10 +1,5 @@
+open Generated_frame_constants
 
-
-type frame_type =
-  | Method
-  | Header
-  | Body
-  | Heartbeat
 
 type method_payload = {
   class_id : int;
@@ -75,29 +70,34 @@ let amqp_field_to_string (name, field) =
   | Longstring value  -> Printf.sprintf "<Longstring %s %S>" name value
   | Timestamp value   -> Printf.sprintf "<Timestamp %s %d>" name value
   | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
-  | Unparsed value    -> Printf.sprintf "<Unparsed %s %S>" name value (* TODO: Kill this when we parse all payloads. *)
 
 let method_args_to_string args =
   "[" ^ (String.concat "; " (List.map amqp_field_to_string args)) ^ "]"
 
 let frame_payload_to_string = function
   | Method_p payload -> Printf.sprintf "<class=%d method=%d %s>"
-                          payload.class_id payload.method_id (method_args_to_string payload.arguments)
+                          payload.class_id payload.method_id
+                          (method_args_to_string payload.arguments)
   | Header_p payload -> Printf.sprintf "%S" payload
   | Body_p payload -> Printf.sprintf "%S" payload
   | Heartbeat_p payload -> Printf.sprintf "%S" payload
 
 let frame_to_string frame =
   Printf.sprintf "<Frame %s channel=%d size=%d payload=%s>"
-    (frame_type_to_string frame.frame_type) frame.channel frame.size (frame_payload_to_string frame.payload)
+    (frame_type_to_string frame.frame_type) frame.channel frame.size
+    (frame_payload_to_string frame.payload)
 
 
 let parse_method_args buf class_id method_id =
   try
-    let (module P: Stubs.Method_instance) = Generated_methods.build_method_instance (class_id, method_id) buf in
+    let (module P: Stubs.Method_instance) =
+      Generated_methods.build_method_instance (class_id, method_id) buf
+    in
     P.Method.list_of_t P.this
   with
-  | Not_found -> Methods.parse_unknown_payload buf
+  | Not_found -> failwith (
+      Printf.sprintf "Unknown method (%d, %d) with payload: %S"
+        class_id method_id (Parse_utils.consume_str buf (Parse_utils.Parse_buf.length buf)))
 
 let parse_method_payload buf =
   let class_id = consume_short buf in
@@ -116,15 +116,8 @@ let consume_payload buf method_type =
   | Heartbeat -> Heartbeat_p (consume_str buf (Parse_buf.length buf))
 
 
-let byte_to_frame_type = function
-  | 1 -> Method
-  | 2 -> Header
-  | 3 -> Body
-  | 4 -> Heartbeat
-  | _ -> assert false
-
 let consume_frame_type buf =
-  byte_to_frame_type (consume_byte buf)
+  Generated_frame_constants.byte_to_frame_type (consume_byte buf)
 
 
 let consume_frame str =
@@ -141,5 +134,5 @@ let consume_frame str =
       let payload_buf = consume_buf buf size in
       let payload = consume_payload payload_buf frame_type in
       let frame_end = consume_byte buf in
-      assert (frame_end = 0xCE);
+      assert (frame_end = Generated_frame_constants.frame_end);
       Some { frame_type; channel; size; payload }, Parse_buf.to_string buf

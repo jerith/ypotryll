@@ -88,7 +88,6 @@ module Amqp_field = struct
     | Longstring of string
     | Timestamp of int
     | Table of Amqp_table.table
-    | Unparsed of string (* TODO: Kill this when we parse all payloads. *)
 
   (* amqp_field parsers *)
 

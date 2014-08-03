@@ -32,11 +32,16 @@ let write_generated_types_file spec =
   let filename = gen_ml_filename "generated_method_types" in
   write_to_file filename (Module_builder.build_method_types spec)
 
+let write_generated_frame_constants_file spec =
+  let filename = gen_ml_filename "generated_frame_constants" in
+  write_to_file filename (Module_builder.build_frame_constants spec)
+
 let write_all_files channel =
   let spec = Spec_parser.parse_spec_from_channel channel in
   List.iter write_module_file (Module_builder.build_methods spec);
   write_stubs_file ();
   write_generated_methods_file spec;
-  write_generated_types_file spec
+  write_generated_types_file spec;
+  write_generated_frame_constants_file spec
 
 let () = write_all_files stdin

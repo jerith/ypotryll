@@ -2,14 +2,8 @@ open Generated_frame_constants
 open Generated_method_types
 
 
-type method_body = {
-  class_id : int;
-  method_id : int;
-  fields : method_payload;
-}
-
 type frame_payload =
-  | Method_p of method_body
+  | Method_p of method_payload
   | Header_p of string
   | Body_p of string
   | Heartbeat_p of string
@@ -75,12 +69,11 @@ let amqp_field_to_string (name, field) =
 let method_args_to_string payload =
   let (module P : Method) = Generated_methods.rebuild_method_instance payload in
   let args = P.list_of_t payload in
-  "[" ^ (String.concat "; " (List.map amqp_field_to_string args)) ^ "]"
+  let args_str = String.concat "; " (List.map amqp_field_to_string args) in
+  Printf.sprintf "<Method (%d, %d) [%s]>" P.class_id P.method_id args_str
 
 let frame_payload_to_string = function
-  | Method_p payload -> Printf.sprintf "<class=%d method=%d %s>"
-                          payload.class_id payload.method_id
-                          (method_args_to_string payload.fields)
+  | Method_p payload -> method_args_to_string payload
   | Header_p payload -> Printf.sprintf "%S" payload
   | Body_p payload -> Printf.sprintf "%S" payload
   | Heartbeat_p payload -> Printf.sprintf "%S" payload
@@ -102,11 +95,11 @@ let parse_method_args buf class_id method_id =
 let parse_method_payload buf =
   let class_id = consume_short buf in
   let method_id = consume_short buf in
-  let fields = parse_method_args buf class_id method_id in
+  let payload = parse_method_args buf class_id method_id in
   let unconsumed = Parse_buf.length buf in
   if unconsumed > 0
-  then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed);
-  { class_id; method_id; fields }
+  then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed)
+  else payload
 
 let consume_payload buf method_type =
   match method_type with
@@ -139,7 +132,7 @@ let consume_frame str =
 
 
 let extract_method = function
-  | Method_p { fields; _ } -> fields
+  | Method_p payload -> payload
   | Header_p _ -> failwith "Expected method frame, got header frame."
   | Body_p _ -> failwith "Expected method frame, got body frame."
   | Heartbeat_p _ -> failwith "Expected method frame, got heartbeat frame."

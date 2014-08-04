@@ -28,8 +28,8 @@ let write_generated_methods_file spec =
 let write_generated_types_file spec =
   let filename = gen_ml_filename "generated_method_types" in
   let method_types = Module_builder.build_method_types spec in
-  let stubs = Module_builder.build_method_module_type () in
-  write_to_file filename (method_types ^ "\n\n" ^ stubs)
+  let method_module_type = Module_builder.build_method_module_type () in
+  write_to_file filename (method_types ^ "\n\n" ^ method_module_type ^ "\n")
 
 let write_generated_frame_constants_file spec =
   let filename = gen_ml_filename "generated_frame_constants" in

@@ -9,14 +9,6 @@ open Generated_methods
 (*   buf *)
 
 
-let make_frame class_id method_id fields =
-  Frame.Method_p {
-    Frame.class_id;
-    Frame.method_id;
-    Frame.fields;
-  }
-
-
 let tests =
   "test_frame" >::: [
 
@@ -40,7 +32,7 @@ let tests =
         assert_equal ~printer:(Printf.sprintf "%S") "" str_left;
         match frame_opt with
         | None -> assert_failure "Expected Some frame_opt, got None."
-        | Some frame_opt -> assert_equal (make_frame 10 11 fields) frame_opt.Frame.payload
+        | Some frame_opt -> assert_equal (Frame.Method_p fields) frame_opt.Frame.payload
       );
 
     (* TODO: More tests. *)

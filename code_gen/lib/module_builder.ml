@@ -300,6 +300,8 @@ module Method_module_type = struct
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     fmt_module_type ppf "Method" (fun ppf ->
         Format.fprintf ppf "@,type t";
+        fmt_line_str ppf "val class_id : int";
+        fmt_line_str ppf "val method_id : int";
         fmt_line_str ppf "val parse_method : Parse_utils.Parse_buf.t -> method_payload";
         fmt_line_str ppf "val build_method : method_payload -> string";
         fmt_line_str ppf "(* temporary? *)";

@@ -60,6 +60,10 @@ type method_payload = [
 module type Method = sig
   type t
 
+  val class_id : int
+
+  val method_id : int
+
   val parse_method : Parse_utils.Parse_buf.t -> method_payload
 
   val build_method : method_payload -> string

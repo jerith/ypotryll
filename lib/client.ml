@@ -4,6 +4,15 @@ open Lwt
 open Generated_methods
 
 
+let client_properties = [
+  "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
+  "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
+  "platform", Protocol.Amqp_table.Long_string "OCaml";
+  "product", Protocol.Amqp_table.Long_string "ypotryll";
+  "version", Protocol.Amqp_table.Long_string "0.0.1";
+]
+
+
 let open_socket addr port =
   let sock = Lwt_unix.socket Lwt_unix.PF_INET Lwt_unix.SOCK_STREAM 0 in
   let sockaddr = Lwt_unix.ADDR_INET (addr, port) in
@@ -115,14 +124,8 @@ let process_connection_start connection frame =
   Printf.printf "<<< START %s\n%!" (Frame.frame_to_string frame);
   Printf.printf "Auth mechanism: %S\n%!" mechanism;
   Printf.printf "Locales: %S\n%!" locale;
-  let frame_ok_str = Frame.emit_method_frame 0 (`Connection_start_ok {
-      Connection_start_ok.client_properties = [
-        "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
-        "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
-        "platform", Protocol.Amqp_table.Long_string "OCaml";
-        "product", Protocol.Amqp_table.Long_string "ypotryll";
-        "version", Protocol.Amqp_table.Long_string "0.0.1";
-      ];
+  let frame_ok_str = Frame.build_method_frame 0 (`Connection_start_ok {
+      Connection_start_ok.client_properties = client_properties;
       Connection_start_ok.mechanism;
       Connection_start_ok.response;
       Connection_start_ok.locale;
@@ -158,7 +161,7 @@ let process_connection_tune connection frame =
   let heartbeat = choose_heartbeat body in
   Printf.printf "<<< TUNE %s\n%!" (Frame.frame_to_string frame);
   (* Send connection.tune-ok *)
-  let frame_ok_str = Frame.emit_method_frame 0 (`Connection_tune_ok {
+  let frame_ok_str = Frame.build_method_frame 0 (`Connection_tune_ok {
       Connection_tune_ok.channel_max;
       Connection_tune_ok.frame_max;
       Connection_tune_ok.heartbeat;
@@ -167,7 +170,7 @@ let process_connection_tune connection frame =
   write_data connection frame_ok_str
   (* Send connection.open *)
   >> let virtual_host = "/" in
-  let frame_open = Frame.emit_method_frame 0 (`Connection_open {
+  let frame_open = Frame.build_method_frame 0 (`Connection_open {
       Connection_open.virtual_host;
       Connection_open.reserved_1 = "";
       Connection_open.reserved_2 = false;
@@ -175,6 +178,16 @@ let process_connection_tune connection frame =
   in
   write_data connection frame_open
   >> return Connection_open
+
+
+let process_connection_open connection frame =
+  (* TODO: Assert channel 0 *)
+  let _ = match Frame.extract_method frame.Frame.payload with
+    | `Connection_open_ok body -> body
+    | _ -> failwith ("Expected Connection_open_ok, got: " ^ Frame.frame_to_string frame)
+  in
+  Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
+  return Connected
 
 
 let vomit_frame frame state =
@@ -186,7 +199,7 @@ let process_frame connection callback frame = function
   | Connection_start -> process_connection_start connection frame
   | Connection_secure -> failwith "Unexpected Connection_secure state."
   | Connection_tune -> process_connection_tune connection frame
-  | Connection_open -> vomit_frame frame Connected
+  | Connection_open -> process_connection_open connection frame
   | Connected -> callback frame >> return Connected
   | Disconnected -> failwith "Disconnected."
 

@@ -44,6 +44,45 @@ module Parse_buf = struct
 end
 
 
+module Build_buf = struct
+  (* Pretty much the same as Parse_buf, but for building. *)
+
+  type t = {
+    mutable str : string;
+    mutable bits : int;
+  }
+
+  let from_string str =
+    { str; bits = 0 }
+
+  let to_string buf =
+    buf.str
+
+  let length buf =
+    String.length buf.str
+
+  let clear_bits buf =
+    buf.bits <- 0
+
+  let add_str buf str =
+    clear_bits buf;
+    buf.str <- buf.str ^ str
+
+  let add_char buf char =
+    add_str buf (String.make 1 char)
+
+  let add_bit buf bit =
+    if buf.bits > 7 then clear_bits buf;
+    if buf.bits = 0 then add_char buf '\000';
+    if bit then begin
+      let pos = length buf - 1 in
+      let value = (1 lsl buf.bits) lor int_of_char buf.str.[pos] in
+      buf.str.[pos] <- char_of_int value
+    end;
+    buf.bits <- buf.bits + 1
+
+end
+
 
 let consume_char = Parse_buf.consume_char
 
@@ -101,36 +140,49 @@ let consume_long_str buf =
   consume_str buf size
 
 
-let emit_octet value =
-  Printf.sprintf "%c" (char_of_int value)
+let add_char = Build_buf.add_char
 
-let emit_short value =
-  (emit_octet (value lsr 8)) ^ (emit_octet (value land 0xFF))
+let add_str = Build_buf.add_str
 
-let emit_long value =
-  (emit_short (value lsr 16)) ^ (emit_short (value land 0xFFFF))
+let add_bit = Build_buf.add_bit
 
-let emit_long_long value =
-  (emit_long (value lsr 32)) ^ (emit_long (value land 0xFFFFFFFF))
+let add_octet buf value =
+  Build_buf.add_char buf (char_of_int value)
 
-let emit_int32 value =
+let add_short buf value =
+  add_octet buf (value lsr 8);
+  add_octet buf (value land 0xff)
+
+let add_long buf value =
+  add_short buf (value lsr 16);
+  add_short buf (value land 0xffff)
+
+let add_long_long buf value =
+  add_long buf (value lsr 32);
+  add_long buf (value land 0xffffffff)
+
+let add_int32 buf value =
   let high = Int32.(to_int (shift_right value 16)) in
   let low = Int32.(to_int (logand value (of_int 0xFFFF))) in
-  (emit_short high) ^ (emit_short low)
+  add_short buf high;
+  add_short buf low
 
-let emit_int64 value =
+let add_int64 buf value =
   let high = Int64.(to_int32 (shift_right value 32)) in
   let low = Int64.(to_int32 (logand value (of_int 0xFFFFFFFF))) in
-  (emit_int32 high) ^ (emit_int32 low)
+  add_int32 buf high;
+  add_int32 buf low
 
-let emit_float value =
-  emit_int32 (Int32.bits_of_float value)
+let add_float buf value =
+  add_int32 buf (Int32.bits_of_float value)
 
-let emit_double value =
-  emit_int64 (Int64.bits_of_float value)
+let add_double buf value =
+  add_int64 buf (Int64.bits_of_float value)
 
-let emit_short_str value =
-  (emit_octet (String.length value)) ^ value
+let add_short_str buf value =
+  add_octet buf (String.length value);
+  Build_buf.add_str buf value
 
-let emit_long_str value =
-  (emit_long (String.length value)) ^ value
+let add_long_str buf value =
+  add_long buf (String.length value);
+  Build_buf.add_str buf value

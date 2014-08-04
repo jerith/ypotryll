@@ -138,20 +138,12 @@ let extract_method = function
   | Heartbeat_p _ -> failwith "Expected method frame, got heartbeat frame."
 
 
-let make_method_frame channel method_payload =
-  {
-    frame_type = Method;
-    channel;
-    size = 0;
-    payload = Method_p method_payload;
-  }
-
-let emit_method_frame channel method_payload =
+let build_method_frame channel method_payload =
   let (module P : Method) = Generated_methods.rebuild_method_instance method_payload in
   let args = P.build_method method_payload in
-  Printf.sprintf "%s%s%s%s%s"
-  (emit_frame_type Method)
-  (emit_short channel)
-  (emit_long (String.length args))
-  args
-  (emit_octet (frame_end))
+  let buf = Build_buf.from_string "" in
+  add_str buf (emit_frame_type Method);
+  add_short buf channel;
+  add_long_str buf args;
+  add_octet buf frame_end;
+  Build_buf.to_string buf

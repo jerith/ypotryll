@@ -1,4 +1,6 @@
 
+module PU = Parse_utils
+
 module Field_type = struct
   type t =
     | Octet
@@ -36,24 +38,24 @@ module Amqp_table = struct
   and table = (string * field) list
 
   let rec consume_table_entry buf =
-    let name = Parse_utils.consume_short_str buf in
-    let table_field = match Parse_utils.consume_char buf with
-      | 't' -> Boolean (Parse_utils.consume_byte buf = 0)
-      | 'b' -> Shortshort_int (Parse_utils.consume_byte buf)
-      | 'B' -> Shortshort_uint (Parse_utils.consume_byte buf)
-      | 'U' -> Short_int (Parse_utils.consume_short buf)
-      | 'u' -> Short_uint (Parse_utils.consume_short buf)
-      | 'I' -> Long_int (Parse_utils.consume_long buf)
-      | 'i' -> Long_uint (Parse_utils.consume_long buf)
-      | 'L' -> Longlong_int (Parse_utils.consume_long_long buf)
-      | 'l' -> Longlong_uint (Parse_utils.consume_long_long buf)
-      | 'f' -> Float (Parse_utils.consume_float buf)
-      | 'd' -> Double (Parse_utils.consume_double buf)
+    let name = PU.consume_short_str buf in
+    let table_field = match PU.consume_char buf with
+      | 't' -> Boolean (PU.consume_byte buf = 0)
+      | 'b' -> Shortshort_int (PU.consume_byte buf)
+      | 'B' -> Shortshort_uint (PU.consume_byte buf)
+      | 'U' -> Short_int (PU.consume_short buf)
+      | 'u' -> Short_uint (PU.consume_short buf)
+      | 'I' -> Long_int (PU.consume_long buf)
+      | 'i' -> Long_uint (PU.consume_long buf)
+      | 'L' -> Longlong_int (PU.consume_long_long buf)
+      | 'l' -> Longlong_uint (PU.consume_long_long buf)
+      | 'f' -> Float (PU.consume_float buf)
+      | 'd' -> Double (PU.consume_double buf)
       (* | 'D' -> Decimal (???) *)
-      | 's' -> Short_string (Parse_utils.consume_short_str buf)
-      | 'S' -> Long_string (Parse_utils.consume_long_str buf)
+      | 's' -> Short_string (PU.consume_short_str buf)
+      | 'S' -> Long_string (PU.consume_long_str buf)
       (* | 'A' -> Field_array (???) *)
-      | 'T' -> Timestamp (Parse_utils.consume_long_long buf)
+      | 'T' -> Timestamp (PU.consume_long_long buf)
       | 'F' -> Field_table (consume_table buf)
       | 'V' -> No_value
       | field_type -> failwith (Printf.sprintf "Unknown field type %C" field_type)
@@ -61,47 +63,47 @@ module Amqp_table = struct
     name, table_field
 
   and consume_table_entries buf =
-    if Parse_utils.Parse_buf.length buf = 0
+    if PU.Parse_buf.length buf = 0
     then []
     else let table_entry = consume_table_entry buf in
       table_entry :: consume_table_entries buf
 
   and consume_table buf =
-    let size = Parse_utils.consume_long buf in
-    let table_buf = Parse_utils.consume_buf buf size in
+    let size = PU.consume_long buf in
+    let table_buf = PU.consume_buf buf size in
     let table = consume_table_entries table_buf in
-    assert (Parse_utils.Parse_buf.length table_buf = 0);
+    assert (PU.Parse_buf.length table_buf = 0);
     table
 
-  let rec emit_table_entry (name, value) =
-    let field_type, field_value = match value with
-      | Boolean value -> 't', if value then "\000" else "\001"
-      | Shortshort_int value -> 'b', Parse_utils.emit_octet value
-      | Shortshort_uint value -> 'B', Parse_utils.emit_octet value
-      | Short_int value -> 'U', Parse_utils.emit_short value
-      | Short_uint value -> 'u', Parse_utils.emit_short value
-      | Long_int value -> 'I', Parse_utils.emit_long value
-      | Long_uint value -> 'i', Parse_utils.emit_long value
-      | Longlong_int value -> 'L', Parse_utils.emit_long_long value
-      | Longlong_uint value -> 'l', Parse_utils.emit_long_long value
-      | Float value -> 'f', Parse_utils.emit_float value
-      | Double value -> 'd', Parse_utils.emit_double value
-      (* | Decimal value -> 'D', ??? *)
-      | Short_string value -> 's', Parse_utils.emit_short_str value
-      | Long_string value -> 'S', Parse_utils.emit_long_str value
-      (* | Field_array value -> 'A', ??? *)
-      | Timestamp value -> 'T', Parse_utils.emit_long_long value
-      | Field_table value -> 'F', emit_table value
-      | No_value -> 'V', ""
-    in
-    Printf.sprintf "%s%c%s" (Parse_utils.emit_short_str name) field_type field_value
+  let rec add_table_entry buf (name, value) =
+    PU.add_short_str buf name;
+    match value with
+    | Boolean value -> PU.add_char buf 't'; PU.add_octet buf (if value then 1 else 0)
+    | Shortshort_int value -> PU.add_char buf 'b'; PU.add_octet buf value
+    | Shortshort_uint value -> PU.add_char buf 'B'; PU.add_octet buf value
+    | Short_int value -> PU.add_char buf 'U'; PU.add_short buf value
+    | Short_uint value -> PU.add_char buf 'u'; PU.add_short buf value
+    | Long_int value -> PU.add_char buf 'I'; PU.add_long buf value
+    | Long_uint value -> PU.add_char buf 'i'; PU.add_long buf value
+    | Longlong_int value -> PU.add_char buf 'L'; PU.add_long_long buf value
+    | Longlong_uint value -> PU.add_char buf 'l'; PU.add_long_long buf value
+    | Float value -> PU.add_char buf 'f'; PU.add_float buf value
+    | Double value -> PU.add_char buf 'd'; PU.add_double buf value
+    (* | Decimal value -> PU.add_char buf 'D'; ??? *)
+    | Short_string value -> PU.add_char buf 's'; PU.add_short_str buf value
+    | Long_string value -> PU.add_char buf 'S'; PU.add_long_str buf value
+    (* | Field_array value -> PU.add_char buf 'A'; ??? *)
+    | Timestamp value -> PU.add_char buf 'T'; PU.add_long_long buf value
+    | Field_table value -> PU.add_char buf 'F'; add_table buf value
+    | No_value -> PU.add_char buf 'V'
 
-  and emit_table_entries value =
-    String.concat "" (List.map emit_table_entry value)
+  and add_table_entries buf value =
+    List.iter (add_table_entry buf) value
 
-  and emit_table value =
-    let table_entries = emit_table_entries value in
-    (Parse_utils.emit_long (String.length table_entries)) ^ table_entries
+  and add_table buf value =
+    let table_buf = PU.Build_buf.from_string "" in
+    add_table_entries table_buf value;
+    PU.add_long_str buf (PU.Build_buf.to_string table_buf)
 
 end
 
@@ -122,27 +124,26 @@ module Amqp_field = struct
   (* amqp_field parsers *)
 
   let consume_field buf = function
-    | Field_type.Octet       -> Octet (Parse_utils.consume_byte buf)
-    | Field_type.Short       -> Short (Parse_utils.consume_short buf)
-    | Field_type.Long        -> Long (Parse_utils.consume_long buf)
-    | Field_type.Longlong    -> Longlong (Parse_utils.consume_long_long buf)
-    | Field_type.Bit         -> failwith "I don't know how to parse Bit fields yet, sorry."
-    | Field_type.Shortstring -> Shortstring (Parse_utils.consume_short_str buf)
-    | Field_type.Longstring  -> Longstring (Parse_utils.consume_long_str buf)
-    | Field_type.Timestamp   -> Timestamp (Parse_utils.consume_long_long buf)
+    | Field_type.Octet       -> Octet (PU.consume_byte buf)
+    | Field_type.Short       -> Short (PU.consume_short buf)
+    | Field_type.Long        -> Long (PU.consume_long buf)
+    | Field_type.Longlong    -> Longlong (PU.consume_long_long buf)
+    | Field_type.Bit         -> Bit (PU.consume_bit buf)
+    | Field_type.Shortstring -> Shortstring (PU.consume_short_str buf)
+    | Field_type.Longstring  -> Longstring (PU.consume_long_str buf)
+    | Field_type.Timestamp   -> Timestamp (PU.consume_long_long buf)
     | Field_type.Table       -> Table (Amqp_table.consume_table buf)
 
-  let emit_field = function
-    | (_ : string), Octet value -> Parse_utils.emit_octet value
-    | (_ : string), Short value -> Parse_utils.emit_short value
-    | (_ : string), Long value -> Parse_utils.emit_long value
-    | (_ : string), Longlong value -> Parse_utils.emit_long_long value
-    (* | (_ : string), Bit value -> failwith "I don't know how to emit Bit fields yet, sorry." *)
-    | (_ : string), Bit value -> "0" (* TEMPORARY! *)
-    | (_ : string), Shortstring value -> Parse_utils.emit_short_str value
-    | (_ : string), Longstring value -> Parse_utils.emit_long_str value
-    | (_ : string), Timestamp value -> Parse_utils.emit_long_long value
-    | (_ : string), Table value -> Amqp_table.emit_table value
+  let add_field buf = function
+    | (_ : string), Octet value -> PU.add_octet buf value
+    | (_ : string), Short value -> PU.add_short buf value
+    | (_ : string), Long value -> PU.add_long buf value
+    | (_ : string), Longlong value -> PU.add_long_long buf value
+    | (_ : string), Bit value -> PU.add_bit buf value
+    | (_ : string), Shortstring value -> PU.add_short_str buf value
+    | (_ : string), Longstring value -> PU.add_long_str buf value
+    | (_ : string), Timestamp value -> PU.add_long_long buf value
+    | (_ : string), Table value -> Amqp_table.add_table buf value
 
 end
 
@@ -158,7 +159,9 @@ module Method_utils = struct
     List.map consume_argument arguments
 
   let string_of_list class_id method_id payload =
-    let field_strings = List.map Amqp_field.emit_field payload in
-    let payload_strings = (Parse_utils.emit_short class_id) :: (Parse_utils.emit_short method_id) :: field_strings in
-    String.concat "" payload_strings
+    let buf = PU.Build_buf.from_string "" in
+    PU.add_short buf class_id;
+    PU.add_short buf method_id;
+    List.iter (Amqp_field.add_field buf) payload;
+    PU.Build_buf.to_string buf
 end

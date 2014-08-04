@@ -3,12 +3,6 @@ open OUnit2
 open Generated_methods
 
 
-(* let buf_of_str str = *)
-(*   let buf = Buffer.create 0 in *)
-(*   Buffer.add_string buf str; *)
-(*   buf *)
-
-
 let tests =
   "test_frame" >::: [
 
@@ -27,7 +21,7 @@ let tests =
             Connection_start_ok.locale = "en_US";
           })
         in
-        let wire = Frame.emit_method_frame 0 fields in
+        let wire = Frame.build_method_frame 0 fields in
         let frame_opt, str_left = Frame.consume_frame wire in
         assert_equal ~printer:(Printf.sprintf "%S") "" str_left;
         match frame_opt with

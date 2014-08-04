@@ -1,8 +1,8 @@
 language: c  # Not really, but Travis doesn't do OCaml.
 
 env:
-  - PPA="avsm/ocaml40+opam11" OPAMYES="1"
-  - PPA="avsm/ocaml41+opam11" OPAMYES="1"
+  - PPA="avsm/ocaml40+opam11" OPAMYES="1" CONFIGUREFLAGS="--enable-tests"
+  - PPA="avsm/ocaml41+opam11" OPAMYES="1" CONFIGUREFLAGS="--enable-tests"
 
 before_install:
   - "echo 'yes' | sudo add-apt-repository ppa:$PPA"
@@ -18,10 +18,8 @@ script:
   # Code generator
   - "pushd code_gen"
   - "make"
-  - "ocaml setup.ml -configure --enable-tests"
   - "make test"
   - "popd"
   # Other stuff
   - "make"
-  - "ocaml setup.ml -configure --enable-tests"
   - "make test"

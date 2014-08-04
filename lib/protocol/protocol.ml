@@ -137,7 +137,8 @@ module Amqp_field = struct
     | (_ : string), Short value -> Parse_utils.emit_short value
     | (_ : string), Long value -> Parse_utils.emit_long value
     | (_ : string), Longlong value -> Parse_utils.emit_long_long value
-    | (_ : string), Bit value -> failwith "I don't know how to emit Bit fields yet, sorry."
+    (* | (_ : string), Bit value -> failwith "I don't know how to emit Bit fields yet, sorry." *)
+    | (_ : string), Bit value -> "0" (* TEMPORARY! *)
     | (_ : string), Shortstring value -> Parse_utils.emit_short_str value
     | (_ : string), Longstring value -> Parse_utils.emit_long_str value
     | (_ : string), Timestamp value -> Parse_utils.emit_long_long value

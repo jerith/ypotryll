@@ -35,7 +35,7 @@ Executable test_ypotryll
   Install:      false
   BuildDepends: ypotryll, oUnit
 
-Test test_ypotryll_code_gen
+Test test_ypotryll
   Run$:             flag(tests)
   Command:          $test_ypotryll
   WorkingDirectory: test

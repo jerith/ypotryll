@@ -1,27 +1,59 @@
 
 module Parse_buf = struct
-  type t = string ref
+  type t = {
+    mutable str : string;
+    mutable bits : int;
+  }
 
-  let from_string = ref
+  let from_string str =
+    { str; bits = 0 }
 
-  let to_string = (!)
-
-  let copy buf  = ref !buf
+  let to_string buf =
+    buf.str
 
   let length buf =
-    String.length !buf
+    String.length buf.str
 
   let advance buf length =
-    buf := String.sub !buf length ((String.length !buf) - length)
+    let str = String.sub buf.str length ((String.length buf.str) - length) in
+    buf.str <- str;
+    buf.bits <- 0
+
+  let clear_bits buf =
+    if buf.bits > 0
+    then advance buf 1
+
+  let consume_char buf =
+    clear_bits buf;
+    let value = buf.str.[0] in
+    advance buf 1;
+    value
+
+  let consume_str buf length =
+    clear_bits buf;
+    let value = String.sub buf.str 0 length in
+    advance buf length;
+    value
+
+  let consume_bit buf =
+    if buf.bits > 7 then clear_bits buf;
+    let value = (int_of_char buf.str.[0]) land (1 lsl buf.bits) in
+    buf.bits <- buf.bits + 1;
+    value <> 0
 
 end
 
 
 
-let consume_char buf =
-  let value = !buf.[0] in
-  Parse_buf.advance buf 1;
-  value
+let consume_char = Parse_buf.consume_char
+
+let consume_str = Parse_buf.consume_str
+
+let consume_bit = Parse_buf.consume_bit
+
+let consume_buf buf length =
+  Parse_buf.from_string (consume_str buf length)
+
 
 let consume_byte buf =
   int_of_char (consume_char buf)
@@ -42,14 +74,6 @@ let consume_long_long buf =
   let high = consume_long buf in
   let low = consume_long buf in
   (high lsl 32) + low
-
-let consume_str buf length =
-  let value = String.sub !buf 0 length in
-  Parse_buf.advance buf length;
-  value
-
-let consume_buf buf length =
-  Parse_buf.from_string (consume_str buf length)
 
 
 let consume_int32 buf =

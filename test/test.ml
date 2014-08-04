@@ -1,4 +1,10 @@
 open OUnit2
 
 
-let () = run_test_tt_main Test_frame.tests
+let tests =
+  "tests" >::: [
+    Test_parse_utils.tests;
+    Test_frame.tests;
+  ]
+
+let () = run_test_tt_main tests

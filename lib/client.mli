@@ -9,4 +9,4 @@ val connect :
 val connect_by_name :
   server:string -> ?port:int -> unit -> connection_t option Lwt.t
 
-val listen : connection_t -> (Frame.frame -> 'a Lwt.t) -> unit Lwt.t
+val listen : connection_t -> (Frame.t -> 'a Lwt.t) -> unit Lwt.t

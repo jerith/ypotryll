@@ -3,7 +3,7 @@ module FC = Generated_frame_constants
 module MTypes = Generated_method_types
 
 
-type frame =
+type t =
   | Method of (int * MTypes.method_payload)
   | Header of (int * string)
   | Body of (int * string)

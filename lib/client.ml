@@ -36,10 +36,18 @@ type connection_params = {
 }
 
 
+type channel_t = {
+  stream : Frame.t Lwt_stream.t;
+  push : Frame.t option -> unit;
+  send : Frame.t -> unit Lwt.t;
+}
+
+
 type connection_t = {
   inch : Lwt_io.input_channel;
   ouch : Lwt_io.output_channel;
   mutable params : connection_params;
+  channels : (int, channel_t) Hashtbl.t;
 }
 
 
@@ -59,7 +67,8 @@ let write_data connection data =
 let connect ~addr ?(port=5672) () =
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
   >>= (fun (inch, ouch) ->
-      let connection = { inch; ouch; params = default_params } in
+      let channels = Hashtbl.create 10 in
+      let connection = { inch; ouch; params = default_params; channels } in
       write_data connection "AMQP\x00\x00\x09\x01"
       >> return connection)
 
@@ -180,6 +189,18 @@ let process_connection_tune connection frame =
   >> return Connection_open
 
 
+let channel_send connection channel frame =
+  if Hashtbl.mem connection.channels channel
+  then write_data connection (Frame.frame_to_string frame)
+  else failwith ("Channel not found: " ^ string_of_int channel)
+
+
+let create_channel connection channel =
+  let stream, push = Lwt_stream.create () in
+  let send = channel_send connection channel in
+  Hashtbl.add connection.channels channel { stream; push; send }
+
+
 let process_connection_open connection frame =
   (* TODO: Assert channel 0 *)
   let _ = match frame with
@@ -187,6 +208,7 @@ let process_connection_open connection frame =
     | _ -> failwith ("Expected Connection_open_ok, got: " ^ Frame.frame_to_string frame)
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
+  create_channel connection 0;
   return Connected
 
 

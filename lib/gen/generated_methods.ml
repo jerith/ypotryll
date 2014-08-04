@@ -1331,7 +1331,7 @@ let build_method_instance = function
     failwith (Printf.sprintf "Unknown method: (%d, %d)" class_id method_id)
 
 
-let rebuild_method_instance = function
+let module_for = function
   | `Connection_start _ -> (module Connection_start : Generated_method_types.Method)
   | `Connection_start_ok _ -> (module Connection_start_ok : Generated_method_types.Method)
   | `Connection_secure _ -> (module Connection_secure : Generated_method_types.Method)

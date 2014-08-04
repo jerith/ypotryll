@@ -25,8 +25,8 @@ let tests =
         let frame_opt, str_left = Frame.consume_frame wire in
         assert_equal ~printer:(Printf.sprintf "%S") "" str_left;
         match frame_opt with
-        | None -> assert_failure "Expected Some frame_opt, got None."
-        | Some frame_opt -> assert_equal (Frame.Method_p fields) frame_opt.Frame.payload
+        | None -> assert_failure "Expected Some frame, got None."
+        | Some frame -> assert_equal (Frame.Method (0, fields)) frame
       );
 
     (* TODO: More tests. *)

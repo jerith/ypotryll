@@ -1,19 +1,13 @@
-open Generated_frame_constants
-open Generated_method_types
+
+module FC = Generated_frame_constants
+module MTypes = Generated_method_types
 
 
-type frame_payload =
-  | Method_p of method_payload
-  | Header_p of string
-  | Body_p of string
-  | Heartbeat_p of string
-
-type frame = {
-  frame_type : frame_type;
-  channel : int;
-  size : int;
-  payload : frame_payload;
-}
+type frame =
+  | Method of (int * MTypes.method_payload)
+  | Header of (int * string)
+  | Body of (int * string)
+  | Heartbeat of (int * string)
 
 let minimum_frame_length = 8
 
@@ -23,10 +17,10 @@ open Parse_utils
 (* String formatting *)
 
 let frame_type_to_string = function
-  | Method    -> "Method"
-  | Header    -> "Header"
-  | Body      -> "Body"
-  | Heartbeat -> "Heartbeat"
+  | FC.Method    -> "Method"
+  | FC.Header    -> "Header"
+  | FC.Body      -> "Body"
+  | FC.Heartbeat -> "Heartbeat"
 
 let rec field_table_to_string field_table =
   "{" ^ (String.concat "; " (List.map field_entry_to_string field_table)) ^ "}"
@@ -67,21 +61,20 @@ let amqp_field_to_string (name, field) =
   | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
 
 let method_args_to_string payload =
-  let (module P : Method) = Generated_methods.rebuild_method_instance payload in
+  let (module P : Generated_method_types.Method) = Generated_methods.module_for payload in
   let args = P.list_of_t payload in
   let args_str = String.concat "; " (List.map amqp_field_to_string args) in
   Printf.sprintf "<Method (%d, %d) [%s]>" P.class_id P.method_id args_str
 
-let frame_payload_to_string = function
-  | Method_p payload -> method_args_to_string payload
-  | Header_p payload -> Printf.sprintf "%S" payload
-  | Body_p payload -> Printf.sprintf "%S" payload
-  | Heartbeat_p payload -> Printf.sprintf "%S" payload
-
-let frame_to_string frame =
-  Printf.sprintf "<Frame %s channel=%d size=%d payload=%s>"
-    (frame_type_to_string frame.frame_type) frame.channel frame.size
-    (frame_payload_to_string frame.payload)
+let frame_to_string = function
+  | Method (channel, payload) ->
+    Printf.sprintf "<Method ch=%d %s>" channel (method_args_to_string payload)
+  | Header (channel, payload) ->
+    Printf.sprintf "<Header ch=%d %S>" channel payload
+  | Body (channel, payload) ->
+    Printf.sprintf "<Body ch=%d %S>" channel payload
+  | Heartbeat (channel, payload) ->
+    Printf.sprintf "<Heartbeat ch=%d %S>" channel payload
 
 
 let parse_method_args buf class_id method_id =
@@ -101,16 +94,13 @@ let parse_method_payload buf =
   then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed)
   else payload
 
-let consume_payload buf method_type =
-  match method_type with
-  | Method -> Method_p (parse_method_payload buf)
-  | Header -> Header_p (consume_str buf (Parse_buf.length buf))
-  | Body -> Body_p (consume_str buf (Parse_buf.length buf))
-  | Heartbeat -> Heartbeat_p (consume_str buf (Parse_buf.length buf))
-
 
 let consume_frame_type buf =
   Generated_frame_constants.byte_to_frame_type (consume_byte buf)
+
+
+let consume_payload_str buf =
+  consume_str buf (Parse_buf.length buf)
 
 
 let consume_frame str =
@@ -125,25 +115,29 @@ let consume_frame str =
     then (None, str)
     else
       let payload_buf = consume_buf buf size in
-      let payload = consume_payload payload_buf frame_type in
-      let frame_end = consume_byte buf in
-      assert (frame_end = Generated_frame_constants.frame_end);
-      Some { frame_type; channel; size; payload }, Parse_buf.to_string buf
+      let frame = match frame_type with
+        | FC.Method -> Method (channel, parse_method_payload payload_buf)
+        | FC.Header -> Header (channel, consume_payload_str payload_buf)
+        | FC.Body -> Body (channel, consume_payload_str payload_buf)
+        | FC.Heartbeat -> Heartbeat (channel, consume_payload_str payload_buf)
+      in
+      assert (consume_byte buf = FC.frame_end);
+      (Some frame, Parse_buf.to_string buf)
 
 
-let extract_method = function
-  | Method_p payload -> payload
-  | Header_p _ -> failwith "Expected method frame, got header frame."
-  | Body_p _ -> failwith "Expected method frame, got body frame."
-  | Heartbeat_p _ -> failwith "Expected method frame, got heartbeat frame."
+(* let extract_method = function *)
+(*   | Method_p payload -> payload *)
+(*   | Header_p _ -> failwith "Expected method frame, got header frame." *)
+(*   | Body_p _ -> failwith "Expected method frame, got body frame." *)
+(*   | Heartbeat_p _ -> failwith "Expected method frame, got heartbeat frame." *)
 
 
 let build_method_frame channel method_payload =
-  let (module P : Method) = Generated_methods.rebuild_method_instance method_payload in
+  let (module P : Generated_method_types.Method) = Generated_methods.module_for method_payload in
   let args = P.build_method method_payload in
   let buf = Build_buf.from_string "" in
-  add_str buf (emit_frame_type Method);
+  add_str buf (FC.emit_frame_type FC.Method);
   add_short buf channel;
   add_long_str buf args;
-  add_octet buf frame_end;
+  add_octet buf FC.frame_end;
   Build_buf.to_string buf

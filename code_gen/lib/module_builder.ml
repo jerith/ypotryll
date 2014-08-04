@@ -265,7 +265,7 @@ module Method_rebuilder_list = struct
       (String.capitalize (make_method_name cls meth))
 
   let fmt_builder_list ppf spec =
-    fmt_function ppf "let rebuild_method_instance = function" (fun ppf ->
+    fmt_function ppf "let module_for = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
         Format.fprintf ppf "@.")
 

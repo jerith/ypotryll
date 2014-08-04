@@ -114,8 +114,8 @@ let choose_locale body =
 
 let process_connection_start connection frame =
   (* TODO: Assert channel 0 *)
-  let body = match Frame.extract_method frame.Frame.payload with
-    | `Connection_start body -> body
+  let body = match frame with
+    | Frame.Method (channel, `Connection_start body) -> body
     | _ -> failwith ("Expected Connection_start, got: " ^ Frame.frame_to_string frame)
   in
   let mechanism = choose_auth_mechanism body in
@@ -152,8 +152,8 @@ let choose_heartbeat body =
 
 let process_connection_tune connection frame =
   (* TODO: Assert channel 0 *)
-  let body = match Frame.extract_method frame.Frame.payload with
-    | `Connection_tune body -> body
+  let body = match frame with
+    | Frame.Method (channel, `Connection_tune body) -> body
     | _ -> failwith ("Expected Connection_tune, got: " ^ Frame.frame_to_string frame)
   in
   let channel_max = choose_channel_max body in
@@ -182,8 +182,8 @@ let process_connection_tune connection frame =
 
 let process_connection_open connection frame =
   (* TODO: Assert channel 0 *)
-  let _ = match Frame.extract_method frame.Frame.payload with
-    | `Connection_open_ok body -> body
+  let _ = match frame with
+    | Frame.Method (channel, `Connection_open_ok body) -> body
     | _ -> failwith ("Expected Connection_open_ok, got: " ^ Frame.frame_to_string frame)
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);

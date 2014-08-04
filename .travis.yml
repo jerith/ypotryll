@@ -23,3 +23,5 @@ script:
   # Other stuff
   - "make"
   - "make test"
+  # Detect differences in generated code
+  - "./check-generated-code"

@@ -4,6 +4,77 @@ open Lwt
 open Generated_methods
 
 
+module Connection = struct
+
+  type connection_params = {
+    locale : string;
+    channel_max : int;
+    frame_max : int;
+    heartbeat : int;
+  }
+
+  type t = {
+    inch : Lwt_io.input_channel;
+    ouch : Lwt_io.output_channel;
+    mutable params : connection_params;
+  }
+
+  let default_params = {
+    locale = "en_US";
+    channel_max = 0;
+    frame_max = 0;
+    heartbeat = 0;
+  }
+
+  let gethostbyname name =
+    try_lwt
+      lwt entry = Lwt_unix.gethostbyname name in
+      let addrs = Array.to_list entry.Unix.h_addr_list in
+      Lwt.return addrs
+    with Not_found ->
+      Lwt.return_nil
+
+  let write_data conn data =
+    Printf.printf ">>> %S\n%!" data;
+    Lwt_io.write conn.ouch data
+
+  let connect ~addr ?(port=5672) () =
+    Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
+    >>= (fun (inch, ouch) ->
+        let conn = { inch; ouch; params = default_params } in
+        return conn)
+
+  let connect_by_name ~server ?port () =
+    gethostbyname server
+    >>= (function
+        | [] -> return None
+        | addr :: _ ->
+          connect ~addr ?port ()
+          >>= (fun conn -> return (Some conn)))
+
+end
+
+
+module Channel = struct
+
+  type t = {
+    stream : Frame.t Lwt_stream.t;
+    push : Frame.t option -> unit;
+    send : Frame.t -> unit Lwt.t;
+  }
+
+end
+
+
+type t = {
+  connection : Connection.t;
+  channels : (int, Channel.t) Hashtbl.t;
+}
+
+
+let write_data client = Connection.write_data client.connection
+
+
 let client_properties = [
   "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
   "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
@@ -11,74 +82,6 @@ let client_properties = [
   "product", Protocol.Amqp_table.Long_string "ypotryll";
   "version", Protocol.Amqp_table.Long_string "0.0.1";
 ]
-
-
-let open_socket addr port =
-  let sock = Lwt_unix.socket Lwt_unix.PF_INET Lwt_unix.SOCK_STREAM 0 in
-  let sockaddr = Lwt_unix.ADDR_INET (addr, port) in
-  lwt () = Lwt_unix.connect sock sockaddr in
-  return sock
-
-let gethostbyname name =
-  try_lwt
-    lwt entry = Lwt_unix.gethostbyname name in
-    let addrs = Array.to_list entry.Unix.h_addr_list in
-    Lwt.return addrs
-  with Not_found ->
-    Lwt.return_nil
-
-
-type connection_params = {
-  locale : string;
-  channel_max : int;
-  frame_max : int;
-  heartbeat : int;
-}
-
-
-type channel_t = {
-  stream : Frame.t Lwt_stream.t;
-  push : Frame.t option -> unit;
-  send : Frame.t -> unit Lwt.t;
-}
-
-
-type connection_t = {
-  inch : Lwt_io.input_channel;
-  ouch : Lwt_io.output_channel;
-  mutable params : connection_params;
-  channels : (int, channel_t) Hashtbl.t;
-}
-
-
-let default_params = {
-  locale = "en_US";
-  channel_max = 0;
-  frame_max = 0;
-  heartbeat = 0;
-}
-
-
-
-let write_data connection data =
-  Printf.printf ">>> %S\n%!" data;
-  Lwt_io.write connection.ouch data
-
-let connect ~addr ?(port=5672) () =
-  Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
-  >>= (fun (inch, ouch) ->
-      let channels = Hashtbl.create 10 in
-      let connection = { inch; ouch; params = default_params; channels } in
-      write_data connection "AMQP\x00\x00\x09\x01"
-      >> return connection)
-
-let connect_by_name ~server ?port () =
-  gethostbyname server
-  >>= (function
-      | [] -> return None
-      | addr :: _ ->
-        connect ~addr ?port ()
-        >>= (fun connection -> return (Some connection)))
 
 
 type protocol_state =
@@ -121,7 +124,7 @@ let choose_locale body =
   else failwith ("en_US not found in locales: " ^ String.concat " " locales)
 
 
-let process_connection_start connection frame =
+let process_connection_start client frame =
   (* TODO: Assert channel 0 *)
   let body = match frame with
     | Frame.Method (channel, `Connection_start body) -> body
@@ -140,7 +143,7 @@ let process_connection_start connection frame =
       Connection_start_ok.locale;
     })
   in
-  write_data connection frame_ok_str
+  write_data client frame_ok_str
   (* If we support auth mechanisms other than PLAIN in the future, we'll need
      to potentially switch to Connection_secure instead. *)
   >> return Connection_tune
@@ -159,7 +162,7 @@ let choose_heartbeat body =
   body.Connection_tune.heartbeat
 
 
-let process_connection_tune connection frame =
+let process_connection_tune client frame =
   (* TODO: Assert channel 0 *)
   let body = match frame with
     | Frame.Method (channel, `Connection_tune body) -> body
@@ -176,7 +179,7 @@ let process_connection_tune connection frame =
       Connection_tune_ok.heartbeat;
     })
   in
-  write_data connection frame_ok_str
+  write_data client frame_ok_str
   (* Send connection.open *)
   >> let virtual_host = "/" in
   let frame_open = Frame.build_method_frame 0 (`Connection_open {
@@ -185,30 +188,30 @@ let process_connection_tune connection frame =
       Connection_open.reserved_2 = false;
     })
   in
-  write_data connection frame_open
+  write_data client frame_open
   >> return Connection_open
 
 
-let channel_send connection channel frame =
-  if Hashtbl.mem connection.channels channel
-  then write_data connection (Frame.frame_to_string frame)
+let channel_send client channel frame =
+  if Hashtbl.mem client.channels channel
+  then Connection.write_data client.connection (Frame.frame_to_string frame)
   else failwith ("Channel not found: " ^ string_of_int channel)
 
 
-let create_channel connection channel =
+let create_channel client channel =
   let stream, push = Lwt_stream.create () in
-  let send = channel_send connection channel in
-  Hashtbl.add connection.channels channel { stream; push; send }
+  let send = channel_send client channel in
+  Hashtbl.add client.channels channel { Channel.stream; push; send }
 
 
-let process_connection_open connection frame =
+let process_connection_open client frame =
   (* TODO: Assert channel 0 *)
   let _ = match frame with
     | Frame.Method (channel, `Connection_open_ok body) -> body
     | _ -> failwith ("Expected Connection_open_ok, got: " ^ Frame.frame_to_string frame)
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
-  create_channel connection 0;
+  create_channel client 0;
   return Connected
 
 
@@ -217,30 +220,39 @@ let vomit_frame frame state =
   return state
 
 
-let process_frame connection callback frame = function
-  | Connection_start -> process_connection_start connection frame
+let process_frame (client : t) callback frame = function
+  | Connection_start -> process_connection_start client frame
   | Connection_secure -> failwith "Unexpected Connection_secure state."
-  | Connection_tune -> process_connection_tune connection frame
-  | Connection_open -> process_connection_open connection frame
+  | Connection_tune -> process_connection_tune client frame
+  | Connection_open -> process_connection_open client frame
   | Connected -> callback frame >> return Connected
   | Disconnected -> failwith "Disconnected."
 
 
-let rec process_frames connection callback str state =
+let rec process_frames client callback str state =
   (* TODO: Avoid waiting here. *)
   let frame, str = Frame.consume_frame str in
   match frame with
   | None -> return (str, state)
   | Some frame -> begin
-      process_frame connection callback frame state
-      >>= process_frames connection callback str
+      process_frame client callback frame state
+      >>= process_frames client callback str
     end
 
 
-let listen connection callback =
+let connect ~server ?port () =
+  Connection.connect_by_name ~server ?port ()
+  >>= (function
+      | None -> return None
+      | Some conn ->
+        Connection.write_data conn "AMQP\x00\x00\x09\x01"
+        >> return (Some { connection = conn; channels = Hashtbl.create 10 }))
+
+
+let listen client callback =
   let rec listen' ~state ~buffer =
     (* Read some data into our string. *)
-    Lwt_io.read ~count:1024 connection.inch
+    Lwt_io.read ~count:1024 client.connection.Connection.inch
     >>= (fun input ->
         Lwt_io.printlf "Read bytes: %d" (String.length input) >>
         Lwt_io.hexdump Lwt_io.stdout input >>
@@ -249,7 +261,7 @@ let listen connection callback =
         then return Disconnected
         else begin
           Buffer.add_string buffer input;
-          process_frames connection callback (Buffer.contents buffer) state
+          process_frames client callback (Buffer.contents buffer) state
           >>= (fun (remaining_data, state) ->
               Buffer.reset buffer;
               Buffer.add_string buffer remaining_data;

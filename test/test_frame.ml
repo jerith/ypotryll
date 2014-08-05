@@ -21,12 +21,12 @@ let tests =
             Connection_start_ok.locale = "en_US";
           })
         in
-        let wire = Frame.build_method_frame 0 fields in
+        let wire = Frame.build_frame (Frame.make_method 0 fields) in
         let frame_opt, str_left = Frame.consume_frame wire in
         assert_equal ~printer:(Printf.sprintf "%S") "" str_left;
         match frame_opt with
         | None -> assert_failure "Expected Some frame, got None."
-        | Some frame -> assert_equal (Frame.Method (0, fields)) frame
+        | Some frame -> assert_equal (0, Frame.Method fields) frame
       );
 
     (* TODO: More tests. *)

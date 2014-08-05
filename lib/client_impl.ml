@@ -5,33 +5,28 @@ open Generated_methods
 
 
 type channel_io = {
+  channel : int;
   stream : Frame.t Lwt_stream.t;
   push : Frame.t option -> unit;
   send : Frame.payload -> unit Lwt.t;
 }
 
 
-type client_io = {
+type client = {
   connection : Connection.t;
+  listener : unit Lwt.t;
   channels : (int, channel_io) Hashtbl.t;
 }
 
 
-type client = {
-  client_io : client_io;
-  listener : unit Lwt.t;
-}
-
-
 type channel = {
-  channel : int;
   channel_io : channel_io;
   client : client;
 }
 
 
-let send_frame client_io =
-  client_io.connection.Connection.send
+let send_frame connection =
+  connection.Connection.send
 
 
 let client_properties = [
@@ -82,7 +77,7 @@ let choose_locale body =
   else failwith ("en_US not found in locales: " ^ String.concat " " locales)
 
 
-let process_connection_start client_io frame =
+let process_connection_start connection frame =
   (* TODO: Assert channel 0 *)
   let body = match frame with
     | channel, Frame.Method (`Connection_start body) -> body
@@ -101,7 +96,7 @@ let process_connection_start client_io frame =
       Connection_start_ok.locale;
     })
   in
-  send_frame client_io frame_ok
+  send_frame connection frame_ok
   (* If we support auth mechanisms other than PLAIN in the future, we'll need
      to potentially switch to Connection_secure instead. *)
   >> return Connection_tune
@@ -120,7 +115,7 @@ let choose_heartbeat body =
   body.Connection_tune.heartbeat
 
 
-let process_connection_tune client_io frame =
+let process_connection_tune connection frame =
   (* TODO: Assert channel 0 *)
   let body = match frame with
     | channel, Frame.Method (`Connection_tune body) -> body
@@ -137,7 +132,7 @@ let process_connection_tune client_io frame =
       Connection_tune_ok.heartbeat;
     })
   in
-  send_frame client_io frame_ok
+  send_frame connection frame_ok
   (* Send connection.open *)
   >> let virtual_host = "/" in
   let frame_open = Frame.make_method 0 (`Connection_open {
@@ -146,30 +141,27 @@ let process_connection_tune client_io frame =
       Connection_open.reserved_2 = false;
     })
   in
-  send_frame client_io frame_open
+  send_frame connection frame_open
   >> return Connection_open
 
 
-let channel_send client_io channel frame_payload =
-  if Hashtbl.mem client_io.channels channel
-  then send_frame client_io (channel, frame_payload)
-  else failwith ("Channel not found: " ^ string_of_int channel)
+let channel_send connection channel frame_payload =
+  send_frame connection (channel, frame_payload)
 
 
-let create_channel client_io channel =
+let create_channel connection channels channel =
   let stream, push = Lwt_stream.create () in
-  let send = channel_send client_io channel in
-  Hashtbl.add client_io.channels channel { stream; push; send }
+  let send = channel_send connection channel in
+  Hashtbl.add channels channel { channel; stream; push; send }
 
 
-let process_connection_open client_io frame =
+let process_connection_open connection frame =
   (* TODO: Assert channel 0 *)
   let _ = match frame with
     | channel, Frame.Method (`Connection_open_ok body) -> body
     | _ -> failwith ("Expected Connection_open_ok, got: " ^ Frame.frame_to_string frame)
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
-  create_channel client_io 0;
   return Connected
 
 
@@ -177,38 +169,37 @@ let vomit_frame frame =
   Printf.printf "<<< %s\n%!" (Frame.frame_to_string frame)
 
 
-let process_setup_frame client_io frame = function
-  | Connection_start -> process_connection_start client_io frame
+let process_setup_frame connection frame = function
+  | Connection_start -> process_connection_start connection frame
   | Connection_secure -> failwith "Unexpected Connection_secure state."
-  | Connection_tune -> process_connection_tune client_io frame
-  | Connection_open -> process_connection_open client_io frame
+  | Connection_tune -> process_connection_tune connection frame
+  | Connection_open -> process_connection_open connection frame
   | Connected -> return Connected
 
 
-let rec setup_connection client_io state =
-  Lwt_stream.get client_io.connection.Connection.stream
+let rec setup_connection connection state =
+  Lwt_stream.get connection.Connection.stream
   >>= function
   | None -> return ()
-  | Some frame -> process_setup_frame client_io frame state
+  | Some frame -> process_setup_frame connection frame state
   >>= function
   | Connected -> return ()
-  | state -> setup_connection client_io state
+  | state -> setup_connection connection state
 
 
-let rec maintain_connection client_io =
-  Lwt_stream.get client_io.connection.Connection.stream
+let rec maintain_connection connection channels =
+  Lwt_stream.get connection.Connection.stream
   >>= function
   | None -> return ()
-  | Some frame -> vomit_frame frame; maintain_connection client_io
+  | Some frame -> vomit_frame frame; maintain_connection connection channels
 
 
 let connect ~server ?port () =
   lwt connection = Connection.connect ~server ?port () in
   let channels = Hashtbl.create 10 in
-  let client_io = { connection; channels } in
-  setup_connection client_io Connection_start
-  >> let listener = maintain_connection client_io in
-  return { client_io; listener }
+  setup_connection connection Connection_start >>
+  let listener = maintain_connection connection channels in
+  return { connection; listener; channels }
 
 
 let wait_for_shutdown client =
@@ -220,14 +211,14 @@ let next_channel channels =
 
 
 let get_channel client channel =
-  Hashtbl.find client.client_io.channels channel
+  Hashtbl.find client.channels channel
 
 
 let new_channel client =
-  let channel = next_channel client.client_io.channels in
-  create_channel client.client_io channel;
+  let channel = next_channel client.channels in
+  create_channel client.connection client.channels channel;
   let channel_io = get_channel client channel in
   channel_io.send (Frame.Method (`Channel_open {
       Channel_open.reserved_1 = "";
     })) >>
-  return { channel; channel_io; client }
+  return { channel_io; client }

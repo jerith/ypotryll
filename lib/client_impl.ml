@@ -14,7 +14,7 @@ type channel_io = {
 
 type client = {
   connection : Connection.t;
-  listener : unit Lwt.t;
+  finished : unit Lwt.t;
   channels : (int, channel_io) Hashtbl.t;
 }
 
@@ -187,23 +187,25 @@ let rec setup_connection connection state =
   | state -> setup_connection connection state
 
 
-let rec maintain_connection connection channels =
-  Lwt_stream.get connection.Connection.stream
+let rec maintain_connection client finished_waker =
+  Lwt_stream.get client.connection.Connection.stream
   >>= function
-  | None -> return ()
-  | Some frame -> vomit_frame frame; maintain_connection connection channels
+  | None -> wakeup finished_waker (); return ()
+  | Some frame -> vomit_frame frame; maintain_connection client finished_waker
 
 
 let connect ~server ?port () =
   lwt connection = Connection.connect ~server ?port () in
   let channels = Hashtbl.create 10 in
   setup_connection connection Connection_start >>
-  let listener = maintain_connection connection channels in
-  return { connection; listener; channels }
+  let finished, finished_waker = wait () in
+  let client = { connection; finished; channels } in
+  ignore_result (maintain_connection client finished_waker);
+  return client
 
 
 let wait_for_shutdown client =
-  client.listener
+  client.finished
 
 
 let next_channel channels =

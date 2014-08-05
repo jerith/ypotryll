@@ -17,4 +17,8 @@ module Channel : sig
   type t = channel
 
   val get_client : t -> client
+
+  val get_channel_number : t -> int
+
+  val get_frame_payload : t -> Frame.payload option Lwt.t
 end

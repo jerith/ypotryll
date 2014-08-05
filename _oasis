@@ -19,9 +19,9 @@ Library ypotryll_gen_code
   BuildDepends: ypotryll_proto
 
 Library ypotryll
-  Path:         lib
-  Modules:      Client
-  BuildDepends: lwt, lwt.syntax, lwt.unix, ypotryll_gen_code
+  Path:            lib
+  Modules:         Ypotryll
+  BuildDepends:    lwt, lwt.syntax, lwt.unix, ypotryll_gen_code
 
 Executable foo
   Path:       example

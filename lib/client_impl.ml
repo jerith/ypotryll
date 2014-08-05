@@ -43,13 +43,12 @@ let client_properties = [
 ]
 
 
-type protocol_state =
+type protocol_setup_state =
   | Connection_start
   | Connection_secure (* Not used currently. *)
   | Connection_tune
   | Connection_open
   | Connected
-  | Disconnected
 
 
 let str_rpartition str ch =
@@ -163,7 +162,7 @@ let create_channel client_io channel =
   Hashtbl.add client_io.channels channel { stream; push; send }
 
 
-let process_connection_open wake_start client_io frame =
+let process_connection_open client_io frame =
   (* TODO: Assert channel 0 *)
   let _ = match frame with
     | channel, Frame.Method (`Connection_open_ok body) -> body
@@ -171,43 +170,44 @@ let process_connection_open wake_start client_io frame =
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
   create_channel client_io 0;
-  wakeup wake_start ();
   return Connected
 
 
-let vomit_frame frame state =
-  Printf.printf "<<< %s\n%!" (Frame.frame_to_string frame);
-  return state
+let vomit_frame frame =
+  Printf.printf "<<< %s\n%!" (Frame.frame_to_string frame)
 
 
-let process_frame wake_start client_io frame = function
+let process_setup_frame client_io frame = function
   | Connection_start -> process_connection_start client_io frame
   | Connection_secure -> failwith "Unexpected Connection_secure state."
   | Connection_tune -> process_connection_tune client_io frame
-  | Connection_open -> process_connection_open wake_start client_io frame
-  | Connected -> vomit_frame frame Connected
-  | Disconnected -> failwith "Disconnected."
+  | Connection_open -> process_connection_open client_io frame
+  | Connected -> return Connected
 
 
-let listen client_io =
-  let wait_start, wake_start = Lwt.wait () in
-  let rec listen' state =
-    Lwt_stream.get client_io.connection.Connection.stream
-    >>= function
-    | None -> return ()
-    | Some frame ->
-      process_frame wake_start client_io frame state
-      >>= listen'
-  in
-  (wait_start, listen' Connection_start)
+let rec setup_connection client_io state =
+  Lwt_stream.get client_io.connection.Connection.stream
+  >>= function
+  | None -> return ()
+  | Some frame -> process_setup_frame client_io frame state
+  >>= function
+  | Connected -> return ()
+  | state -> setup_connection client_io state
+
+
+let rec maintain_connection client_io =
+  Lwt_stream.get client_io.connection.Connection.stream
+  >>= function
+  | None -> return ()
+  | Some frame -> vomit_frame frame; maintain_connection client_io
 
 
 let connect ~server ?port () =
   lwt connection = Connection.connect ~server ?port () in
   let channels = Hashtbl.create 10 in
   let client_io = { connection; channels } in
-  let wait_start, listener = listen client_io in
-  wait_start >>
+  setup_connection client_io Connection_start
+  >> let listener = maintain_connection client_io in
   return { client_io; listener }
 
 

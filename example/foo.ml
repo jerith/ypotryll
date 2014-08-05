@@ -8,6 +8,7 @@ let callback frame =
 
 let lwt_main =
   lwt client = Client.connect "localhost" () in
+  lwt channel = Client.new_channel client in
   Client.wait_for_shutdown client
 
 

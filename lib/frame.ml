@@ -7,7 +7,7 @@ type payload =
   | Method of MTypes.method_payload
   | Header of string
   | Body of string
-  | Heartbeat of string
+  | Heartbeat
 
 
 type t = int * payload
@@ -76,8 +76,8 @@ let frame_to_string = function
     Printf.sprintf "<Header ch=%d %S>" channel payload
   | channel, Body payload ->
     Printf.sprintf "<Body ch=%d %S>" channel payload
-  | channel, Heartbeat payload ->
-    Printf.sprintf "<Heartbeat ch=%d %S>" channel payload
+  | channel, Heartbeat ->
+    Printf.sprintf "<Heartbeat ch=%d>" channel
 
 
 let parse_method_args buf class_id method_id =
@@ -91,11 +91,7 @@ let parse_method_args buf class_id method_id =
 let parse_method_payload buf =
   let class_id = consume_short buf in
   let method_id = consume_short buf in
-  let payload = parse_method_args buf class_id method_id in
-  let unconsumed = Parse_buf.length buf in
-  if unconsumed > 0
-  then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed)
-  else payload
+  parse_method_args buf class_id method_id
 
 
 let consume_frame_type buf =
@@ -116,16 +112,20 @@ let consume_frame str =
     let size = consume_long buf in
     if Parse_buf.length buf <= size
     then (None, str)
-    else
+    else begin
       let payload_buf = consume_buf buf size in
       let frame = match frame_type with
         | FC.Method -> (channel, Method (parse_method_payload payload_buf))
         | FC.Header -> (channel, Header (consume_payload_str payload_buf))
         | FC.Body -> (channel, Body (consume_payload_str payload_buf))
-        | FC.Heartbeat -> (channel, Heartbeat (consume_payload_str payload_buf))
+        | FC.Heartbeat -> (channel, Heartbeat)
       in
+      let unconsumed = Parse_buf.length payload_buf in
+      if unconsumed > 0
+      then failwith (Printf.sprintf "Unconsumed payload buffer: %d" unconsumed);
       assert (consume_byte buf = FC.frame_end);
       (Some frame, Parse_buf.to_string buf)
+    end
 
 
 let make_method channel method_payload =
@@ -143,7 +143,7 @@ let build_frame (channel, payload) =
     | Method payload -> FC.Method, build_method_payload payload
     | Header payload -> FC.Header, payload
     | Body payload -> FC.Body, payload
-    | Heartbeat payload -> FC.Heartbeat, payload
+    | Heartbeat -> FC.Heartbeat, ""
   in
   add_str buf (FC.emit_frame_type frame_type);
   add_short buf channel;

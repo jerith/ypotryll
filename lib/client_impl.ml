@@ -7,7 +7,7 @@ open Generated_methods
 type channel_io = {
   stream : Frame.t Lwt_stream.t;
   push : Frame.t option -> unit;
-  send : Frame.t -> unit Lwt.t;
+  send : Frame.payload -> unit Lwt.t;
 }
 
 
@@ -30,8 +30,8 @@ type channel = {
 }
 
 
-let write_frame client_io =
-  Connection.write_frame client_io.connection.Connection.connection_io
+let send_frame client_io =
+  client_io.connection.Connection.send
 
 
 let client_properties = [
@@ -102,7 +102,7 @@ let process_connection_start client_io frame =
       Connection_start_ok.locale;
     })
   in
-  write_frame client_io frame_ok
+  send_frame client_io frame_ok
   (* If we support auth mechanisms other than PLAIN in the future, we'll need
      to potentially switch to Connection_secure instead. *)
   >> return Connection_tune
@@ -138,7 +138,7 @@ let process_connection_tune client_io frame =
       Connection_tune_ok.heartbeat;
     })
   in
-  write_frame client_io frame_ok
+  send_frame client_io frame_ok
   (* Send connection.open *)
   >> let virtual_host = "/" in
   let frame_open = Frame.make_method 0 (`Connection_open {
@@ -147,13 +147,13 @@ let process_connection_tune client_io frame =
       Connection_open.reserved_2 = false;
     })
   in
-  write_frame client_io frame_open
+  send_frame client_io frame_open
   >> return Connection_open
 
 
-let channel_send client_io channel frame =
+let channel_send client_io channel frame_payload =
   if Hashtbl.mem client_io.channels channel
-  then Connection.write_frame client_io.connection.Connection.connection_io frame
+  then send_frame client_io (channel, frame_payload)
   else failwith ("Channel not found: " ^ string_of_int channel)
 
 
@@ -163,7 +163,7 @@ let create_channel client_io channel =
   Hashtbl.add client_io.channels channel { stream; push; send }
 
 
-let process_connection_open client_io frame =
+let process_connection_open wake_start client_io frame =
   (* TODO: Assert channel 0 *)
   let _ = match frame with
     | channel, Frame.Method (`Connection_open_ok body) -> body
@@ -171,6 +171,7 @@ let process_connection_open client_io frame =
   in
   Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string frame);
   create_channel client_io 0;
+  wakeup wake_start ();
   return Connected
 
 
@@ -179,57 +180,34 @@ let vomit_frame frame state =
   return state
 
 
-let process_frame client_io frame = function
+let process_frame wake_start client_io frame = function
   | Connection_start -> process_connection_start client_io frame
   | Connection_secure -> failwith "Unexpected Connection_secure state."
   | Connection_tune -> process_connection_tune client_io frame
-  | Connection_open -> process_connection_open client_io frame
+  | Connection_open -> process_connection_open wake_start client_io frame
   | Connected -> vomit_frame frame Connected
   | Disconnected -> failwith "Disconnected."
 
 
-let rec process_frames client_io str state =
-  (* TODO: Avoid waiting here. *)
-  let frame, str = Frame.consume_frame str in
-  match frame with
-  | None -> return (str, state)
-  | Some frame -> begin
-      process_frame client_io frame state
-      >>= process_frames client_io str
-    end
-
-
-
 let listen client_io =
-  let rec listen' state buffer =
-    (* Read some data into our string. *)
-    Lwt_io.read ~count:1024 client_io.connection.Connection.connection_io.Connection.inch
-    >>= (fun input ->
-        Lwt_io.printlf "Read bytes: %d" (String.length input) >>
-        Lwt_io.hexdump Lwt_io.stdout input >>
-        Lwt_io.flush Lwt_io.stdout >>
-        if String.length input = 0 (* EOF from server - we have quit or been kicked. *)
-        then return Disconnected
-        else begin
-          Buffer.add_string buffer input;
-          process_frames client_io (Buffer.contents buffer) state
-          >>= (fun (remaining_data, state) ->
-              Buffer.reset buffer;
-              Buffer.add_string buffer remaining_data;
-              return state)
-        end)
+  let wait_start, wake_start = Lwt.wait () in
+  let rec listen' state =
+    Lwt_stream.get client_io.connection.Connection.stream
     >>= function
-    | Disconnected -> return ()
-    | state -> listen' state buffer
+    | None -> return ()
+    | Some frame ->
+      process_frame wake_start client_io frame state
+      >>= listen'
   in
-  listen' Connection_start (Buffer.create 0)
+  (wait_start, listen' Connection_start)
 
 
 let connect ~server ?port () =
   lwt connection = Connection.connect ~server ?port () in
   let channels = Hashtbl.create 10 in
   let client_io = { connection; channels } in
-  let listener = listen client_io in
+  let wait_start, listener = listen client_io in
+  wait_start >>
   return { client_io; listener }
 
 
@@ -241,5 +219,15 @@ let next_channel channels =
   1 + Hashtbl.fold (fun k _ acc -> max k acc) channels 0
 
 
+let get_channel client channel =
+  Hashtbl.find client.client_io.channels channel
+
+
 let new_channel client =
-  create_channel client.client_io (next_channel client.client_io.channels)
+  let channel = next_channel client.client_io.channels in
+  create_channel client.client_io channel;
+  let channel_io = get_channel client channel in
+  channel_io.send (Frame.Method (`Channel_open {
+      Channel_open.reserved_1 = "";
+    })) >>
+  return { channel; channel_io; client }

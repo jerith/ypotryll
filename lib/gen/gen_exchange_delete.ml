@@ -8,7 +8,7 @@ module Exchange_delete = struct
   let method_id = 20
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     exchange : string (* exchange-name : shortstr *);
     if_unused : bool (* bit : bit *);
     no_wait : bool (* no-wait : bit *);
@@ -44,9 +44,9 @@ module Exchange_delete = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~exchange ~if_unused ~no_wait () =
+  let make_t ~exchange ~if_unused ~no_wait () =
     `Exchange_delete {
-      reserved_1;
+      reserved_1 = 0;
       exchange;
       if_unused;
       no_wait;

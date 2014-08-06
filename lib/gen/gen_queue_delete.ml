@@ -8,7 +8,7 @@ module Queue_delete = struct
   let method_id = 40
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     if_unused : bool (* bit : bit *);
     if_empty : bool (* bit : bit *);
@@ -49,9 +49,9 @@ module Queue_delete = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~if_unused ~if_empty ~no_wait () =
+  let make_t ~queue ~if_unused ~if_empty ~no_wait () =
     `Queue_delete {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       if_unused;
       if_empty;

@@ -123,7 +123,7 @@ let process_connection_tune channel_io frame_payload =
   (* Send connection.open *)
   >> let virtual_host = "/" in
   let frame_open =
-    Connection_open.make_t ~virtual_host ~reserved_1:"" ~reserved_2:false ()
+    Connection_open.make_t ~virtual_host ()
   in
   send_method channel_io frame_open
   >> return Connection_open

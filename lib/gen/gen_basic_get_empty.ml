@@ -8,7 +8,7 @@ module Basic_get_empty = struct
   let method_id = 72
 
   type record = {
-    reserved_1 : string (* shortstr *);
+    reserved_1 : string (* reserved : shortstr *);
   }
 
   let arguments = [
@@ -29,8 +29,8 @@ module Basic_get_empty = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 () =
+  let make_t () =
     `Basic_get_empty {
-      reserved_1;
+      reserved_1 = "";
     }
 end

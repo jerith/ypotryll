@@ -8,7 +8,7 @@ module Queue_bind = struct
   let method_id = 20
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);
@@ -54,9 +54,9 @@ module Queue_bind = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~exchange ~routing_key ~no_wait ~arguments () =
+  let make_t ~queue ~exchange ~routing_key ~no_wait ~arguments () =
     `Queue_bind {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       exchange;
       routing_key;

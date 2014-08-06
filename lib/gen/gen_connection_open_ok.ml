@@ -8,7 +8,7 @@ module Connection_open_ok = struct
   let method_id = 41
 
   type record = {
-    reserved_1 : string (* shortstr *);
+    reserved_1 : string (* reserved : shortstr *);
   }
 
   let arguments = [
@@ -29,8 +29,8 @@ module Connection_open_ok = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 () =
+  let make_t () =
     `Connection_open_ok {
-      reserved_1;
+      reserved_1 = "";
     }
 end

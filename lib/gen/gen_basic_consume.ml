@@ -8,7 +8,7 @@ module Basic_consume = struct
   let method_id = 20
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     consumer_tag : string (* consumer-tag : shortstr *);
     no_local : bool (* no-local : bit *);
@@ -64,9 +64,9 @@ module Basic_consume = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~consumer_tag ~no_local ~no_ack ~exclusive ~no_wait ~arguments () =
+  let make_t ~queue ~consumer_tag ~no_local ~no_ack ~exclusive ~no_wait ~arguments () =
     `Basic_consume {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       consumer_tag;
       no_local;

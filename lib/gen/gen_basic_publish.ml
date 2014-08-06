@@ -8,7 +8,7 @@ module Basic_publish = struct
   let method_id = 40
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);
     mandatory : bool (* bit : bit *);
@@ -49,9 +49,9 @@ module Basic_publish = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~exchange ~routing_key ~mandatory ~immediate () =
+  let make_t ~exchange ~routing_key ~mandatory ~immediate () =
     `Basic_publish {
-      reserved_1;
+      reserved_1 = 0;
       exchange;
       routing_key;
       mandatory;

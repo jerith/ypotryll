@@ -8,7 +8,7 @@ module Basic_get = struct
   let method_id = 70
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     no_ack : bool (* no-ack : bit *);
   }
@@ -39,9 +39,9 @@ module Basic_get = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~no_ack () =
+  let make_t ~queue ~no_ack () =
     `Basic_get {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       no_ack;
     }

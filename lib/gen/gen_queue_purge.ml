@@ -8,7 +8,7 @@ module Queue_purge = struct
   let method_id = 30
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     no_wait : bool (* no-wait : bit *);
   }
@@ -39,9 +39,9 @@ module Queue_purge = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~no_wait () =
+  let make_t ~queue ~no_wait () =
     `Queue_purge {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       no_wait;
     }

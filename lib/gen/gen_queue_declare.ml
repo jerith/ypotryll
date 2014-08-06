@@ -8,7 +8,7 @@ module Queue_declare = struct
   let method_id = 10
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     queue : string (* queue-name : shortstr *);
     passive : bool (* bit : bit *);
     durable : bool (* bit : bit *);
@@ -64,9 +64,9 @@ module Queue_declare = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~queue ~passive ~durable ~exclusive ~auto_delete ~no_wait ~arguments () =
+  let make_t ~queue ~passive ~durable ~exclusive ~auto_delete ~no_wait ~arguments () =
     `Queue_declare {
-      reserved_1;
+      reserved_1 = 0;
       queue;
       passive;
       durable;

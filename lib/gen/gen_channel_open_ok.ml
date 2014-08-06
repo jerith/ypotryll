@@ -8,7 +8,7 @@ module Channel_open_ok = struct
   let method_id = 11
 
   type record = {
-    reserved_1 : string (* longstr *);
+    reserved_1 : string (* reserved : longstr *);
   }
 
   let arguments = [
@@ -29,8 +29,8 @@ module Channel_open_ok = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 () =
+  let make_t () =
     `Channel_open_ok {
-      reserved_1;
+      reserved_1 = "";
     }
 end

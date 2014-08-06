@@ -8,13 +8,13 @@ module Exchange_declare = struct
   let method_id = 10
 
   type record = {
-    reserved_1 : int (* short *);
+    reserved_1 : int (* reserved : short *);
     exchange : string (* exchange-name : shortstr *);
     type_ : string (* shortstr : shortstr *);
     passive : bool (* bit : bit *);
     durable : bool (* bit : bit *);
-    reserved_2 : bool (* bit *);
-    reserved_3 : bool (* bit *);
+    reserved_2 : bool (* reserved : bit *);
+    reserved_3 : bool (* reserved : bit *);
     no_wait : bool (* no-wait : bit *);
     arguments : Amqp_table.table (* table : table *);
   }
@@ -69,15 +69,15 @@ module Exchange_declare = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~reserved_1 ~exchange ~type_ ~passive ~durable ~reserved_2 ~reserved_3 ~no_wait ~arguments () =
+  let make_t ~exchange ~type_ ~passive ~durable ~no_wait ~arguments () =
     `Exchange_declare {
-      reserved_1;
+      reserved_1 = 0;
       exchange;
       type_;
       passive;
       durable;
-      reserved_2;
-      reserved_3;
+      reserved_2 = false;
+      reserved_3 = false;
       no_wait;
       arguments;
     }

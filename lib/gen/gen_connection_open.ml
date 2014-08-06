@@ -9,8 +9,8 @@ module Connection_open = struct
 
   type record = {
     virtual_host : string (* path : shortstr *);
-    reserved_1 : string (* shortstr *);
-    reserved_2 : bool (* bit *);
+    reserved_1 : string (* reserved : shortstr *);
+    reserved_2 : bool (* reserved : bit *);
   }
 
   let arguments = [
@@ -39,10 +39,10 @@ module Connection_open = struct
       }
     | _ -> failwith "Unexpected fields."
 
-  let make_t ~virtual_host ~reserved_1 ~reserved_2 () =
+  let make_t ~virtual_host () =
     `Connection_open {
       virtual_host;
-      reserved_1;
-      reserved_2;
+      reserved_1 = "";
+      reserved_2 = false;
     }
 end

@@ -27,7 +27,9 @@ let lwt_main =
       ~exchange:"foo" ~type_:"direct" ~passive:false ~durable:false ~no_wait:false ~arguments:[] ())
   >>= (fun x -> Lwt_io.printlf "XXX" >> return (Frame.Method x))
   >>= callback (Channel.get_channel_number channel) >>
-  Client.wait_for_shutdown client
+  try_lwt
+    Client.wait_for_shutdown client
+  with Failure text -> Lwt_io.printlf "exception: %S" text >> return ()
 
 
 let () = Lwt_main.run lwt_main

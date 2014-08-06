@@ -34,7 +34,7 @@ type channel_io = {
   push : Frame.payload option -> unit;
   send : Frame.payload -> unit Lwt.t;
   mutable expected_responses : expected_response list;
-  mutable state : connection_state;
+  mutable channel_state : connection_state;
 }
 
 
@@ -43,7 +43,7 @@ type t = {
   connection_send : Frame.t -> unit Lwt.t;
   channels : (int, channel_io) Hashtbl.t;
   finished : unit Lwt.u;
-  mutable state : connection_state;
+  mutable connection_state : connection_state;
 }
 
 
@@ -134,13 +134,13 @@ let listen connection =
   listen' (Buffer.create 0)
 
 
-let create_channel connection channel state =
+let create_channel connection channel channel_state =
   let stream, push = Lwt_stream.create () in
   let send frame_payload =
     connection.connection_send (channel, frame_payload)
   in
   Hashtbl.add connection.channels channel
-    { channel; stream; push; send; expected_responses = []; state }
+    { channel; stream; push; send; expected_responses = []; channel_state }
 
 let send_method_async channel_io payload =
   channel_io.send (Frame.Method payload)
@@ -306,7 +306,7 @@ let connect ~server ?(port=5672) () =
   let channels = Hashtbl.create 10 in
   let _, finished = wait () in
   let connection =
-    { connection_io; connection_send; channels; finished; state = Opening }
+    { connection_io; connection_send; channels; finished; connection_state = Opening }
   in
   create_channel connection 0 Open;
   ignore_result (listen connection);
@@ -323,5 +323,5 @@ let new_channel connection =
   create_channel connection channel Opening;
   let channel_io = Hashtbl.find connection.channels channel in
   send_method_sync channel_io (Channel_open.make_t ())
-  >|= (fun _ -> channel_io.state <- Open) >>
+  >|= (fun _ -> channel_io.channel_state <- Open) >>
   return channel_io

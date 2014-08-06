@@ -20,10 +20,10 @@ open Parse_utils
 (* String formatting *)
 
 let frame_type_to_string = function
-  | FC.Method    -> "Method"
-  | FC.Header    -> "Header"
-  | FC.Body      -> "Body"
-  | FC.Heartbeat -> "Heartbeat"
+  | FC.Method_frame    -> "Method"
+  | FC.Header_frame    -> "Header"
+  | FC.Body_frame      -> "Body"
+  | FC.Heartbeat_frame -> "Heartbeat"
 
 let rec field_table_to_string field_table =
   "{" ^ (String.concat "; " (List.map field_entry_to_string field_table)) ^ "}"
@@ -64,7 +64,7 @@ let amqp_field_to_string (name, field) =
   | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
 
 let method_args_to_string payload =
-  let (module P : Generated_method_types.Method) = Generated_methods.module_for payload in
+  let (module P : Generated_methods.Method) = Generated_methods.module_for payload in
   let args = P.list_of_t payload in
   let args_str = String.concat "; " (List.map amqp_field_to_string args) in
   Printf.sprintf "<Method (%d, %d) [%s]>" P.class_id P.method_id args_str
@@ -115,10 +115,10 @@ let consume_frame str =
     else begin
       let payload_buf = consume_buf buf size in
       let frame = match frame_type with
-        | FC.Method -> (channel, Method (parse_method_payload payload_buf))
-        | FC.Header -> (channel, Header (consume_payload_str payload_buf))
-        | FC.Body -> (channel, Body (consume_payload_str payload_buf))
-        | FC.Heartbeat -> (channel, Heartbeat)
+        | FC.Method_frame -> (channel, Method (parse_method_payload payload_buf))
+        | FC.Header_frame -> (channel, Header (consume_payload_str payload_buf))
+        | FC.Body_frame -> (channel, Body (consume_payload_str payload_buf))
+        | FC.Heartbeat_frame -> (channel, Heartbeat)
       in
       let unconsumed = Parse_buf.length payload_buf in
       if unconsumed > 0
@@ -133,17 +133,17 @@ let make_method channel method_payload =
 
 
 let build_method_payload payload =
-  let (module P : Generated_method_types.Method) = Generated_methods.module_for payload in
+  let (module P : Generated_methods.Method) = Generated_methods.module_for payload in
   P.build_method payload
 
 
 let build_frame (channel, payload) =
   let buf = Build_buf.from_string "" in
   let frame_type, payload_str = match payload with
-    | Method payload -> FC.Method, build_method_payload payload
-    | Header payload -> FC.Header, payload
-    | Body payload -> FC.Body, payload
-    | Heartbeat -> FC.Heartbeat, ""
+    | Method payload -> FC.Method_frame, build_method_payload payload
+    | Header payload -> FC.Header_frame, payload
+    | Body payload -> FC.Body_frame, payload
+    | Heartbeat -> FC.Heartbeat_frame, ""
   in
   add_str buf (FC.emit_frame_type frame_type);
   add_short buf channel;

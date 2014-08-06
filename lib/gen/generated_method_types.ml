@@ -56,23 +56,3 @@ type method_payload = [
   | `Tx_rollback of Gen_tx_rollback.Tx_rollback.record
   | `Tx_rollback_ok of Gen_tx_rollback_ok.Tx_rollback_ok.record
 ]
-
-module type Method = sig
-  type t
-
-  val class_id : int
-
-  val method_id : int
-
-  val parse_method : Parse_utils.Parse_buf.t -> method_payload
-
-  val build_method : method_payload -> string
-
-  (* temporary? *)
-
-  val buf_to_list : Parse_utils.Parse_buf.t -> (string * Protocol.Amqp_field.t) list
-
-  val string_of_list : (string * Protocol.Amqp_field.t) list -> string
-
-  val list_of_t : method_payload -> (string * Protocol.Amqp_field.t) list
-end

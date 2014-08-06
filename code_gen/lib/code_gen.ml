@@ -20,16 +20,16 @@ let write_module_file method_module =
 
 let write_generated_methods_file spec =
   let filename = gen_ml_filename "generated_methods" in
-  let wrappers = String.concat "\n\n\n" (Module_builder.build_method_wrappers spec) in
-  let builders = Module_builder.build_method_builders spec in
-  let rebuilders = Module_builder.build_method_rebuilders spec in
-  write_to_file filename (wrappers ^ "\n\n\n" ^ builders ^ "\n\n" ^ rebuilders)
+  write_to_file filename (String.concat "\n\n\n" [
+      Module_builder.build_method_module_type ();
+      String.concat "\n\n\n" (Module_builder.build_method_wrappers spec);
+      Module_builder.build_method_builders spec;
+      Module_builder.build_module_for_method spec;
+    ])
 
 let write_generated_types_file spec =
   let filename = gen_ml_filename "generated_method_types" in
-  let method_types = Module_builder.build_method_types spec in
-  let method_module_type = Module_builder.build_method_module_type () in
-  write_to_file filename (method_types ^ "\n\n" ^ method_module_type ^ "\n")
+  write_to_file filename (Module_builder.build_method_types spec ^ "\n")
 
 let write_generated_frame_constants_file spec =
   let filename = gen_ml_filename "generated_frame_constants" in

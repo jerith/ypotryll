@@ -248,7 +248,7 @@ module Method_builder_list = struct
   let fmt_builder_list ppf spec =
     fmt_function ppf "let build_method_instance = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
-        Format.fprintf ppf "@,| (class_id, method_id) ->@,%s@."
+        Format.fprintf ppf "@,| (class_id, method_id) ->@,%s"
           "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
 
   let build spec =
@@ -257,10 +257,10 @@ module Method_builder_list = struct
 end
 
 
-module Method_rebuilder_list = struct
+module Module_for_method_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
-    Format.fprintf ppf "@,| `%s _ -> (module %s : Generated_method_types.Method)"
+    Format.fprintf ppf "@,| `%s _ -> (module %s : Method)"
       (String.capitalize (make_method_name cls meth))
       (String.capitalize (make_method_name cls meth))
 
@@ -302,12 +302,22 @@ module Method_module_type = struct
         Format.fprintf ppf "@,type t";
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
-        fmt_line_str ppf "val parse_method : Parse_utils.Parse_buf.t -> method_payload";
-        fmt_line_str ppf "val build_method : method_payload -> string";
+        fmt_line_str ppf (
+          "val parse_method : Parse_utils.Parse_buf.t"
+          ^ " -> Generated_method_types.method_payload");
+        fmt_line_str ppf (
+          "val build_method : Generated_method_types.method_payload"
+          ^ " -> string");
         fmt_line_str ppf "(* temporary? *)";
-        fmt_line_str ppf "val buf_to_list : Parse_utils.Parse_buf.t -> (string * Protocol.Amqp_field.t) list";
-        fmt_line_str ppf "val string_of_list : (string * Protocol.Amqp_field.t) list -> string";
-        fmt_line_str ppf "val list_of_t : method_payload -> (string * Protocol.Amqp_field.t) list")
+        fmt_line_str ppf (
+          "val buf_to_list : Parse_utils.Parse_buf.t"
+          ^ " -> (string * Protocol.Amqp_field.t) list");
+        fmt_line_str ppf (
+          "val string_of_list : (string * Protocol.Amqp_field.t) list"
+          ^ " -> string");
+        fmt_line_str ppf (
+          "val list_of_t : Generated_method_types.method_payload"
+          ^ " -> (string * Protocol.Amqp_field.t) list"))
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_method_type ();
@@ -323,30 +333,30 @@ module Frame_constants = struct
   let fmt_frame_type ppf () =
     (* Not a function, but it looks like one. *)
     fmt_function ppf "type frame_type =" (fun ppf ->
-        Format.fprintf ppf "@,| Method";
-        Format.fprintf ppf "@,| Header";
-        Format.fprintf ppf "@,| Body";
-        Format.fprintf ppf "@,| Heartbeat")
+        Format.fprintf ppf "@,| Method_frame";
+        Format.fprintf ppf "@,| Header_frame";
+        Format.fprintf ppf "@,| Body_frame";
+        Format.fprintf ppf "@,| Heartbeat_frame")
 
   let fmt_byte_to_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
     fmt_function ppf "let byte_to_frame_type = function" (fun ppf ->
-        Format.fprintf ppf "@,| %d -> Method" (get_constant "frame-method");
-        Format.fprintf ppf "@,| %d -> Header" (get_constant "frame-header");
-        Format.fprintf ppf "@,| %d -> Body" (get_constant "frame-body");
-        Format.fprintf ppf "@,| %d -> Heartbeat" (get_constant "frame-heartbeat");
+        Format.fprintf ppf "@,| %d -> Method_frame" (get_constant "frame-method");
+        Format.fprintf ppf "@,| %d -> Header_frame" (get_constant "frame-header");
+        Format.fprintf ppf "@,| %d -> Body_frame" (get_constant "frame-body");
+        Format.fprintf ppf "@,| %d -> Heartbeat_frame" (get_constant "frame-heartbeat");
         Format.fprintf ppf "@,| i -> failwith (Printf.sprintf %S i)" "Unexpected frame type: %d")
 
   let fmt_emit_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
     fmt_function ppf "let emit_frame_type = function" (fun ppf ->
-        Format.fprintf ppf "@,| Method -> String.make 1 (char_of_int %d)"
+        Format.fprintf ppf "@,| Method_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-method");
-        Format.fprintf ppf "@,| Header -> String.make 1 (char_of_int %d)"
+        Format.fprintf ppf "@,| Header_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-header");
-        Format.fprintf ppf "@,| Body -> String.make 1 (char_of_int %d)"
+        Format.fprintf ppf "@,| Body_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-body");
-        Format.fprintf ppf "@,| Heartbeat -> String.make 1 (char_of_int %d)"
+        Format.fprintf ppf "@,| Heartbeat_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-heartbeat"))
 
   let fmt_frame_constants ppf spec =
@@ -372,8 +382,8 @@ let build_method_wrappers spec =
 let build_method_builders spec =
   Method_builder_list.build spec
 
-let build_method_rebuilders spec =
-  Method_rebuilder_list.build spec
+let build_module_for_method spec =
+  Module_for_method_list.build spec
 
 let build_method_types spec =
   Method_type_list.build spec

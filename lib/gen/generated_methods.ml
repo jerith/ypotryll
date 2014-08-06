@@ -1,6 +1,27 @@
 (* This file is generated. See the code_gen dir for details. *)
 
 
+module type Method = sig
+  type t
+
+  val class_id : int
+
+  val method_id : int
+
+  val parse_method : Parse_utils.Parse_buf.t -> Generated_method_types.method_payload
+
+  val build_method : Generated_method_types.method_payload -> string
+
+  (* temporary? *)
+
+  val buf_to_list : Parse_utils.Parse_buf.t -> (string * Protocol.Amqp_field.t) list
+
+  val string_of_list : (string * Protocol.Amqp_field.t) list -> string
+
+  val list_of_t : Generated_method_types.method_payload -> (string * Protocol.Amqp_field.t) list
+end
+
+
 module Connection_start = struct
   open Generated_method_types
   open Protocol.Method_utils
@@ -1332,56 +1353,56 @@ let build_method_instance = function
 
 
 let module_for = function
-  | `Connection_start _ -> (module Connection_start : Generated_method_types.Method)
-  | `Connection_start_ok _ -> (module Connection_start_ok : Generated_method_types.Method)
-  | `Connection_secure _ -> (module Connection_secure : Generated_method_types.Method)
-  | `Connection_secure_ok _ -> (module Connection_secure_ok : Generated_method_types.Method)
-  | `Connection_tune _ -> (module Connection_tune : Generated_method_types.Method)
-  | `Connection_tune_ok _ -> (module Connection_tune_ok : Generated_method_types.Method)
-  | `Connection_open _ -> (module Connection_open : Generated_method_types.Method)
-  | `Connection_open_ok _ -> (module Connection_open_ok : Generated_method_types.Method)
-  | `Connection_close _ -> (module Connection_close : Generated_method_types.Method)
-  | `Connection_close_ok _ -> (module Connection_close_ok : Generated_method_types.Method)
-  | `Channel_open _ -> (module Channel_open : Generated_method_types.Method)
-  | `Channel_open_ok _ -> (module Channel_open_ok : Generated_method_types.Method)
-  | `Channel_flow _ -> (module Channel_flow : Generated_method_types.Method)
-  | `Channel_flow_ok _ -> (module Channel_flow_ok : Generated_method_types.Method)
-  | `Channel_close _ -> (module Channel_close : Generated_method_types.Method)
-  | `Channel_close_ok _ -> (module Channel_close_ok : Generated_method_types.Method)
-  | `Exchange_declare _ -> (module Exchange_declare : Generated_method_types.Method)
-  | `Exchange_declare_ok _ -> (module Exchange_declare_ok : Generated_method_types.Method)
-  | `Exchange_delete _ -> (module Exchange_delete : Generated_method_types.Method)
-  | `Exchange_delete_ok _ -> (module Exchange_delete_ok : Generated_method_types.Method)
-  | `Queue_declare _ -> (module Queue_declare : Generated_method_types.Method)
-  | `Queue_declare_ok _ -> (module Queue_declare_ok : Generated_method_types.Method)
-  | `Queue_bind _ -> (module Queue_bind : Generated_method_types.Method)
-  | `Queue_bind_ok _ -> (module Queue_bind_ok : Generated_method_types.Method)
-  | `Queue_unbind _ -> (module Queue_unbind : Generated_method_types.Method)
-  | `Queue_unbind_ok _ -> (module Queue_unbind_ok : Generated_method_types.Method)
-  | `Queue_purge _ -> (module Queue_purge : Generated_method_types.Method)
-  | `Queue_purge_ok _ -> (module Queue_purge_ok : Generated_method_types.Method)
-  | `Queue_delete _ -> (module Queue_delete : Generated_method_types.Method)
-  | `Queue_delete_ok _ -> (module Queue_delete_ok : Generated_method_types.Method)
-  | `Basic_qos _ -> (module Basic_qos : Generated_method_types.Method)
-  | `Basic_qos_ok _ -> (module Basic_qos_ok : Generated_method_types.Method)
-  | `Basic_consume _ -> (module Basic_consume : Generated_method_types.Method)
-  | `Basic_consume_ok _ -> (module Basic_consume_ok : Generated_method_types.Method)
-  | `Basic_cancel _ -> (module Basic_cancel : Generated_method_types.Method)
-  | `Basic_cancel_ok _ -> (module Basic_cancel_ok : Generated_method_types.Method)
-  | `Basic_publish _ -> (module Basic_publish : Generated_method_types.Method)
-  | `Basic_return _ -> (module Basic_return : Generated_method_types.Method)
-  | `Basic_deliver _ -> (module Basic_deliver : Generated_method_types.Method)
-  | `Basic_get _ -> (module Basic_get : Generated_method_types.Method)
-  | `Basic_get_ok _ -> (module Basic_get_ok : Generated_method_types.Method)
-  | `Basic_get_empty _ -> (module Basic_get_empty : Generated_method_types.Method)
-  | `Basic_ack _ -> (module Basic_ack : Generated_method_types.Method)
-  | `Basic_reject _ -> (module Basic_reject : Generated_method_types.Method)
-  | `Basic_recover_async _ -> (module Basic_recover_async : Generated_method_types.Method)
-  | `Basic_recover _ -> (module Basic_recover : Generated_method_types.Method)
-  | `Basic_recover_ok _ -> (module Basic_recover_ok : Generated_method_types.Method)
-  | `Tx_select _ -> (module Tx_select : Generated_method_types.Method)
-  | `Tx_select_ok _ -> (module Tx_select_ok : Generated_method_types.Method)
-  | `Tx_commit _ -> (module Tx_commit : Generated_method_types.Method)
-  | `Tx_commit_ok _ -> (module Tx_commit_ok : Generated_method_types.Method)
-  | `Tx_rollback _ -> (module Tx_rollback : Generated_method_types.Method)
-  | `Tx_rollback_ok _ -> (module Tx_rollback_ok : Generated_method_types.Method)
+  | `Connection_start _ -> (module Connection_start : Method)
+  | `Connection_start_ok _ -> (module Connection_start_ok : Method)
+  | `Connection_secure _ -> (module Connection_secure : Method)
+  | `Connection_secure_ok _ -> (module Connection_secure_ok : Method)
+  | `Connection_tune _ -> (module Connection_tune : Method)
+  | `Connection_tune_ok _ -> (module Connection_tune_ok : Method)
+  | `Connection_open _ -> (module Connection_open : Method)
+  | `Connection_open_ok _ -> (module Connection_open_ok : Method)
+  | `Connection_close _ -> (module Connection_close : Method)
+  | `Connection_close_ok _ -> (module Connection_close_ok : Method)
+  | `Channel_open _ -> (module Channel_open : Method)
+  | `Channel_open_ok _ -> (module Channel_open_ok : Method)
+  | `Channel_flow _ -> (module Channel_flow : Method)
+  | `Channel_flow_ok _ -> (module Channel_flow_ok : Method)
+  | `Channel_close _ -> (module Channel_close : Method)
+  | `Channel_close_ok _ -> (module Channel_close_ok : Method)
+  | `Exchange_declare _ -> (module Exchange_declare : Method)
+  | `Exchange_declare_ok _ -> (module Exchange_declare_ok : Method)
+  | `Exchange_delete _ -> (module Exchange_delete : Method)
+  | `Exchange_delete_ok _ -> (module Exchange_delete_ok : Method)
+  | `Queue_declare _ -> (module Queue_declare : Method)
+  | `Queue_declare_ok _ -> (module Queue_declare_ok : Method)
+  | `Queue_bind _ -> (module Queue_bind : Method)
+  | `Queue_bind_ok _ -> (module Queue_bind_ok : Method)
+  | `Queue_unbind _ -> (module Queue_unbind : Method)
+  | `Queue_unbind_ok _ -> (module Queue_unbind_ok : Method)
+  | `Queue_purge _ -> (module Queue_purge : Method)
+  | `Queue_purge_ok _ -> (module Queue_purge_ok : Method)
+  | `Queue_delete _ -> (module Queue_delete : Method)
+  | `Queue_delete_ok _ -> (module Queue_delete_ok : Method)
+  | `Basic_qos _ -> (module Basic_qos : Method)
+  | `Basic_qos_ok _ -> (module Basic_qos_ok : Method)
+  | `Basic_consume _ -> (module Basic_consume : Method)
+  | `Basic_consume_ok _ -> (module Basic_consume_ok : Method)
+  | `Basic_cancel _ -> (module Basic_cancel : Method)
+  | `Basic_cancel_ok _ -> (module Basic_cancel_ok : Method)
+  | `Basic_publish _ -> (module Basic_publish : Method)
+  | `Basic_return _ -> (module Basic_return : Method)
+  | `Basic_deliver _ -> (module Basic_deliver : Method)
+  | `Basic_get _ -> (module Basic_get : Method)
+  | `Basic_get_ok _ -> (module Basic_get_ok : Method)
+  | `Basic_get_empty _ -> (module Basic_get_empty : Method)
+  | `Basic_ack _ -> (module Basic_ack : Method)
+  | `Basic_reject _ -> (module Basic_reject : Method)
+  | `Basic_recover_async _ -> (module Basic_recover_async : Method)
+  | `Basic_recover _ -> (module Basic_recover : Method)
+  | `Basic_recover_ok _ -> (module Basic_recover_ok : Method)
+  | `Tx_select _ -> (module Tx_select : Method)
+  | `Tx_select_ok _ -> (module Tx_select_ok : Method)
+  | `Tx_commit _ -> (module Tx_commit : Method)
+  | `Tx_commit_ok _ -> (module Tx_commit_ok : Method)
+  | `Tx_rollback _ -> (module Tx_rollback : Method)
+  | `Tx_rollback_ok _ -> (module Tx_rollback_ok : Method)

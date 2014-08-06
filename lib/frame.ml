@@ -25,53 +25,13 @@ let frame_type_to_string = function
   | FC.Body_frame      -> "Body"
   | FC.Heartbeat_frame -> "Heartbeat"
 
-let rec field_table_to_string field_table =
-  "{" ^ (String.concat "; " (List.map field_entry_to_string field_table)) ^ "}"
-
-and field_entry_to_string (name, field_value) =
-  let open Protocol.Amqp_table in
-  match field_value with
-  | Boolean value         -> Printf.sprintf "<Boolean %s=%b>" name value
-  | Shortshort_int value  -> Printf.sprintf "<Shortshort_int %s=%d>" name value
-  | Shortshort_uint value -> Printf.sprintf "<Shortshort_uint %s=%d>" name value
-  | Short_int value       -> Printf.sprintf "<Short_int %s=%d>" name value
-  | Short_uint value      -> Printf.sprintf "<Short_uint %s=%d>" name value
-  | Long_int value        -> Printf.sprintf "<Long_int %s=%d>" name value
-  | Long_uint value       -> Printf.sprintf "<Long_uint %s=%d>" name value
-  | Longlong_int value    -> Printf.sprintf "<Longlong_int %s=%d>" name value
-  | Longlong_uint value   -> Printf.sprintf "<Longlong_uint %s=%d>" name value
-  | Float value           -> Printf.sprintf "<Float %s=%f>" name value
-  | Double value          -> Printf.sprintf "<Double %s=%f>" name value
-  (* | Decimal value         -> "???" *)
-  | Short_string value    -> Printf.sprintf "<Short_string %s=%S>" name value
-  | Long_string value     -> Printf.sprintf "<Long_string %s=%S>" name value
-  (* | Field_array value     -> "???" *)
-  | Timestamp value       -> Printf.sprintf "<Timestamp %s=%d>" name value
-  | Field_table value     -> Printf.sprintf "<Field_table %s=%s>" name (field_table_to_string value)
-  | No_value              -> Printf.sprintf "<No_value %s>" name
-
-let amqp_field_to_string (name, field) =
-  let open Protocol.Amqp_field in
-  match field with
-  | Octet value       -> Printf.sprintf "<Octet %s %d>" name value
-  | Short value       -> Printf.sprintf "<Short %s %d>" name value
-  | Long value        -> Printf.sprintf "<Long %s %d>" name value
-  | Longlong value    -> Printf.sprintf "<LongLong %s %d>" name value
-  | Bit value         -> Printf.sprintf "<Bit %s %b>" name value
-  | Shortstring value -> Printf.sprintf "<Shortstring %s %S>" name value
-  | Longstring value  -> Printf.sprintf "<Longstring %s %S>" name value
-  | Timestamp value   -> Printf.sprintf "<Timestamp %s %d>" name value
-  | Table value       -> Printf.sprintf "<Table %s %s>" name (field_table_to_string value)
-
-let method_args_to_string payload =
+let method_to_string payload =
   let (module P : Generated_methods.Method) = Generated_methods.module_for payload in
-  let args = P.list_of_t payload in
-  let args_str = String.concat "; " (List.map amqp_field_to_string args) in
-  Printf.sprintf "<Method (%d, %d) [%s]>" P.class_id P.method_id args_str
+  P.dump_method payload
 
 let frame_to_string = function
   | channel, Method payload ->
-    Printf.sprintf "<Method ch=%d %s>" channel (method_args_to_string payload)
+    Printf.sprintf "<Method ch=%d %s>" channel (method_to_string payload)
   | channel, Header payload ->
     Printf.sprintf "<Header ch=%d %S>" channel payload
   | channel, Body payload ->

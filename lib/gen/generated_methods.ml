@@ -3,22 +3,17 @@
 
 module type Method = sig
   type t
+  open Generated_method_types
 
   val class_id : int
 
   val method_id : int
 
-  val parse_method : Parse_utils.Parse_buf.t -> Generated_method_types.method_payload
+  val parse_method : Parse_utils.Parse_buf.t -> method_payload
 
-  val build_method : Generated_method_types.method_payload -> string
+  val build_method : method_payload -> string
 
-  (* temporary? *)
-
-  val buf_to_list : Parse_utils.Parse_buf.t -> (string * Protocol.Amqp_field.t) list
-
-  val string_of_list : (string * Protocol.Amqp_field.t) list -> string
-
-  val list_of_t : Generated_method_types.method_payload -> (string * Protocol.Amqp_field.t) list
+  val dump_method : method_payload -> string
 end
 
 
@@ -33,11 +28,17 @@ module Connection_start = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_start (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_start payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_start payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -57,11 +58,17 @@ module Connection_start_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_start_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_start_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_start_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -81,11 +88,17 @@ module Connection_secure = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_secure (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_secure payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_secure payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -105,11 +118,17 @@ module Connection_secure_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_secure_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_secure_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_secure_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -129,11 +148,17 @@ module Connection_tune = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_tune (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_tune payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_tune payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -153,11 +178,17 @@ module Connection_tune_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_tune_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_tune_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_tune_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -177,11 +208,17 @@ module Connection_open = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_open (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_open payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_open payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -201,11 +238,17 @@ module Connection_open_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_open_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_open_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -225,11 +268,17 @@ module Connection_close = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_close (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_close payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_close payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -249,11 +298,17 @@ module Connection_close_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Connection_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Connection_close_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Connection_close_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -273,11 +328,17 @@ module Channel_open = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_open (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_open payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_open payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -297,11 +358,17 @@ module Channel_open_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_open_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_open_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -321,11 +388,17 @@ module Channel_flow = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_flow (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_flow payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_flow payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -345,11 +418,17 @@ module Channel_flow_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_flow_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_flow_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_flow_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -369,11 +448,17 @@ module Channel_close = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_close (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_close payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_close payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -393,11 +478,17 @@ module Channel_close_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Channel_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Channel_close_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Channel_close_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -417,11 +508,17 @@ module Exchange_declare = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Exchange_declare (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Exchange_declare payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Exchange_declare payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -441,11 +538,17 @@ module Exchange_declare_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Exchange_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Exchange_declare_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Exchange_declare_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -465,11 +568,17 @@ module Exchange_delete = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Exchange_delete (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Exchange_delete payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Exchange_delete payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -489,11 +598,17 @@ module Exchange_delete_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Exchange_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Exchange_delete_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Exchange_delete_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -513,11 +628,17 @@ module Queue_declare = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_declare (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_declare payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_declare payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -537,11 +658,17 @@ module Queue_declare_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_declare_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_declare_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -561,11 +688,17 @@ module Queue_bind = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_bind (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_bind payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_bind payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -585,11 +718,17 @@ module Queue_bind_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_bind_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_bind_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_bind_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -609,11 +748,17 @@ module Queue_unbind = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_unbind (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_unbind payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_unbind payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -633,11 +778,17 @@ module Queue_unbind_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_unbind_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_unbind_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_unbind_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -657,11 +808,17 @@ module Queue_purge = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_purge (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_purge payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_purge payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -681,11 +838,17 @@ module Queue_purge_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_purge_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_purge_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_purge_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -705,11 +868,17 @@ module Queue_delete = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_delete (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_delete payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_delete payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -729,11 +898,17 @@ module Queue_delete_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Queue_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Queue_delete_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Queue_delete_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -753,11 +928,17 @@ module Basic_qos = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_qos (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_qos payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_qos payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -777,11 +958,17 @@ module Basic_qos_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_qos_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_qos_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_qos_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -801,11 +988,17 @@ module Basic_consume = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_consume (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_consume payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_consume payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -825,11 +1018,17 @@ module Basic_consume_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_consume_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_consume_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_consume_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -849,11 +1048,17 @@ module Basic_cancel = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_cancel (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_cancel payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_cancel payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -873,11 +1078,17 @@ module Basic_cancel_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_cancel_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_cancel_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_cancel_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -897,11 +1108,17 @@ module Basic_publish = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_publish (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_publish payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_publish payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -921,11 +1138,17 @@ module Basic_return = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_return (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_return payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_return payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -945,11 +1168,17 @@ module Basic_deliver = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_deliver (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_deliver payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_deliver payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -969,11 +1198,17 @@ module Basic_get = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_get (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_get payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_get payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -993,11 +1228,17 @@ module Basic_get_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_get_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_get_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_get_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1017,11 +1258,17 @@ module Basic_get_empty = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_get_empty (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_get_empty payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_get_empty payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1041,11 +1288,17 @@ module Basic_ack = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_ack (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_ack payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_ack payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1065,11 +1318,17 @@ module Basic_reject = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_reject (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_reject payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_reject payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1089,11 +1348,17 @@ module Basic_recover_async = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_recover_async (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_recover_async payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_recover_async payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1113,11 +1378,17 @@ module Basic_recover = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_recover (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_recover payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_recover payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1137,11 +1408,17 @@ module Basic_recover_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Basic_recover_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Basic_recover_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Basic_recover_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1161,11 +1438,17 @@ module Tx_select = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_select (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_select payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_select payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1185,11 +1468,17 @@ module Tx_select_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_select_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_select_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_select_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1209,11 +1498,17 @@ module Tx_commit = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_commit (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_commit payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_commit payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1233,11 +1528,17 @@ module Tx_commit_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_commit_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_commit_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_commit_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1257,11 +1558,17 @@ module Tx_rollback = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_rollback (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_rollback payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_rollback payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function
@@ -1281,11 +1588,17 @@ module Tx_rollback_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
+  let dump_list = dump_list class_id method_id
+
   let parse_method buf =
     (`Tx_rollback_ok (t_from_list (buf_to_list buf)) :> method_payload)
 
   let build_method = function
     | `Tx_rollback_ok payload -> string_of_list (t_to_list payload)
+    | _ -> assert false
+
+  let dump_method = function
+    | `Tx_rollback_ok payload -> dump_list (t_to_list payload)
     | _ -> assert false
 
   let list_of_t = function

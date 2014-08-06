@@ -219,6 +219,7 @@ module Method_module_wrapper = struct
         fmt_line ppf (fun ppf -> Format.fprintf ppf "type t = [`%s of record]") module_name;
         fmt_line_str ppf "let buf_to_list = buf_to_list arguments";
         fmt_line_str ppf "let string_of_list = string_of_list class_id method_id";
+        fmt_line_str ppf "let dump_list = dump_list class_id method_id";
         fmt_function ppf "let parse_method buf =" (fun ppf ->
             Format.fprintf ppf
               "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
@@ -226,6 +227,10 @@ module Method_module_wrapper = struct
         fmt_function ppf "let build_method = function" (fun ppf ->
             Format.fprintf ppf
               "@,| `%s payload -> string_of_list (t_to_list payload)@,| _ -> assert false"
+              module_name);
+        fmt_function ppf "let dump_method = function" (fun ppf ->
+            Format.fprintf ppf
+              "@,| `%s payload -> dump_list (t_to_list payload)@,| _ -> assert false"
               module_name);
         fmt_function ppf "let list_of_t = function" (fun ppf ->
             Format.fprintf ppf
@@ -299,25 +304,15 @@ module Method_module_type = struct
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     fmt_module_type ppf "Method" (fun ppf ->
-        Format.fprintf ppf "@,type t";
+        Format.fprintf ppf "@,type t@,open Generated_method_types";
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
         fmt_line_str ppf (
-          "val parse_method : Parse_utils.Parse_buf.t"
-          ^ " -> Generated_method_types.method_payload");
-        fmt_line_str ppf (
-          "val build_method : Generated_method_types.method_payload"
-          ^ " -> string");
-        fmt_line_str ppf "(* temporary? *)";
-        fmt_line_str ppf (
-          "val buf_to_list : Parse_utils.Parse_buf.t"
-          ^ " -> (string * Protocol.Amqp_field.t) list");
-        fmt_line_str ppf (
-          "val string_of_list : (string * Protocol.Amqp_field.t) list"
-          ^ " -> string");
-        fmt_line_str ppf (
-          "val list_of_t : Generated_method_types.method_payload"
-          ^ " -> (string * Protocol.Amqp_field.t) list"))
+          "val parse_method : Parse_utils.Parse_buf.t -> method_payload");
+        fmt_line_str ppf
+          "val build_method : method_payload -> string";
+        fmt_line_str ppf
+          "val dump_method : method_payload -> string")
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_method_type ();

@@ -105,6 +105,31 @@ module Amqp_table = struct
     add_table_entries table_buf value;
     PU.add_long_str buf (PU.Build_buf.to_string table_buf)
 
+  let rec dump_field_table field_table =
+    "{" ^ (String.concat "; " (List.map dump_field_entry field_table)) ^ "}"
+
+  and dump_field_entry (name, field_value) =
+    match field_value with
+    | Boolean value         -> Printf.sprintf "<Boolean %s=%b>" name value
+    | Shortshort_int value  -> Printf.sprintf "<Shortshort_int %s=%d>" name value
+    | Shortshort_uint value -> Printf.sprintf "<Shortshort_uint %s=%d>" name value
+    | Short_int value       -> Printf.sprintf "<Short_int %s=%d>" name value
+    | Short_uint value      -> Printf.sprintf "<Short_uint %s=%d>" name value
+    | Long_int value        -> Printf.sprintf "<Long_int %s=%d>" name value
+    | Long_uint value       -> Printf.sprintf "<Long_uint %s=%d>" name value
+    | Longlong_int value    -> Printf.sprintf "<Longlong_int %s=%d>" name value
+    | Longlong_uint value   -> Printf.sprintf "<Longlong_uint %s=%d>" name value
+    | Float value           -> Printf.sprintf "<Float %s=%f>" name value
+    | Double value          -> Printf.sprintf "<Double %s=%f>" name value
+    (* | Decimal value         -> "???" *)
+    | Short_string value    -> Printf.sprintf "<Short_string %s=%S>" name value
+    | Long_string value     -> Printf.sprintf "<Long_string %s=%S>" name value
+    (* | Field_array value     -> "???" *)
+    | Timestamp value       -> Printf.sprintf "<Timestamp %s=%d>" name value
+    | Field_table value     -> Printf.sprintf "<Field_table %s=%s>"
+                                 name (dump_field_table value)
+    | No_value              -> Printf.sprintf "<No_value %s>" name
+
 end
 
 module Amqp_field = struct
@@ -145,6 +170,19 @@ module Amqp_field = struct
     | (_ : string), Timestamp value -> PU.add_long_long buf value
     | (_ : string), Table value -> Amqp_table.add_table buf value
 
+  let dump_field (name, field) =
+    match field with
+    | Octet value       -> Printf.sprintf "<Octet %s %d>" name value
+    | Short value       -> Printf.sprintf "<Short %s %d>" name value
+    | Long value        -> Printf.sprintf "<Long %s %d>" name value
+    | Longlong value    -> Printf.sprintf "<LongLong %s %d>" name value
+    | Bit value         -> Printf.sprintf "<Bit %s %b>" name value
+    | Shortstring value -> Printf.sprintf "<Shortstring %s %S>" name value
+    | Longstring value  -> Printf.sprintf "<Longstring %s %S>" name value
+    | Timestamp value   -> Printf.sprintf "<Timestamp %s %d>" name value
+    | Table value       -> Printf.sprintf "<Table %s %s>"
+                             name (Amqp_table.dump_field_table value)
+
 end
 
 
@@ -164,4 +202,8 @@ module Method_utils = struct
     PU.add_short buf method_id;
     List.iter (Amqp_field.add_field buf) payload;
     PU.Build_buf.to_string buf
+
+  let dump_list class_id method_id payload =
+    let args_str = String.concat "; " (List.map Amqp_field.dump_field payload) in
+    Printf.sprintf "<Method (%d, %d) [%s]>" class_id method_id args_str
 end

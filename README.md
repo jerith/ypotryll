@@ -27,11 +27,14 @@ Things that have been implemented:
 
  * XML spec parser
  * Basic wire protocol frame decoder
+ * Generated method frame parsers and builders
+ * First pass at a high-level API (incomplete)
 
 Things that still need to be implemented:
 
- * Tests!
+ * More high-level API
  * Everything else
+ * More tests!
 
 I'm actively working on this project, but I'm new to OCaml and I've never
 written an AMQP client in any language, so I have no idea how long this will
@@ -41,16 +44,16 @@ take.
 How?
 ----
 
-Ypotryll uses OASIS, so you can build it like so:
+Ypotryll uses an OASIS-generated makefile, so you can build it like so:
 ```
-$ ocaml setup.ml -configure
-$ ocaml setup.ml -build
+$ make configure
+$ make
 ```
 
-You can run the code generator (which doesn't actually generate code yet, but
-it parses the XML spec) as follows:
+You can build and run the code generator as follows:
 ```
-$ ./code_gen.byte
+$ (cd code_gen; make configure; make)
+$ code_gen/code_gen.byte < amqp0-9-1.xml
 ```
 
 

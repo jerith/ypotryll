@@ -6,7 +6,8 @@ open Generated_methods
 
 
 let callback channel frame_payload =
-  Lwt_io.printlf "<<< %s" (Frame.frame_to_string (channel, frame_payload))
+  Lwt_io.printlf "Received frame: %s"
+    (Frame.frame_to_string (channel, frame_payload))
 
 
 let rec catch_frames channel =
@@ -24,9 +25,9 @@ let lwt_main =
   ignore_result (catch_frames channel);
   Channel.send_method_sync channel (
     Exchange_declare.make_t
-      ~exchange:"foo" ~type_:"direct" ~passive:false ~durable:false ~no_wait:false ~arguments:[] ())
-  >>= (fun x -> Lwt_io.printlf "XXX" >> return (Frame.Method x))
-  >>= callback (Channel.get_channel_number channel) >>
+      ~exchange:"foo" ~type_:"direct" ~passive:false ~durable:false
+      ~no_wait:false ~arguments:[] ())
+  >>= (fun x -> Lwt_io.printlf "Exchange created.") >>
   try_lwt
     Client.wait_for_shutdown client
   with Failure text -> Lwt_io.printlf "exception: %S" text >> return ()

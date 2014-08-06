@@ -62,7 +62,6 @@ let gethostbyname name =
 
 
 let write_data conn_io data =
-  Printf.printf ">>> %S\n%!" data;
   Lwt_io.write conn_io.ouch data
 
 
@@ -76,6 +75,7 @@ let create_connection_io server port =
   >>= (fun (inch, ouch) ->
       let connection_io = { inch; ouch; params = default_params } in
       write_data connection_io "AMQP\x00\x00\x09\x01" >>
+      Lwt_io.printlf ">>> %S" "AMQP\x00\x00\x09\x01" >>
       return connection_io)
 
 
@@ -108,8 +108,18 @@ let rec process_frames connection str =
   | None -> return str
   | Some (channel, frame_payload) ->
     let channel_io = Hashtbl.find connection.channels channel in
-    process_channel_frame channel_io frame_payload;
-    process_frames connection str
+    Lwt_io.printlf "<<< %s" (Frame.frame_to_string (channel, frame_payload)) >>
+    (process_channel_frame channel_io frame_payload;
+     process_frames connection str)
+
+
+let debug_dump connection input =
+  match connection.connection_state with
+  | Opening -> return_unit
+  | Open | Closing | Closed ->
+    Lwt_io.printlf "Read bytes: %d" (String.length input) >>
+    Lwt_io.hexdump Lwt_io.stdout input >>
+    Lwt_io.flush Lwt_io.stdout
 
 
 let listen connection =
@@ -117,9 +127,7 @@ let listen connection =
     (* Read some data into our string. *)
     Lwt_io.read ~count:1024 connection.connection_io.inch
     >>= (fun input ->
-        Lwt_io.printlf "Read bytes: %d" (String.length input) >>
-        Lwt_io.hexdump Lwt_io.stdout input >>
-        Lwt_io.flush Lwt_io.stdout >>
+        debug_dump connection input >>
         if String.length input = 0 (* EOF from server - we have quit or been kicked. *)
         then return (wakeup_exn connection.finished (Failure "connection reset by peer"))
         else begin
@@ -137,6 +145,7 @@ let listen connection =
 let create_channel connection channel channel_state =
   let stream, push = Lwt_stream.create () in
   let send frame_payload =
+    Lwt_io.printlf ">>> %s" (Frame.frame_to_string (channel, frame_payload)) >>
     connection.connection_send (channel, frame_payload)
   in
   Hashtbl.add connection.channels channel
@@ -283,7 +292,7 @@ let process_setup_frame_payload channel_io frame_payload = function
   | Connection_secure -> failwith "Unexpected Connection_secure state."
   | Connection_tune -> process_connection_tune channel_io frame_payload
   | Connection_open -> process_connection_open channel_io frame_payload
-  | Connected -> return Connected
+  | Connected -> assert false
 
 
 let rec setup_connection connection state =
@@ -293,7 +302,7 @@ let rec setup_connection connection state =
   | None -> return ()
   | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
   >>= function
-  | Connected -> return ()
+  | Connected -> connection.connection_state <- Open; return ()
   | state -> setup_connection connection state
 
 

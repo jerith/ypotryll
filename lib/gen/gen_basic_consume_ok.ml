@@ -6,6 +6,10 @@ module Basic_consume_ok = struct
 
   let class_id = 60
   let method_id = 21
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = {
     consumer_tag : string (* consumer-tag : shortstr *);

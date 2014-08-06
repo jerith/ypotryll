@@ -6,6 +6,11 @@ module Basic_consume = struct
 
   let class_id = 60
   let method_id = 20
+  let synchronous = true
+
+  let responses = [
+    (60, 21);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

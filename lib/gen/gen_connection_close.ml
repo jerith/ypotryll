@@ -6,6 +6,11 @@ module Connection_close = struct
 
   let class_id = 10
   let method_id = 50
+  let synchronous = true
+
+  let responses = [
+    (10, 51);
+  ]
 
   type record = {
     reply_code : int (* reply-code : short *);

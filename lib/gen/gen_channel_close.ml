@@ -6,6 +6,11 @@ module Channel_close = struct
 
   let class_id = 20
   let method_id = 40
+  let synchronous = true
+
+  let responses = [
+    (20, 41);
+  ]
 
   type record = {
     reply_code : int (* reply-code : short *);

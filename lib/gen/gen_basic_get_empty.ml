@@ -6,6 +6,10 @@ module Basic_get_empty = struct
 
   let class_id = 60
   let method_id = 72
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = {
     reserved_1 : string (* reserved : shortstr *);

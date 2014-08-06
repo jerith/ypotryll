@@ -6,6 +6,11 @@ module Exchange_delete = struct
 
   let class_id = 40
   let method_id = 20
+  let synchronous = true
+
+  let responses = [
+    (40, 21);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

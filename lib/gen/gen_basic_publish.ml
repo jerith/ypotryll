@@ -6,6 +6,10 @@ module Basic_publish = struct
 
   let class_id = 60
   let method_id = 40
+  let synchronous = false
+
+  let responses = [
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

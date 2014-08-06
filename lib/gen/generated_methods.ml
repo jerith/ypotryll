@@ -9,6 +9,10 @@ module type Method = sig
 
   val method_id : int
 
+  val synchronous : bool
+
+  val responses : (int * int) list
+
   val parse_method : Parse_utils.Parse_buf.t -> method_payload
 
   val build_method : method_payload -> string

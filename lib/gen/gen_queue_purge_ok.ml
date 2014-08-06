@@ -6,6 +6,10 @@ module Queue_purge_ok = struct
 
   let class_id = 50
   let method_id = 31
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = {
     message_count : int (* message-count : long *);

@@ -6,6 +6,11 @@ module Connection_open = struct
 
   let class_id = 10
   let method_id = 40
+  let synchronous = true
+
+  let responses = [
+    (10, 41);
+  ]
 
   type record = {
     virtual_host : string (* path : shortstr *);

@@ -6,6 +6,12 @@ module Basic_get = struct
 
   let class_id = 60
   let method_id = 70
+  let synchronous = true
+
+  let responses = [
+    (60, 71);
+    (60, 72);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

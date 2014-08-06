@@ -6,6 +6,10 @@ module Basic_recover_async = struct
 
   let class_id = 60
   let method_id = 100
+  let synchronous = false
+
+  let responses = [
+  ]
 
   type record = {
     requeue : bool (* bit : bit *);

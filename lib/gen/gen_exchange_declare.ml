@@ -6,6 +6,11 @@ module Exchange_declare = struct
 
   let class_id = 40
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (40, 11);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

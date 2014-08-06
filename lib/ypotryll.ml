@@ -1,7 +1,8 @@
 
 
-type client = Client_impl.client
+type client = Connection.t
 type channel = Client_impl.channel
+type method_payload = Generated_method_types.method_payload
 
 
 module Client = struct

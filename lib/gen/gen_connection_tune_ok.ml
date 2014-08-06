@@ -6,6 +6,10 @@ module Connection_tune_ok = struct
 
   let class_id = 10
   let method_id = 31
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = {
     channel_max : int (* short : short *);

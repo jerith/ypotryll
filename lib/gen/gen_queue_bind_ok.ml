@@ -6,6 +6,10 @@ module Queue_bind_ok = struct
 
   let class_id = 50
   let method_id = 21
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = ()
 

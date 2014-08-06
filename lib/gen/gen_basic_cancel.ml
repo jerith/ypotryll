@@ -6,6 +6,11 @@ module Basic_cancel = struct
 
   let class_id = 60
   let method_id = 30
+  let synchronous = true
+
+  let responses = [
+    (60, 31);
+  ]
 
   type record = {
     consumer_tag : string (* consumer-tag : shortstr *);

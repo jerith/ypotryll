@@ -6,6 +6,11 @@ module Basic_qos = struct
 
   let class_id = 60
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (60, 11);
+  ]
 
   type record = {
     prefetch_size : int (* long : long *);

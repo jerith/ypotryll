@@ -119,9 +119,28 @@ module Method_module = struct
     text : string;
   }
 
-  let fmt_index_vals ppf (cls, meth) =
-    Format.fprintf ppf "@[<v>let class_id = %d@;let method_id = %d@]"
-      cls.Class.index meth.Method.index
+  let fmt_method_constants ppf (cls, meth) =
+    Format.fprintf ppf "@[<v>let %s = %d@;let %s = %d@;let %s = %B@]"
+      "class_id" cls.Class.index
+      "method_id" meth.Method.index
+      "synchronous" meth.Method.synchronous
+
+  (* method responses *)
+
+  let rec find_method_for_name name = function
+    | [] -> failwith ("No method found for name: " ^ name)
+    | meth :: methods ->
+      if meth.Method.name = name
+      then meth
+      else find_method_for_name name methods
+
+  let fmt_method_response cls ppf response =
+    let meth = find_method_for_name response.Response.name cls.Class.methods in
+    Format.fprintf ppf "(%d, %d);" cls.Class.index meth.Method.index
+
+  let fmt_method_responses ppf (cls, meth) =
+    fmt_list_in_vbox ppf "let responses = [" "]"
+      (fmt_method_response cls) meth.Method.responses
 
   (* type record *)
 
@@ -215,7 +234,8 @@ module Method_module = struct
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     fmt_module ppf module_name (fun ppf ->
         Format.fprintf ppf "@,open Protocol";
-        fmt_line ppf fmt_index_vals (cls, meth);
+        fmt_line ppf fmt_method_constants (cls, meth);
+        fmt_line ppf fmt_method_responses (cls, meth);
         fmt_line ppf fmt_method_record (spec, cls, meth);
         fmt_line ppf fmt_argument_list (spec, cls, meth);
         fmt_line ppf fmt_t_to_list (spec, cls, meth);
@@ -340,6 +360,8 @@ module Method_module_type = struct
         Format.fprintf ppf "@,type t@,open Generated_method_types";
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
+        fmt_line_str ppf "val synchronous : bool";
+        fmt_line_str ppf "val responses : (int * int) list";
         fmt_line_str ppf (
           "val parse_method : Parse_utils.Parse_buf.t -> method_payload");
         fmt_line_str ppf

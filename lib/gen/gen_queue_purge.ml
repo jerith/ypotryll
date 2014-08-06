@@ -6,6 +6,11 @@ module Queue_purge = struct
 
   let class_id = 50
   let method_id = 30
+  let synchronous = true
+
+  let responses = [
+    (50, 31);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

@@ -6,6 +6,11 @@ module Connection_secure = struct
 
   let class_id = 10
   let method_id = 20
+  let synchronous = true
+
+  let responses = [
+    (10, 21);
+  ]
 
   type record = {
     challenge : string (* longstr : longstr *);

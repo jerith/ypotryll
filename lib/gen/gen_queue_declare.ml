@@ -6,6 +6,11 @@ module Queue_declare = struct
 
   let class_id = 50
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (50, 11);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

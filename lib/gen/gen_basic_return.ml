@@ -6,6 +6,10 @@ module Basic_return = struct
 
   let class_id = 60
   let method_id = 50
+  let synchronous = false
+
+  let responses = [
+  ]
 
   type record = {
     reply_code : int (* reply-code : short *);

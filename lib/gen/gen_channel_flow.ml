@@ -6,6 +6,11 @@ module Channel_flow = struct
 
   let class_id = 20
   let method_id = 20
+  let synchronous = true
+
+  let responses = [
+    (20, 21);
+  ]
 
   type record = {
     active : bool (* bit : bit *);

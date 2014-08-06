@@ -6,6 +6,11 @@ module Tx_select = struct
 
   let class_id = 90
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (90, 11);
+  ]
 
   type record = ()
 

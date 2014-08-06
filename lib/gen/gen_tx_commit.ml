@@ -6,6 +6,11 @@ module Tx_commit = struct
 
   let class_id = 90
   let method_id = 20
+  let synchronous = true
+
+  let responses = [
+    (90, 21);
+  ]
 
   type record = ()
 

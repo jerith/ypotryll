@@ -15,11 +15,15 @@ type connection_io = {
 }
 
 
+type expected_response = (int * int) list * Generated_method_types.method_payload Lwt.u
+
+
 type channel_io = {
   channel : int;
   stream : Frame.payload Lwt_stream.t;
   push : Frame.payload option -> unit;
   send : Frame.payload -> unit Lwt.t;
+  mutable expected_responses : expected_response list;
 }
 
 
@@ -27,6 +31,7 @@ type t = {
   connection_io : connection_io;
   connection_send : Frame.t -> unit Lwt.t;
   channels : (int, channel_io) Hashtbl.t;
+  finished : unit Lwt.u;
 }
 
 
@@ -61,13 +66,36 @@ let create_connection_io server port =
       return connection_io)
 
 
+let rec pop_expected_response method_num checked = function
+  | [] -> None, List.rev checked
+  | (expected, waker) :: responses when List.mem method_num expected ->
+    Some waker, List.rev_append checked responses
+  | response :: responses ->
+    pop_expected_response method_num (response :: checked) responses
+
+
+let process_channel_method channel_io payload =
+  let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
+  let method_num = (M.class_id, M.method_id) in
+  match pop_expected_response method_num [] channel_io.expected_responses with
+  | None, _ -> channel_io.push (Some (Frame.Method payload))
+  | Some waker, expected_responses ->
+    channel_io.expected_responses <- expected_responses;
+    wakeup waker payload
+
+
+let process_channel_frame channel_io = function
+  | Frame.Method method_payload -> process_channel_method channel_io method_payload
+  | frame_payload -> channel_io.push (Some frame_payload)
+
+
 let rec process_frames connection str =
   let frame, str = Frame.consume_frame str in
   match frame with
   | None -> return str
   | Some (channel, frame_payload) ->
     let channel_io = Hashtbl.find connection.channels channel in
-    channel_io.push (Some frame_payload);
+    process_channel_frame channel_io frame_payload;
     process_frames connection str
 
 
@@ -80,7 +108,7 @@ let listen connection =
         Lwt_io.hexdump Lwt_io.stdout input >>
         Lwt_io.flush Lwt_io.stdout >>
         if String.length input = 0 (* EOF from server - we have quit or been kicked. *)
-        then return ()
+        then return (wakeup connection.finished ())
         else begin
           Buffer.add_string buffer input;
           process_frames connection (Buffer.contents buffer)
@@ -98,14 +126,16 @@ let create_channel connection channel =
   let send frame_payload =
     connection.connection_send (channel, frame_payload)
   in
-  Hashtbl.add connection.channels channel { channel; stream; push; send }
+  Hashtbl.add connection.channels channel
+    { channel; stream; push; send; expected_responses = [] }
 
 
 let connect ~server ?(port=5672) () =
   lwt connection_io = create_connection_io server port in
   let connection_send = write_frame connection_io in
   let channels = Hashtbl.create 10 in
-  let connection = { connection_io; connection_send; channels } in
+  let _, finished = wait () in
+  let connection = { connection_io; connection_send; channels; finished } in
   create_channel connection 0;
   ignore_result (listen connection);
   return connection

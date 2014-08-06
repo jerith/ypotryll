@@ -6,6 +6,10 @@ module Connection_start_ok = struct
 
   let class_id = 10
   let method_id = 11
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = {
     client_properties : Amqp_table.table (* peer-properties : table *);

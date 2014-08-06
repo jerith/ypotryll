@@ -6,6 +6,11 @@ module Connection_start = struct
 
   let class_id = 10
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (10, 11);
+  ]
 
   type record = {
     version_major : int (* octet : octet *);

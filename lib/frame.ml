@@ -26,8 +26,8 @@ let frame_type_to_string = function
   | FC.Heartbeat_frame -> "Heartbeat"
 
 let method_to_string payload =
-  let (module P : Generated_methods.Method) = Generated_methods.module_for payload in
-  P.dump_method payload
+  let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
+  M.dump_method payload
 
 let frame_to_string = function
   | channel, Method payload ->

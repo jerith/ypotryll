@@ -6,6 +6,11 @@ module Channel_open = struct
 
   let class_id = 20
   let method_id = 10
+  let synchronous = true
+
+  let responses = [
+    (20, 11);
+  ]
 
   type record = {
     reserved_1 : string (* reserved : shortstr *);

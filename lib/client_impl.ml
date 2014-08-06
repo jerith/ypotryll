@@ -4,15 +4,9 @@ open Lwt
 open Generated_methods
 
 
-type client = {
-  connection : Connection.t;
-  finished : unit Lwt.t;
-}
-
-
 type channel = {
   channel_io : Connection.channel_io;
-  client : client;
+  connection : Connection.t;
 }
 
 
@@ -165,28 +159,26 @@ let rec setup_connection connection state =
 let connect ~server ?port () =
   lwt connection = Connection.connect ~server ?port () in
   setup_connection connection Connection_start >>
-  let finished, finished_waker = wait () in
-  let client = { connection; finished } in
-  return client
+  return connection
 
 
-let wait_for_shutdown client =
-  client.finished
+let wait_for_shutdown connection =
+  waiter_of_wakener connection.Connection.finished
 
 
 let next_channel channels =
   1 + Hashtbl.fold (fun k _ acc -> max k acc) channels 0
 
 
-let get_channel client channel =
-  Hashtbl.find client.connection.Connection.channels channel
+let get_channel connection channel =
+  Hashtbl.find connection.Connection.channels channel
 
 
-let new_channel client =
-  let channel = next_channel client.connection.Connection.channels in
-  Connection.create_channel client.connection channel;
-  let channel_io = get_channel client channel in
+let new_channel connection =
+  let channel = next_channel connection.Connection.channels in
+  Connection.create_channel connection channel;
+  let channel_io = get_channel connection channel in
   channel_io.Connection.send (Frame.Method (`Channel_open {
       Channel_open.reserved_1 = "";
     })) >>
-  return { channel_io; client }
+  return { channel_io; connection }

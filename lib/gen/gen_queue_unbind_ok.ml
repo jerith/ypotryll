@@ -6,6 +6,10 @@ module Queue_unbind_ok = struct
 
   let class_id = 50
   let method_id = 51
+  let synchronous = true
+
+  let responses = [
+  ]
 
   type record = ()
 

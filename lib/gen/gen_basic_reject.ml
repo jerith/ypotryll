@@ -6,6 +6,10 @@ module Basic_reject = struct
 
   let class_id = 60
   let method_id = 90
+  let synchronous = false
+
+  let responses = [
+  ]
 
   type record = {
     delivery_tag : int (* delivery-tag : longlong *);

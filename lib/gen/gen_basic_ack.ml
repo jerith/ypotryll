@@ -6,6 +6,10 @@ module Basic_ack = struct
 
   let class_id = 60
   let method_id = 80
+  let synchronous = false
+
+  let responses = [
+  ]
 
   type record = {
     delivery_tag : int (* delivery-tag : longlong *);

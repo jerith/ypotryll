@@ -6,6 +6,11 @@ module Queue_delete = struct
 
   let class_id = 50
   let method_id = 40
+  let synchronous = true
+
+  let responses = [
+    (50, 41);
+  ]
 
   type record = {
     reserved_1 : int (* reserved : short *);

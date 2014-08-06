@@ -38,4 +38,11 @@ module Queue_purge = struct
         no_wait;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~no_wait () =
+    `Queue_purge {
+      reserved_1;
+      queue;
+      no_wait;
+    }
 end

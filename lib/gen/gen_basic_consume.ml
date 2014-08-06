@@ -63,4 +63,16 @@ module Basic_consume = struct
         arguments;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~consumer_tag ~no_local ~no_ack ~exclusive ~no_wait ~arguments () =
+    `Basic_consume {
+      reserved_1;
+      queue;
+      consumer_tag;
+      no_local;
+      no_ack;
+      exclusive;
+      no_wait;
+      arguments;
+    }
 end

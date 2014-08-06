@@ -43,4 +43,12 @@ module Channel_close = struct
         method_id;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reply_code ~reply_text ~class_id ~method_id () =
+    `Channel_close {
+      reply_code;
+      reply_text;
+      class_id;
+      method_id;
+    }
 end

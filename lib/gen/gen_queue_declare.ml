@@ -63,4 +63,16 @@ module Queue_declare = struct
         arguments;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~passive ~durable ~exclusive ~auto_delete ~no_wait ~arguments () =
+    `Queue_declare {
+      reserved_1;
+      queue;
+      passive;
+      durable;
+      exclusive;
+      auto_delete;
+      no_wait;
+      arguments;
+    }
 end

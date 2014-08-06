@@ -43,4 +43,12 @@ module Exchange_delete = struct
         no_wait;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~exchange ~if_unused ~no_wait () =
+    `Exchange_delete {
+      reserved_1;
+      exchange;
+      if_unused;
+      no_wait;
+    }
 end

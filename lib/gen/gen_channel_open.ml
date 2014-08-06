@@ -28,4 +28,9 @@ module Channel_open = struct
         reserved_1;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 () =
+    `Channel_open {
+      reserved_1;
+    }
 end

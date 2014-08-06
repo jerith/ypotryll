@@ -28,4 +28,9 @@ module Connection_secure = struct
         challenge;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~challenge () =
+    `Connection_secure {
+      challenge;
+    }
 end

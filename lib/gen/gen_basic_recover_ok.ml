@@ -21,4 +21,7 @@ module Basic_recover_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Basic_recover_ok ()
 end

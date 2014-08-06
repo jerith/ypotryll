@@ -38,4 +38,11 @@ module Queue_declare_ok = struct
         consumer_count;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~queue ~message_count ~consumer_count () =
+    `Queue_declare_ok {
+      queue;
+      message_count;
+      consumer_count;
+    }
 end

@@ -38,4 +38,11 @@ module Basic_get = struct
         no_ack;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~no_ack () =
+    `Basic_get {
+      reserved_1;
+      queue;
+      no_ack;
+    }
 end

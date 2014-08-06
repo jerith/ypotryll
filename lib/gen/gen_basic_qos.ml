@@ -38,4 +38,11 @@ module Basic_qos = struct
         global;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~prefetch_size ~prefetch_count ~global () =
+    `Basic_qos {
+      prefetch_size;
+      prefetch_count;
+      global;
+    }
 end

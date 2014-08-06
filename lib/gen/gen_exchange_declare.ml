@@ -68,4 +68,17 @@ module Exchange_declare = struct
         arguments;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~exchange ~type_ ~passive ~durable ~reserved_2 ~reserved_3 ~no_wait ~arguments () =
+    `Exchange_declare {
+      reserved_1;
+      exchange;
+      type_;
+      passive;
+      durable;
+      reserved_2;
+      reserved_3;
+      no_wait;
+      arguments;
+    }
 end

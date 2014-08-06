@@ -48,4 +48,13 @@ module Queue_delete = struct
         no_wait;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~if_unused ~if_empty ~no_wait () =
+    `Queue_delete {
+      reserved_1;
+      queue;
+      if_unused;
+      if_empty;
+      no_wait;
+    }
 end

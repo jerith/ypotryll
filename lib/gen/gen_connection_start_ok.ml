@@ -43,4 +43,12 @@ module Connection_start_ok = struct
         locale;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~client_properties ~mechanism ~response ~locale () =
+    `Connection_start_ok {
+      client_properties;
+      mechanism;
+      response;
+      locale;
+    }
 end

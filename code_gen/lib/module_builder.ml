@@ -176,6 +176,29 @@ module Method_module = struct
         Format.fprintf ppf "| _ -> failwith \"Unexpected fields.\""
       )
 
+  (* make_t *)
+
+  let amqp_field_type spec field =
+    match (field.Field.domain, field.Field.data_type) with
+    | (Some domain_name, None) -> amqp_field_types_from_domain spec domain_name
+    | (None, Some data_type) -> (amqp_field_type_from_type data_type)
+    | _ -> assert false
+
+  let fmt_make_t ppf (spec, cls, meth) =
+    let make_arg field = "~" ^ make_field_name field in
+    let fmt_field ppf field = Format.fprintf ppf "%s;" (make_field_name field) in
+    let params = match meth.Method.fields with
+      | [] -> "()"
+      | fields -> String.concat " " (List.map make_arg fields) ^ " ()"
+    in
+    fmt_function ppf ("let make_t " ^ params ^ " =") (fun ppf ->
+        Format.pp_print_cut ppf ();
+        let constructor = "`" ^ String.capitalize (make_method_name cls meth) in
+        match meth.Method.fields with
+          | [] -> Format.fprintf ppf "%s ()" constructor
+          | fields -> fmt_list_in_vbox ppf (constructor ^ " {") "}"
+                        fmt_field fields)
+
   (* method module *)
 
   let fmt_method_text ppf (spec, cls, meth) =
@@ -188,6 +211,7 @@ module Method_module = struct
         fmt_line ppf fmt_argument_list (spec, cls, meth);
         fmt_line ppf fmt_t_to_list (spec, cls, meth);
         fmt_line ppf fmt_t_from_list (spec, cls, meth);
+        fmt_line ppf fmt_make_t (spec, cls, meth);
       );
     Format.fprintf ppf "@."
 

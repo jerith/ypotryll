@@ -21,4 +21,7 @@ module Tx_commit_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Tx_commit_ok ()
 end

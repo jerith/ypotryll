@@ -28,4 +28,9 @@ module Basic_cancel_ok = struct
         consumer_tag;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~consumer_tag () =
+    `Basic_cancel_ok {
+      consumer_tag;
+    }
 end

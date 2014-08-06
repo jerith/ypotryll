@@ -21,4 +21,7 @@ module Exchange_declare_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Exchange_declare_ok ()
 end

@@ -48,4 +48,13 @@ module Basic_publish = struct
         immediate;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~exchange ~routing_key ~mandatory ~immediate () =
+    `Basic_publish {
+      reserved_1;
+      exchange;
+      routing_key;
+      mandatory;
+      immediate;
+    }
 end

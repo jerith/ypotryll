@@ -21,4 +21,7 @@ module Connection_close_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Connection_close_ok ()
 end

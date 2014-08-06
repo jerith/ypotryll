@@ -38,4 +38,11 @@ module Connection_open = struct
         reserved_2;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~virtual_host ~reserved_1 ~reserved_2 () =
+    `Connection_open {
+      virtual_host;
+      reserved_1;
+      reserved_2;
+    }
 end

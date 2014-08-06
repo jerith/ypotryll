@@ -28,4 +28,9 @@ module Basic_recover_async = struct
         requeue;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~requeue () =
+    `Basic_recover_async {
+      requeue;
+    }
 end

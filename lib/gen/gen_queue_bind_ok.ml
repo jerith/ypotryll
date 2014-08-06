@@ -21,4 +21,7 @@ module Queue_bind_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Queue_bind_ok ()
 end

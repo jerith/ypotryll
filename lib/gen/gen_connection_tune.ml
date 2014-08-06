@@ -38,4 +38,11 @@ module Connection_tune = struct
         heartbeat;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~channel_max ~frame_max ~heartbeat () =
+    `Connection_tune {
+      channel_max;
+      frame_max;
+      heartbeat;
+    }
 end

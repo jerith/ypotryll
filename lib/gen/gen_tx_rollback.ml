@@ -21,4 +21,7 @@ module Tx_rollback = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Tx_rollback ()
 end

@@ -28,4 +28,9 @@ module Connection_secure_ok = struct
         response;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~response () =
+    `Connection_secure_ok {
+      response;
+    }
 end

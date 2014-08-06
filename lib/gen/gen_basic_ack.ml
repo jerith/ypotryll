@@ -33,4 +33,10 @@ module Basic_ack = struct
         multiple;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~delivery_tag ~multiple () =
+    `Basic_ack {
+      delivery_tag;
+      multiple;
+    }
 end

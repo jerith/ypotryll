@@ -28,4 +28,9 @@ module Channel_flow = struct
         active;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~active () =
+    `Channel_flow {
+      active;
+    }
 end

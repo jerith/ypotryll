@@ -33,4 +33,10 @@ module Basic_reject = struct
         requeue;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~delivery_tag ~requeue () =
+    `Basic_reject {
+      delivery_tag;
+      requeue;
+    }
 end

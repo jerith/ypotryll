@@ -53,4 +53,14 @@ module Queue_bind = struct
         arguments;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~exchange ~routing_key ~no_wait ~arguments () =
+    `Queue_bind {
+      reserved_1;
+      queue;
+      exchange;
+      routing_key;
+      no_wait;
+      arguments;
+    }
 end

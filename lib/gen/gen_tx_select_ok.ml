@@ -21,4 +21,7 @@ module Tx_select_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Tx_select_ok ()
 end

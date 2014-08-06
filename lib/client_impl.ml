@@ -25,6 +25,10 @@ let client_properties = [
 ]
 
 
+let send_method channel_io method_payload =
+  channel_io.Connection.send (Frame.Method method_payload)
+
+
 type protocol_setup_state =
   | Connection_start
   | Connection_secure (* Not used currently. *)
@@ -79,14 +83,10 @@ let process_connection_start channel_io frame_payload =
   Printf.printf "<<< START %s\n%!" (Frame.frame_to_string (0, frame_payload));
   Printf.printf "Auth mechanism: %S\n%!" mechanism;
   Printf.printf "Locales: %S\n%!" locale;
-  let frame_ok = Frame.Method (`Connection_start_ok {
-      Connection_start_ok.client_properties = client_properties;
-      Connection_start_ok.mechanism;
-      Connection_start_ok.response;
-      Connection_start_ok.locale;
-    })
+  let frame_ok =
+    Connection_start_ok.make_t ~client_properties ~mechanism ~response ~locale ()
   in
-  channel_io.Connection.send frame_ok
+  send_method channel_io frame_ok
   (* If we support auth mechanisms other than PLAIN in the future, we'll need
      to potentially switch to Connection_secure instead. *)
   >> return Connection_tune
@@ -116,22 +116,16 @@ let process_connection_tune channel_io frame_payload =
   let heartbeat = choose_heartbeat body in
   Printf.printf "<<< TUNE %s\n%!" (Frame.frame_to_string (0, frame_payload));
   (* Send connection.tune-ok *)
-  let frame_ok = Frame.Method (`Connection_tune_ok {
-      Connection_tune_ok.channel_max;
-      Connection_tune_ok.frame_max;
-      Connection_tune_ok.heartbeat;
-    })
+  let frame_ok =
+    Connection_tune_ok.make_t ~channel_max ~frame_max ~heartbeat ()
   in
-  channel_io.Connection.send frame_ok
+  send_method channel_io frame_ok
   (* Send connection.open *)
   >> let virtual_host = "/" in
-  let frame_open = Frame.Method (`Connection_open {
-      Connection_open.virtual_host;
-      Connection_open.reserved_1 = "";
-      Connection_open.reserved_2 = false;
-    })
+  let frame_open =
+    Connection_open.make_t ~virtual_host ~reserved_1:"" ~reserved_2:false ()
   in
-  channel_io.Connection.send frame_open
+  send_method channel_io frame_open
   >> return Connection_open
 
 

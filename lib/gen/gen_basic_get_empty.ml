@@ -28,4 +28,9 @@ module Basic_get_empty = struct
         reserved_1;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 () =
+    `Basic_get_empty {
+      reserved_1;
+    }
 end

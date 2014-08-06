@@ -28,4 +28,9 @@ module Connection_open_ok = struct
         reserved_1;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 () =
+    `Connection_open_ok {
+      reserved_1;
+    }
 end

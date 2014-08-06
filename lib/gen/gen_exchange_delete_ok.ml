@@ -21,4 +21,7 @@ module Exchange_delete_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Exchange_delete_ok ()
 end

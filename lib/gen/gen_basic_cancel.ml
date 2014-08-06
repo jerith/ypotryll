@@ -33,4 +33,10 @@ module Basic_cancel = struct
         no_wait;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~consumer_tag ~no_wait () =
+    `Basic_cancel {
+      consumer_tag;
+      no_wait;
+    }
 end

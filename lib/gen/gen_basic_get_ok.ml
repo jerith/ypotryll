@@ -48,4 +48,13 @@ module Basic_get_ok = struct
         message_count;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~delivery_tag ~redelivered ~exchange ~routing_key ~message_count () =
+    `Basic_get_ok {
+      delivery_tag;
+      redelivered;
+      exchange;
+      routing_key;
+      message_count;
+    }
 end

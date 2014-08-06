@@ -43,4 +43,12 @@ module Basic_return = struct
         routing_key;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reply_code ~reply_text ~exchange ~routing_key () =
+    `Basic_return {
+      reply_code;
+      reply_text;
+      exchange;
+      routing_key;
+    }
 end

@@ -21,4 +21,7 @@ module Basic_qos_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Basic_qos_ok ()
 end

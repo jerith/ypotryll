@@ -48,4 +48,13 @@ module Basic_deliver = struct
         routing_key;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~consumer_tag ~delivery_tag ~redelivered ~exchange ~routing_key () =
+    `Basic_deliver {
+      consumer_tag;
+      delivery_tag;
+      redelivered;
+      exchange;
+      routing_key;
+    }
 end

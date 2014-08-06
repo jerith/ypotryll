@@ -21,4 +21,7 @@ module Queue_unbind_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Queue_unbind_ok ()
 end

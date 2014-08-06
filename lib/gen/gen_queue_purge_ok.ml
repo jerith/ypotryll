@@ -28,4 +28,9 @@ module Queue_purge_ok = struct
         message_count;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~message_count () =
+    `Queue_purge_ok {
+      message_count;
+    }
 end

@@ -21,4 +21,7 @@ module Channel_close_ok = struct
     | [
     ] -> ()
     | _ -> failwith "Unexpected fields."
+
+  let make_t () =
+    `Channel_close_ok ()
 end

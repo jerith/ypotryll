@@ -48,4 +48,13 @@ module Connection_start = struct
         locales;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~version_major ~version_minor ~server_properties ~mechanisms ~locales () =
+    `Connection_start {
+      version_major;
+      version_minor;
+      server_properties;
+      mechanisms;
+      locales;
+    }
 end

@@ -48,4 +48,13 @@ module Queue_unbind = struct
         arguments;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ~reserved_1 ~queue ~exchange ~routing_key ~arguments () =
+    `Queue_unbind {
+      reserved_1;
+      queue;
+      exchange;
+      routing_key;
+      arguments;
+    }
 end

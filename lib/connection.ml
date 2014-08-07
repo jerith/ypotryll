@@ -18,6 +18,13 @@ type connection_state =
   | Closed
 
 
+let string_of_state = function
+  | Opening -> "Opening"
+  | Open -> "Open"
+  | Closing -> "Closing"
+  | Closed -> "Closed"
+
+
 type connection_io = {
   inch : Lwt_io.input_channel;
   ouch : Lwt_io.output_channel;
@@ -79,6 +86,22 @@ let write_frame conn_io frame =
   write_data conn_io (Frame.build_frame frame)
 
 
+let _set_connection_state connection expected_state new_state =
+  let current_state = connection.connection_io.connection_state in
+  if current_state = expected_state
+  then connection.connection_io.connection_state <- new_state
+  else failwith (
+      "Can't transition to state " ^ (string_of_state new_state)
+      ^ " from " ^ (string_of_state current_state) ^ ".")
+
+
+let set_connection_state connection = function
+  | Opening -> failwith "Can't transition to state Opening."
+  | Open -> _set_connection_state connection Opening Open
+  | Closing -> _set_connection_state connection Open Closing
+  | Closed -> _set_connection_state connection Closing Closed
+
+
 let create_connection_io server port =
   lwt addr = gethostbyname server in
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
@@ -131,25 +154,30 @@ let kill_connection connection =
       wakeup_exn connection.finished (Failure "Connection closed by peer.")
     | Closed -> wakeup connection.finished ()
   end;
-  return_unit
+  Lwt_io.printlf "Connection closed."
 
 
 let listen connection =
   let rec listen' buffer =
     (* Read some data into our string. *)
-    Lwt_io.read ~count:1024 connection.connection_io.inch
-    >>= (fun input ->
-        debug_dump "Received" connection.connection_io input >>
-        if String.length input = 0 (* EOF from server. *)
-        then kill_connection connection
-        else begin
-          Buffer.add_string buffer input;
-          process_frames connection (Buffer.contents buffer)
-          >>= (fun remaining_data ->
-              Buffer.reset buffer;
-              Buffer.add_string buffer remaining_data;
-              listen' buffer)
-        end)
+    begin
+      try_lwt
+        Lwt_io.read ~count:1024 connection.connection_io.inch
+      with
+      | Lwt_io.Channel_closed _ -> return ""
+    end
+    >>= fun input ->
+    debug_dump "Received" connection.connection_io input >>
+    if String.length input = 0 (* EOF from server. *)
+    then kill_connection connection
+    else begin
+      Buffer.add_string buffer input;
+      process_frames connection (Buffer.contents buffer)
+      >>= fun remaining_data ->
+      Buffer.reset buffer;
+      Buffer.add_string buffer remaining_data;
+      listen' buffer
+    end
   in
   listen' (Buffer.create 0)
 
@@ -309,7 +337,7 @@ let rec setup_connection connection state =
   | None -> return ()
   | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
   >>= function
-  | Connected -> connection.connection_io.connection_state <- Open; return ()
+  | Connected -> set_connection_state connection Open; return ()
   | state -> setup_connection connection state
 
 
@@ -344,3 +372,17 @@ let new_channel connection =
   send_method_sync channel_io (Channel_open.make_t ())
   >|= (fun _ -> channel_io.channel_state <- Open) >>
   return channel_io
+
+
+let close_connection connection =
+  set_connection_state connection Closing;
+  let channel_io = Hashtbl.find connection.channels 0 in
+  let close_method =
+    Connection_close.make_t
+      ~reply_code:200 ~reply_text:"Ok" ~class_id:0 ~method_id:0 ()
+  in
+  send_method_sync channel_io close_method
+  >>= (fun _ ->
+      set_connection_state connection Closed;
+      let conn_io = connection.connection_io in
+      Lwt_io.close conn_io.inch <&> Lwt_io.close conn_io.ouch)

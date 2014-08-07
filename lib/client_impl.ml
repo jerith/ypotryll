@@ -12,6 +12,8 @@ type channel = {
 
 let connect = Connection.connect
 
+let close_connection = Connection.close_connection
+
 
 let wait_for_shutdown connection =
   waiter_of_wakener connection.Connection.finished

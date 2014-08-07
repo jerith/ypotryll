@@ -1,6 +1,5 @@
 
 open Lwt
-open Ypotryll
 
 open Generated_methods
 
@@ -10,16 +9,16 @@ let callback channel frame_payload =
 
 
 let rec catch_frames channel =
-  Channel.get_frame_payload channel
+  Ypotryll.get_frame_payload channel
   >>= function
   | None -> return ()
   | Some frame_payload ->
-    callback (Channel.get_channel_number channel) frame_payload >>
+    callback (Ypotryll.get_channel_number channel) frame_payload >>
     catch_frames channel
 
 
 let exchange_declare channel exchange type_ =
-  Channel.send_method_sync channel (
+  Ypotryll.send_method_sync channel (
     Exchange_declare.make_t
       ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false
       ~arguments:[] ())
@@ -30,18 +29,18 @@ let exchange_declare channel exchange type_ =
 
 let do_stuff client =
   try_lwt
-    lwt channel = Client.new_channel client in
+    lwt channel = Ypotryll.open_channel client in
     ignore_result (catch_frames channel);
     exchange_declare channel "foo" "direct" >>
-    Channel.close channel >>
+    Ypotryll.close_channel channel >>
     exchange_declare channel "foo" "direct"
-  finally Client.close_connection client
+  finally Ypotryll.close_connection client
 
 
 let lwt_main =
-  lwt client = Client.connect ~server:"localhost" () in
+  lwt client = Ypotryll.connect ~server:"localhost" () in
   try_lwt
-    do_stuff client <&> Client.wait_for_shutdown client
+    do_stuff client <&> Ypotryll.wait_for_shutdown client
   with Failure text -> Lwt_io.printlf "exception: %S" text >> return ()
 
 

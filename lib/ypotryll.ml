@@ -1,17 +1,51 @@
 
+open Lwt
 
-type client = Connection.t
-type channel = Client_impl.channel
+
+type connection = Connection.t
 type method_payload = Generated_method_types.method_payload
 
 
-module Client = struct
-  include Client_impl
-  type t = client
-end
+type channel = {
+  channel_io : Connection.channel_io;
+  connection : Connection.t;
+}
 
 
-module Channel = struct
-  include Channel_impl
-  type t = channel
-end
+let connect = Connection.connect
+
+let close_connection = Connection.close_connection
+
+
+let wait_for_shutdown connection =
+  waiter_of_wakener connection.Connection.finished
+
+
+let open_channel connection =
+  Connection.new_channel connection
+  >|= (fun channel_io -> { channel_io; connection })
+
+
+let get_connection channel =
+  channel.connection
+
+
+let get_channel_number channel =
+  channel.channel_io.Connection.channel
+
+
+let get_frame_payload channel =
+  Lwt_stream.get channel.channel_io.Connection.stream
+
+
+let send_method_async channel payload =
+  Connection.send_method_async channel.channel_io payload
+
+
+let send_method_sync channel payload =
+  Connection.send_method_sync channel.channel_io payload
+
+
+let close_channel channel =
+  Connection.close_channel
+    channel.connection channel.channel_io

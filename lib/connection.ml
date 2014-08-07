@@ -100,11 +100,9 @@ let rec pop_expected_response method_num checked = function
 
 
 let process_channel_method channel_io payload =
-  let (module M : Generated_methods.Method) =
-    Generated_methods.module_for payload
-  in
-  let method_num = (M.class_id, M.method_id) in
-  match pop_expected_response method_num [] channel_io.expected_responses with
+  let { Frame.class_id; Frame.method_id } = Frame.method_info payload in
+  let expected_responses = channel_io.expected_responses in
+  match pop_expected_response (class_id, method_id) [] expected_responses with
   | None, _ -> channel_io.push (Some (Frame.Method payload))
   | Some waker, expected_responses ->
     channel_io.expected_responses <- expected_responses;
@@ -172,10 +170,10 @@ let send_method_async channel_io payload =
 
 let send_method_sync channel_io payload =
   (* TODO: Figure out what to do with no-wait=true methods. *)
-  let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
+  let { Frame.responses } = Frame.method_info payload in
   let waiter, waker = wait () in
   channel_io.expected_responses <-
-    channel_io.expected_responses @ [(M.responses, waker)];
+    channel_io.expected_responses @ [(responses, waker)];
   send_method_async channel_io payload >>
   waiter
 

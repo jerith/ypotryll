@@ -12,16 +12,42 @@ type payload =
 
 type t = int * payload
 
+
+type method_info = {
+  name : string;
+  class_id : int;
+  method_id : int;
+  synchronous : bool;
+  responses : (int * int) list;
+}
+
+
 let minimum_frame_length = 8
 
 
 open Parse_utils
 
+
+let method_info payload =
+  let (module M : Generated_methods.Method) =
+    Generated_methods.module_for payload
+  in
+  {
+    name = M.name;
+    class_id = M.class_id;
+    method_id = M.method_id;
+    synchronous = M.synchronous;
+    responses = M.responses;
+  }
+
+
 (* String formatting *)
 
 
 let dump_method payload =
-  let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
+  let (module M : Generated_methods.Method) =
+    Generated_methods.module_for payload
+  in
   M.dump_method payload
 
 
@@ -32,15 +58,15 @@ let dump_payload = function
   | Heartbeat -> "<Heartbeat>"
 
 
+(* Parsing *)
+
+
 let parse_method_args buf class_id method_id =
   try
-    Generated_methods.build_method_instance (class_id, method_id) buf
+    Generated_methods.parse_method (class_id, method_id) buf
   with Not_found ->
-    let payload =
-      Parse_utils.consume_str buf (Parse_utils.Parse_buf.length buf)
-    in
     failwith (Printf.sprintf "Unknown method (%d, %d) with payload: %S"
-                class_id method_id payload)
+                class_id method_id (consume_str buf (Parse_buf.length buf)))
 
 let parse_method_payload buf =
   let class_id = consume_short buf in

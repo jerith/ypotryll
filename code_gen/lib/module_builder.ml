@@ -299,14 +299,14 @@ module Method_module_wrapper = struct
 end
 
 
-module Method_builder_list = struct
+module Method_parser_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
     Format.fprintf ppf "@,| (%d, %d) -> %s.parse_method"
       cls.Class.index meth.Method.index (String.capitalize (make_method_name cls meth))
 
   let fmt_builder_list ppf spec =
-    fmt_function ppf "let build_method_instance = function" (fun ppf ->
+    fmt_function ppf "let parse_method = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
         Format.fprintf ppf "@,| (class_id, method_id) ->@,%s"
           "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
@@ -432,8 +432,8 @@ let build_methods spec =
 let build_method_wrappers spec =
   map_methods spec Method_module_wrapper.build
 
-let build_method_builders spec =
-  Method_builder_list.build spec
+let build_method_parsers spec =
+  Method_parser_list.build spec
 
 let build_module_for_method spec =
   Module_for_method_list.build spec

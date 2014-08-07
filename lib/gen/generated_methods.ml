@@ -1613,7 +1613,7 @@ module Tx_rollback_ok = struct
 end
 
 
-let build_method_instance = function
+let parse_method = function
   | (10, 10) -> Connection_start.parse_method
   | (10, 11) -> Connection_start_ok.parse_method
   | (10, 20) -> Connection_secure.parse_method

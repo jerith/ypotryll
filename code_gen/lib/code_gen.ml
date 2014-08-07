@@ -23,7 +23,7 @@ let write_generated_methods_file spec =
   write_to_file filename (String.concat "\n\n\n" [
       Module_builder.build_method_module_type ();
       String.concat "\n\n\n" (Module_builder.build_method_wrappers spec);
-      Module_builder.build_method_builders spec;
+      Module_builder.build_method_parsers spec;
       Module_builder.build_module_for_method spec;
     ])
 

@@ -4,6 +4,7 @@
 module Tx_rollback = struct
   open Protocol
 
+  let name = "tx.rollback"
   let class_id = 90
   let method_id = 30
   let synchronous = true

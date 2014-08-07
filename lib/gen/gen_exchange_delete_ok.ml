@@ -4,6 +4,7 @@
 module Exchange_delete_ok = struct
   open Protocol
 
+  let name = "exchange.delete-ok"
   let class_id = 40
   let method_id = 21
   let synchronous = true

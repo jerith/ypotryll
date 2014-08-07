@@ -4,6 +4,7 @@
 module Queue_declare = struct
   open Protocol
 
+  let name = "queue.declare"
   let class_id = 50
   let method_id = 10
   let synchronous = true

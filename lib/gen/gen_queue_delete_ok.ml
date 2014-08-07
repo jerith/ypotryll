@@ -4,6 +4,7 @@
 module Queue_delete_ok = struct
   open Protocol
 
+  let name = "queue.delete-ok"
   let class_id = 50
   let method_id = 41
   let synchronous = true

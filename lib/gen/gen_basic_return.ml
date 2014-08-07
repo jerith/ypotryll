@@ -4,6 +4,7 @@
 module Basic_return = struct
   open Protocol
 
+  let name = "basic.return"
   let class_id = 60
   let method_id = 50
   let synchronous = false

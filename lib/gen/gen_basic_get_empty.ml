@@ -4,6 +4,7 @@
 module Basic_get_empty = struct
   open Protocol
 
+  let name = "basic.get-empty"
   let class_id = 60
   let method_id = 72
   let synchronous = true

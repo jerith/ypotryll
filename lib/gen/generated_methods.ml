@@ -5,6 +5,8 @@ module type Method = sig
   type t
   open Generated_method_types
 
+  val name : string
+
   val class_id : int
 
   val method_id : int
@@ -32,7 +34,7 @@ module Connection_start = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_start (t_from_list (buf_to_list buf)) :> method_payload)
@@ -62,7 +64,7 @@ module Connection_start_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_start_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -92,7 +94,7 @@ module Connection_secure = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_secure (t_from_list (buf_to_list buf)) :> method_payload)
@@ -122,7 +124,7 @@ module Connection_secure_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_secure_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -152,7 +154,7 @@ module Connection_tune = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_tune (t_from_list (buf_to_list buf)) :> method_payload)
@@ -182,7 +184,7 @@ module Connection_tune_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_tune_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -212,7 +214,7 @@ module Connection_open = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_open (t_from_list (buf_to_list buf)) :> method_payload)
@@ -242,7 +244,7 @@ module Connection_open_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -272,7 +274,7 @@ module Connection_close = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_close (t_from_list (buf_to_list buf)) :> method_payload)
@@ -302,7 +304,7 @@ module Connection_close_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Connection_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -332,7 +334,7 @@ module Channel_open = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_open (t_from_list (buf_to_list buf)) :> method_payload)
@@ -362,7 +364,7 @@ module Channel_open_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_open_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -392,7 +394,7 @@ module Channel_flow = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_flow (t_from_list (buf_to_list buf)) :> method_payload)
@@ -422,7 +424,7 @@ module Channel_flow_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_flow_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -452,7 +454,7 @@ module Channel_close = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_close (t_from_list (buf_to_list buf)) :> method_payload)
@@ -482,7 +484,7 @@ module Channel_close_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Channel_close_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -512,7 +514,7 @@ module Exchange_declare = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Exchange_declare (t_from_list (buf_to_list buf)) :> method_payload)
@@ -542,7 +544,7 @@ module Exchange_declare_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Exchange_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -572,7 +574,7 @@ module Exchange_delete = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Exchange_delete (t_from_list (buf_to_list buf)) :> method_payload)
@@ -602,7 +604,7 @@ module Exchange_delete_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Exchange_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -632,7 +634,7 @@ module Queue_declare = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_declare (t_from_list (buf_to_list buf)) :> method_payload)
@@ -662,7 +664,7 @@ module Queue_declare_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_declare_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -692,7 +694,7 @@ module Queue_bind = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_bind (t_from_list (buf_to_list buf)) :> method_payload)
@@ -722,7 +724,7 @@ module Queue_bind_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_bind_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -752,7 +754,7 @@ module Queue_unbind = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_unbind (t_from_list (buf_to_list buf)) :> method_payload)
@@ -782,7 +784,7 @@ module Queue_unbind_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_unbind_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -812,7 +814,7 @@ module Queue_purge = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_purge (t_from_list (buf_to_list buf)) :> method_payload)
@@ -842,7 +844,7 @@ module Queue_purge_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_purge_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -872,7 +874,7 @@ module Queue_delete = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_delete (t_from_list (buf_to_list buf)) :> method_payload)
@@ -902,7 +904,7 @@ module Queue_delete_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Queue_delete_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -932,7 +934,7 @@ module Basic_qos = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_qos (t_from_list (buf_to_list buf)) :> method_payload)
@@ -962,7 +964,7 @@ module Basic_qos_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_qos_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -992,7 +994,7 @@ module Basic_consume = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_consume (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1022,7 +1024,7 @@ module Basic_consume_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_consume_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1052,7 +1054,7 @@ module Basic_cancel = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_cancel (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1082,7 +1084,7 @@ module Basic_cancel_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_cancel_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1112,7 +1114,7 @@ module Basic_publish = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_publish (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1142,7 +1144,7 @@ module Basic_return = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_return (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1172,7 +1174,7 @@ module Basic_deliver = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_deliver (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1202,7 +1204,7 @@ module Basic_get = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_get (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1232,7 +1234,7 @@ module Basic_get_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_get_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1262,7 +1264,7 @@ module Basic_get_empty = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_get_empty (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1292,7 +1294,7 @@ module Basic_ack = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_ack (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1322,7 +1324,7 @@ module Basic_reject = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_reject (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1352,7 +1354,7 @@ module Basic_recover_async = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_recover_async (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1382,7 +1384,7 @@ module Basic_recover = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_recover (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1412,7 +1414,7 @@ module Basic_recover_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Basic_recover_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1442,7 +1444,7 @@ module Tx_select = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_select (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1472,7 +1474,7 @@ module Tx_select_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_select_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1502,7 +1504,7 @@ module Tx_commit = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_commit (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1532,7 +1534,7 @@ module Tx_commit_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_commit_ok (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1562,7 +1564,7 @@ module Tx_rollback = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_rollback (t_from_list (buf_to_list buf)) :> method_payload)
@@ -1592,7 +1594,7 @@ module Tx_rollback_ok = struct
 
   let string_of_list = string_of_list class_id method_id
 
-  let dump_list = dump_list class_id method_id
+  let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
     (`Tx_rollback_ok (t_from_list (buf_to_list buf)) :> method_payload)

@@ -4,6 +4,7 @@
 module Exchange_declare_ok = struct
   open Protocol
 
+  let name = "exchange.declare-ok"
   let class_id = 40
   let method_id = 11
   let synchronous = true

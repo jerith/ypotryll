@@ -4,6 +4,7 @@
 module Basic_deliver = struct
   open Protocol
 
+  let name = "basic.deliver"
   let class_id = 60
   let method_id = 60
   let synchronous = false

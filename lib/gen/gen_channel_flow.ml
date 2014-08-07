@@ -4,6 +4,7 @@
 module Channel_flow = struct
   open Protocol
 
+  let name = "channel.flow"
   let class_id = 20
   let method_id = 20
   let synchronous = true

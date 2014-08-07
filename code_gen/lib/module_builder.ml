@@ -120,7 +120,9 @@ module Method_module = struct
   }
 
   let fmt_method_constants ppf (cls, meth) =
-    Format.fprintf ppf "@[<v>let %s = %d@;let %s = %d@;let %s = %B@]"
+    Format.fprintf ppf
+      "@[<v>let %s = %S@;let %s = %d@;let %s = %d@;let %s = %B@]"
+      "name" (cls.Class.name ^ "." ^ meth.Method.name)
       "class_id" cls.Class.index
       "method_id" meth.Method.index
       "synchronous" meth.Method.synchronous
@@ -272,7 +274,7 @@ module Method_module_wrapper = struct
         fmt_line ppf (fun ppf -> Format.fprintf ppf "type t = [`%s of record]") module_name;
         fmt_line_str ppf "let buf_to_list = buf_to_list arguments";
         fmt_line_str ppf "let string_of_list = string_of_list class_id method_id";
-        fmt_line_str ppf "let dump_list = dump_list class_id method_id";
+        fmt_line_str ppf "let dump_list = dump_list name class_id method_id";
         fmt_function ppf "let parse_method buf =" (fun ppf ->
             Format.fprintf ppf
               "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
@@ -358,6 +360,7 @@ module Method_module_type = struct
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     fmt_module_type ppf "Method" (fun ppf ->
         Format.fprintf ppf "@,type t@,open Generated_method_types";
+        fmt_line_str ppf "val name : string";
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
         fmt_line_str ppf "val synchronous : bool";

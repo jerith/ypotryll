@@ -4,6 +4,7 @@
 module Basic_ack = struct
   open Protocol
 
+  let name = "basic.ack"
   let class_id = 60
   let method_id = 80
   let synchronous = false

@@ -4,6 +4,7 @@
 module Channel_open_ok = struct
   open Protocol
 
+  let name = "channel.open-ok"
   let class_id = 20
   let method_id = 11
   let synchronous = true

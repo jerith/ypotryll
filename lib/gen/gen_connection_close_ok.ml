@@ -4,6 +4,7 @@
 module Connection_close_ok = struct
   open Protocol
 
+  let name = "connection.close-ok"
   let class_id = 10
   let method_id = 51
   let synchronous = true

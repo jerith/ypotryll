@@ -4,6 +4,7 @@
 module Connection_secure = struct
   open Protocol
 
+  let name = "connection.secure"
   let class_id = 10
   let method_id = 20
   let synchronous = true

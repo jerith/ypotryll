@@ -22,6 +22,7 @@ type connection_io = {
   inch : Lwt_io.input_channel;
   ouch : Lwt_io.output_channel;
   mutable params : connection_params;
+  mutable connection_state : connection_state;
 }
 
 
@@ -43,7 +44,6 @@ type t = {
   connection_send : Frame.t -> unit Lwt.t;
   channels : (int, channel_io) Hashtbl.t;
   finished : unit Lwt.u;
-  mutable connection_state : connection_state;
 }
 
 
@@ -55,6 +55,15 @@ let default_params = {
 }
 
 
+let debug_dump verb connection_io data =
+  if false
+  then
+    Lwt_io.printlf "%s %d bytes:" verb (String.length data) >>
+    Lwt_io.hexdump Lwt_io.stdout data >>
+    Lwt_io.flush Lwt_io.stdout
+  else return_unit
+
+
 let gethostbyname name =
   (* May raise Not_found from gethostbyname. *)
   Lwt_unix.gethostbyname name
@@ -62,6 +71,7 @@ let gethostbyname name =
 
 
 let write_data conn_io data =
+  debug_dump "Sending" conn_io data >>
   Lwt_io.write conn_io.ouch data
 
 
@@ -73,7 +83,9 @@ let create_connection_io server port =
   lwt addr = gethostbyname server in
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
   >>= (fun (inch, ouch) ->
-      let connection_io = { inch; ouch; params = default_params } in
+      let connection_io =
+        { inch; ouch; params = default_params; connection_state = Opening }
+      in
       write_data connection_io "AMQP\x00\x00\x09\x01" >>
       Lwt_io.printlf ">>> %S" "AMQP\x00\x00\x09\x01" >>
       return connection_io)
@@ -88,7 +100,9 @@ let rec pop_expected_response method_num checked = function
 
 
 let process_channel_method channel_io payload =
-  let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
+  let (module M : Generated_methods.Method) =
+    Generated_methods.module_for payload
+  in
   let method_num = (M.class_id, M.method_id) in
   match pop_expected_response method_num [] channel_io.expected_responses with
   | None, _ -> channel_io.push (Some (Frame.Method payload))
@@ -97,29 +111,29 @@ let process_channel_method channel_io payload =
     wakeup waker payload
 
 
-let process_channel_frame channel_io = function
-  | Frame.Method method_payload -> process_channel_method channel_io method_payload
-  | frame_payload -> channel_io.push (Some frame_payload)
+let process_channel_frame connection channel_io = function
+  | Frame.Method payload -> process_channel_method channel_io payload; return_unit
+  | frame_payload -> channel_io.push (Some frame_payload); return_unit
 
 
 let rec process_frames connection str =
   let frame, str = Frame.consume_frame str in
   match frame with
   | None -> return str
-  | Some (channel, frame_payload) ->
+  | Some (channel, payload) ->
     let channel_io = Hashtbl.find connection.channels channel in
-    Lwt_io.printlf "<<< %s" (Frame.frame_to_string (channel, frame_payload)) >>
-    (process_channel_frame channel_io frame_payload;
-     process_frames connection str)
+    Lwt_io.printlf "<<<[%d] %s" channel_io.channel (Frame.dump_payload payload) >>
+    process_channel_frame connection channel_io payload >>
+    process_frames connection str
 
 
-let debug_dump connection input =
-  match connection.connection_state with
-  | Opening -> return_unit
-  | Open | Closing | Closed ->
-    Lwt_io.printlf "Read bytes: %d" (String.length input) >>
-    Lwt_io.hexdump Lwt_io.stdout input >>
-    Lwt_io.flush Lwt_io.stdout
+let kill_connection connection =
+  begin match connection.connection_io.connection_state with
+    | Opening | Open | Closing ->
+      wakeup_exn connection.finished (Failure "Connection closed by peer.")
+    | Closed -> wakeup connection.finished ()
+  end;
+  return_unit
 
 
 let listen connection =
@@ -127,9 +141,9 @@ let listen connection =
     (* Read some data into our string. *)
     Lwt_io.read ~count:1024 connection.connection_io.inch
     >>= (fun input ->
-        debug_dump connection input >>
-        if String.length input = 0 (* EOF from server - we have quit or been kicked. *)
-        then return (wakeup_exn connection.finished (Failure "connection reset by peer"))
+        debug_dump "Received" connection.connection_io input >>
+        if String.length input = 0 (* EOF from server. *)
+        then kill_connection connection
         else begin
           Buffer.add_string buffer input;
           process_frames connection (Buffer.contents buffer)
@@ -145,11 +159,12 @@ let listen connection =
 let create_channel connection channel channel_state =
   let stream, push = Lwt_stream.create () in
   let send frame_payload =
-    Lwt_io.printlf ">>> %s" (Frame.frame_to_string (channel, frame_payload)) >>
+    Lwt_io.printlf ">>>[%d] %s" channel (Frame.dump_payload frame_payload) >>
     connection.connection_send (channel, frame_payload)
   in
   Hashtbl.add connection.channels channel
     { channel; stream; push; send; expected_responses = []; channel_state }
+
 
 let send_method_async channel_io payload =
   channel_io.send (Frame.Method payload)
@@ -216,8 +231,8 @@ let choose_locale body =
   else failwith ("en_US not found in locales: " ^ String.concat " " locales)
 
 
-let failwith_wrong_frame expected frame_payload =
-  failwith ("Expected " ^ expected ^ ", got: " ^ Frame.frame_to_string (0, frame_payload))
+let failwith_wrong_frame expected payload =
+  failwith ("Expected " ^ expected ^ ", got: " ^ Frame.dump_payload payload)
 
 let process_connection_start channel_io frame_payload =
   (* TODO: Assert channel 0 *)
@@ -228,7 +243,6 @@ let process_connection_start channel_io frame_payload =
   let mechanism = choose_auth_mechanism body in
   let response = "\000guest\000guest" in
   let locale = choose_locale body in
-  Printf.printf "<<< START\n%!";
   let frame_ok =
     Connection_start_ok.make_t ~client_properties ~mechanism ~response ~locale ()
   in
@@ -260,7 +274,6 @@ let process_connection_tune channel_io frame_payload =
   let channel_max = choose_channel_max body in
   let frame_max = choose_frame_max body in
   let heartbeat = choose_heartbeat body in
-  Printf.printf "<<< TUNE %s\n%!" (Frame.frame_to_string (0, frame_payload));
   (* Send connection.tune-ok *)
   let frame_ok =
     Connection_tune_ok.make_t ~channel_max ~frame_max ~heartbeat ()
@@ -279,12 +292,8 @@ let process_connection_open channel_io frame_payload =
     | Frame.Method (`Connection_open_ok body) -> body
     | _ -> failwith_wrong_frame "Connection_open_ok" frame_payload
   in
-  Printf.printf "<<< OPEN-OK %s\n%!" (Frame.frame_to_string (0, frame_payload));
+  Lwt_io.printlf "Connection open." >>
   return Connected
-
-
-let vomit_frame frame =
-  Printf.printf "<<< %s\n%!" (Frame.frame_to_string frame)
 
 
 let process_setup_frame_payload channel_io frame_payload = function
@@ -302,8 +311,15 @@ let rec setup_connection connection state =
   | None -> return ()
   | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
   >>= function
-  | Connected -> connection.connection_state <- Open; return ()
+  | Connected -> connection.connection_io.connection_state <- Open; return ()
   | state -> setup_connection connection state
+
+
+(* Misc *)
+
+
+let next_channel channels =
+  1 + Hashtbl.fold (fun k _ acc -> max k acc) channels 0
 
 
 (* Stuff for outsiders *)
@@ -315,16 +331,12 @@ let connect ~server ?(port=5672) () =
   let channels = Hashtbl.create 10 in
   let _, finished = wait () in
   let connection =
-    { connection_io; connection_send; channels; finished; connection_state = Opening }
+    { connection_io; connection_send; channels; finished }
   in
   create_channel connection 0 Open;
   ignore_result (listen connection);
   setup_connection connection Connection_start >>
   return connection
-
-
-let next_channel channels =
-  1 + Hashtbl.fold (fun k _ acc -> max k acc) channels 0
 
 
 let new_channel connection =

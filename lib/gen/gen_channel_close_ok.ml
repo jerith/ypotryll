@@ -4,6 +4,7 @@
 module Channel_close_ok = struct
   open Protocol
 
+  let name = "channel.close-ok"
   let class_id = 20
   let method_id = 41
   let synchronous = true

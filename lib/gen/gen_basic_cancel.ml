@@ -4,6 +4,7 @@
 module Basic_cancel = struct
   open Protocol
 
+  let name = "basic.cancel"
   let class_id = 60
   let method_id = 30
   let synchronous = true

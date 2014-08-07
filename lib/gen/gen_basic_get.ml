@@ -4,6 +4,7 @@
 module Basic_get = struct
   open Protocol
 
+  let name = "basic.get"
   let class_id = 60
   let method_id = 70
   let synchronous = true

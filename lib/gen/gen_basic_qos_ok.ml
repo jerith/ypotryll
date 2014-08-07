@@ -4,6 +4,7 @@
 module Basic_qos_ok = struct
   open Protocol
 
+  let name = "basic.qos-ok"
   let class_id = 60
   let method_id = 11
   let synchronous = true

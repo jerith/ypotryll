@@ -4,6 +4,7 @@
 module Connection_start_ok = struct
   open Protocol
 
+  let name = "connection.start-ok"
   let class_id = 10
   let method_id = 11
   let synchronous = true

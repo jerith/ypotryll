@@ -4,6 +4,7 @@
 module Queue_unbind = struct
   open Protocol
 
+  let name = "queue.unbind"
   let class_id = 50
   let method_id = 50
   let synchronous = true

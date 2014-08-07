@@ -4,6 +4,7 @@
 module Connection_tune_ok = struct
   open Protocol
 
+  let name = "connection.tune-ok"
   let class_id = 10
   let method_id = 31
   let synchronous = true

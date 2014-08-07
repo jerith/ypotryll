@@ -4,6 +4,7 @@
 module Basic_recover_async = struct
   open Protocol
 
+  let name = "basic.recover-async"
   let class_id = 60
   let method_id = 100
   let synchronous = false

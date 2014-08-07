@@ -19,34 +19,28 @@ open Parse_utils
 
 (* String formatting *)
 
-let frame_type_to_string = function
-  | FC.Method_frame    -> "Method"
-  | FC.Header_frame    -> "Header"
-  | FC.Body_frame      -> "Body"
-  | FC.Heartbeat_frame -> "Heartbeat"
 
-let method_to_string payload =
+let dump_method payload =
   let (module M : Generated_methods.Method) = Generated_methods.module_for payload in
   M.dump_method payload
 
-let frame_to_string = function
-  | channel, Method payload ->
-    Printf.sprintf "<Method ch=%d %s>" channel (method_to_string payload)
-  | channel, Header payload ->
-    Printf.sprintf "<Header ch=%d %S>" channel payload
-  | channel, Body payload ->
-    Printf.sprintf "<Body ch=%d %S>" channel payload
-  | channel, Heartbeat ->
-    Printf.sprintf "<Heartbeat ch=%d>" channel
+
+let dump_payload = function
+  | Method payload -> dump_method payload
+  | Header payload -> Printf.sprintf "<Header %S>" payload
+  | Body payload -> Printf.sprintf "<Body %S>" payload
+  | Heartbeat -> "<Heartbeat>"
 
 
 let parse_method_args buf class_id method_id =
   try
     Generated_methods.build_method_instance (class_id, method_id) buf
-  with
-  | Not_found -> failwith (
-      Printf.sprintf "Unknown method (%d, %d) with payload: %S"
-        class_id method_id (Parse_utils.consume_str buf (Parse_utils.Parse_buf.length buf)))
+  with Not_found ->
+    let payload =
+      Parse_utils.consume_str buf (Parse_utils.Parse_buf.length buf)
+    in
+    failwith (Printf.sprintf "Unknown method (%d, %d) with payload: %S"
+                class_id method_id payload)
 
 let parse_method_payload buf =
   let class_id = consume_short buf in

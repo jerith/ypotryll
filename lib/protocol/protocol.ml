@@ -203,7 +203,7 @@ module Method_utils = struct
     List.iter (Amqp_field.add_field buf) payload;
     PU.Build_buf.to_string buf
 
-  let dump_list class_id method_id payload =
-    let args_str = String.concat "; " (List.map Amqp_field.dump_field payload) in
-    Printf.sprintf "<Method (%d, %d) [%s]>" class_id method_id args_str
+  let dump_list name class_id method_id payload =
+    let args = String.concat "; " (List.map Amqp_field.dump_field payload) in
+    Printf.sprintf "<Method %s (%d, %d) [%s]>" name class_id method_id args
 end

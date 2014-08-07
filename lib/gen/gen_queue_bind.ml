@@ -4,6 +4,7 @@
 module Queue_bind = struct
   open Protocol
 
+  let name = "queue.bind"
   let class_id = 50
   let method_id = 20
   let synchronous = true

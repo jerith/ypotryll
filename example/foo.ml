@@ -6,8 +6,7 @@ open Generated_methods
 
 
 let callback channel frame_payload =
-  Lwt_io.printlf "Received frame: %s"
-    (Frame.frame_to_string (channel, frame_payload))
+  Lwt_io.printlf "Received frame: %s" (Frame.dump_payload frame_payload)
 
 
 let rec catch_frames channel =

@@ -4,6 +4,7 @@
 module Basic_recover = struct
   open Protocol
 
+  let name = "basic.recover"
   let class_id = 60
   let method_id = 110
   let synchronous = false

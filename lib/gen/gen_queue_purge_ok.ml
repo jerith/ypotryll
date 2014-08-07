@@ -4,6 +4,7 @@
 module Queue_purge_ok = struct
   open Protocol
 
+  let name = "queue.purge-ok"
   let class_id = 50
   let method_id = 31
   let synchronous = true

@@ -4,6 +4,7 @@
 module Exchange_delete = struct
   open Protocol
 
+  let name = "exchange.delete"
   let class_id = 40
   let method_id = 20
   let synchronous = true

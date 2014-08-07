@@ -4,6 +4,7 @@
 module Basic_consume_ok = struct
   open Protocol
 
+  let name = "basic.consume-ok"
   let class_id = 60
   let method_id = 21
   let synchronous = true

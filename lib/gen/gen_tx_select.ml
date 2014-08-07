@@ -4,6 +4,7 @@
 module Tx_select = struct
   open Protocol
 
+  let name = "tx.select"
   let class_id = 90
   let method_id = 10
   let synchronous = true

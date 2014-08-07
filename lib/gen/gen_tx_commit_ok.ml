@@ -4,6 +4,7 @@
 module Tx_commit_ok = struct
   open Protocol
 
+  let name = "tx.commit-ok"
   let class_id = 90
   let method_id = 21
   let synchronous = true

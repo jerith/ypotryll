@@ -7,7 +7,8 @@ type method_payload = Generated_method_types.method_payload
 module Client : sig
   type t = client
 
-  val connect : server:string -> ?port:int -> unit -> t Lwt.t
+  val connect : server:string -> ?port:int -> ?log_section:Lwt_log.section
+    -> unit -> t Lwt.t
   val close_connection : t -> unit Lwt.t
   val wait_for_shutdown : t -> unit Lwt.t
 

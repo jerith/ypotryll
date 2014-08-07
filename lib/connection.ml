@@ -26,6 +26,7 @@ let string_of_state = function
 
 
 type connection_io = {
+  log_section : Lwt_log.section;
   inch : Lwt_io.input_channel;
   ouch : Lwt_io.output_channel;
   mutable params : connection_params;
@@ -62,12 +63,16 @@ let default_params = {
 }
 
 
+let log_debug connection_io = Lwt_log.debug_f ~section:connection_io.log_section
+
+let log_info connection_io = Lwt_log.info_f ~section:connection_io.log_section
+
+
 let debug_dump verb connection_io data =
   if false
   then
     Lwt_io.printlf "%s %d bytes:" verb (String.length data) >>
-    Lwt_io.hexdump Lwt_io.stdout data >>
-    Lwt_io.flush Lwt_io.stdout
+    Lwt_io.hexdump Lwt_io.stdout data
   else return_unit
 
 
@@ -87,6 +92,10 @@ let write_frame conn_io frame =
   write_data conn_io (Frame.build_frame frame)
 
 
+let get_channel_io connection channel =
+  Hashtbl.find connection.channels channel
+
+
 let _set_connection_state connection expected_state new_state =
   let current_state = connection.connection_io.connection_state in
   if current_state = expected_state
@@ -103,15 +112,16 @@ let set_connection_state connection = function
   | Closed -> _set_connection_state connection Closing Closed
 
 
-let create_connection_io server port =
+let create_connection_io server port log_section =
   lwt addr = gethostbyname server in
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
   >>= fun (inch, ouch) ->
+  let connection_state = Opening in
   let connection_io =
-    { inch; ouch; params = default_params; connection_state = Opening }
+    { inch; ouch; params = default_params; connection_state; log_section }
   in
   write_data connection_io "AMQP\x00\x00\x09\x01" >>
-  Lwt_io.printlf ">>> %S" "AMQP\x00\x00\x09\x01" >>
+  log_debug connection_io ">>> %S" "AMQP\x00\x00\x09\x01" >>
   return connection_io
 
 
@@ -143,8 +153,9 @@ let rec process_frames connection str =
   match frame with
   | None -> return str
   | Some (channel, payload) ->
-    let channel_io = Hashtbl.find connection.channels channel in
-    Lwt_io.printlf "<<<[%d] %s" channel_io.channel (Frame.dump_payload payload) >>
+    let channel_io = get_channel_io connection channel in
+    log_debug connection.connection_io "<<<[%d] %s"
+      channel_io.channel (Frame.dump_payload payload) >>
     process_channel_frame connection channel_io payload >>
     process_frames connection str
 
@@ -155,7 +166,7 @@ let kill_connection connection =
       wakeup_exn connection.finished (Failure "Connection closed by peer.")
     | Closed -> wakeup connection.finished ()
   end;
-  Lwt_io.printlf "Connection closed."
+  log_info connection.connection_io "Connection closed."
 
 
 let listen connection =
@@ -186,7 +197,8 @@ let listen connection =
 let create_channel connection channel channel_state =
   let stream, push = Lwt_stream.create () in
   let send frame_payload =
-    Lwt_io.printlf ">>>[%d] %s" channel (Frame.dump_payload frame_payload) >>
+    log_debug connection.connection_io ">>>[%d] %s"
+      channel (Frame.dump_payload frame_payload) >>
     connection.connection_send (channel, frame_payload)
   in
   Hashtbl.add connection.channels channel
@@ -319,7 +331,6 @@ let process_connection_open channel_io frame_payload =
     | Frame.Method (`Connection_open_ok body) -> body
     | _ -> failwith_wrong_frame "Connection_open_ok" frame_payload
   in
-  Lwt_io.printlf "Connection open." >>
   return Connected
 
 
@@ -332,13 +343,15 @@ let process_setup_frame_payload channel_io frame_payload = function
 
 
 let rec setup_connection connection state =
-  let channel_io = Hashtbl.find connection.channels 0 in
+  let channel_io = get_channel_io connection 0 in
   Lwt_stream.get channel_io.stream
   >>= function
   | None -> return ()
   | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
   >>= function
-  | Connected -> set_connection_state connection Open; return ()
+  | Connected ->
+    set_connection_state connection Open;
+    log_info connection.connection_io "Connection open."
   | state -> setup_connection connection state
 
 
@@ -352,8 +365,12 @@ let next_channel channels =
 (* Stuff for outsiders *)
 
 
-let connect ~server ?(port=5672) () =
-  lwt connection_io = create_connection_io server port in
+let connect ~server ?(port=5672) ?log_section () =
+  let log_section = match log_section with
+    | None -> Lwt_log.Section.make "ypotryll"
+    | Some log_section -> log_section
+  in
+  lwt connection_io = create_connection_io server port log_section in
   let connection_send = write_frame connection_io in
   let channels = Hashtbl.create 10 in
   let _, finished = wait () in
@@ -361,6 +378,7 @@ let connect ~server ?(port=5672) () =
     { connection_io; connection_send; channels; finished }
   in
   create_channel connection 0 Open;
+  create_channel connection 1 Open;
   ignore_result (listen connection);
   setup_connection connection Connection_start >>
   return connection
@@ -369,7 +387,7 @@ let connect ~server ?(port=5672) () =
 let new_channel connection =
   let channel = next_channel connection.channels in
   create_channel connection channel Opening;
-  let channel_io = Hashtbl.find connection.channels channel in
+  let channel_io = get_channel_io connection channel in
   send_method_sync channel_io (Channel_open.make_t ())
   >|= (fun _ -> channel_io.channel_state <- Open) >>
   return channel_io
@@ -377,7 +395,7 @@ let new_channel connection =
 
 let close_connection connection =
   set_connection_state connection Closing;
-  let channel_io = Hashtbl.find connection.channels 0 in
+  let channel_io = get_channel_io connection 0 in
   let close_method =
     Connection_close.make_t
       ~reply_code:200 ~reply_text:"Ok" ~class_id:0 ~method_id:0 ()

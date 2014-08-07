@@ -18,8 +18,7 @@ let rec catch_frames channel =
     catch_frames channel
 
 
-let lwt_main =
-  lwt client = Client.connect "localhost" () in
+let do_stuff client =
   lwt channel = Client.new_channel client in
   ignore_result (catch_frames channel);
   Channel.send_method_sync channel (
@@ -27,9 +26,13 @@ let lwt_main =
       ~exchange:"foo" ~type_:"direct" ~passive:false ~durable:false
       ~no_wait:false ~arguments:[] ())
   >>= (fun x -> Lwt_io.printlf "Exchange created.") >>
-  Client.close_connection client >>
+  Client.close_connection client
+
+
+let lwt_main =
+  lwt client = Client.connect ~server:"localhost" () in
   try_lwt
-    Client.wait_for_shutdown client
+    do_stuff client <&> Client.wait_for_shutdown client
   with Failure text -> Lwt_io.printlf "exception: %S" text >> return ()
 
 

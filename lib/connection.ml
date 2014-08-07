@@ -74,7 +74,8 @@ let debug_dump verb connection_io data =
 let gethostbyname name =
   (* May raise Not_found from gethostbyname. *)
   Lwt_unix.gethostbyname name
-  >>= (fun entry -> return entry.Unix.h_addr_list.(0))
+  >>= fun entry ->
+  return entry.Unix.h_addr_list.(0)
 
 
 let write_data conn_io data =
@@ -105,13 +106,13 @@ let set_connection_state connection = function
 let create_connection_io server port =
   lwt addr = gethostbyname server in
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
-  >>= (fun (inch, ouch) ->
-      let connection_io =
-        { inch; ouch; params = default_params; connection_state = Opening }
-      in
-      write_data connection_io "AMQP\x00\x00\x09\x01" >>
-      Lwt_io.printlf ">>> %S" "AMQP\x00\x00\x09\x01" >>
-      return connection_io)
+  >>= fun (inch, ouch) ->
+  let connection_io =
+    { inch; ouch; params = default_params; connection_state = Opening }
+  in
+  write_data connection_io "AMQP\x00\x00\x09\x01" >>
+  Lwt_io.printlf ">>> %S" "AMQP\x00\x00\x09\x01" >>
+  return connection_io
 
 
 let rec pop_expected_response method_num checked = function
@@ -382,7 +383,7 @@ let close_connection connection =
       ~reply_code:200 ~reply_text:"Ok" ~class_id:0 ~method_id:0 ()
   in
   send_method_sync channel_io close_method
-  >>= (fun _ ->
-      set_connection_state connection Closed;
-      let conn_io = connection.connection_io in
-      Lwt_io.close conn_io.inch <&> Lwt_io.close conn_io.ouch)
+  >>= fun _ ->
+  set_connection_state connection Closed;
+  let conn_io = connection.connection_io in
+  Lwt_io.close conn_io.inch <&> Lwt_io.close conn_io.ouch

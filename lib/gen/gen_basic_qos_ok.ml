@@ -12,7 +12,7 @@ module Basic_qos_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

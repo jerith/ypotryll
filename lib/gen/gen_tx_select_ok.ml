@@ -12,7 +12,7 @@ module Tx_select_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

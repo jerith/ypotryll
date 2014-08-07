@@ -12,7 +12,7 @@ module Queue_unbind_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

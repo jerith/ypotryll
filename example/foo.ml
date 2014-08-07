@@ -18,15 +18,24 @@ let rec catch_frames channel =
     catch_frames channel
 
 
-let do_stuff client =
-  lwt channel = Client.new_channel client in
-  ignore_result (catch_frames channel);
+let exchange_declare channel exchange type_ =
   Channel.send_method_sync channel (
     Exchange_declare.make_t
-      ~exchange:"foo" ~type_:"direct" ~passive:false ~durable:false
-      ~no_wait:false ~arguments:[] ())
-  >>= (fun x -> Lwt_io.printlf "Exchange created.") >>
-  Client.close_connection client
+      ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false
+      ~arguments:[] ())
+  >>= function
+  | `Exchange_declare_ok _ -> Lwt_io.printlf "Exchange created: %s" exchange
+  | _ -> assert false
+
+
+let do_stuff client =
+  try_lwt
+    lwt channel = Client.new_channel client in
+    ignore_result (catch_frames channel);
+    exchange_declare channel "foo" "direct" >>
+    Channel.close channel >>
+    exchange_declare channel "foo" "direct"
+  finally Client.close_connection client
 
 
 let lwt_main =

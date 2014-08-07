@@ -19,10 +19,6 @@ let wait_for_shutdown connection =
   waiter_of_wakener connection.Connection.finished
 
 
-let next_channel channels =
-  1 + Hashtbl.fold (fun k _ acc -> max k acc) channels 0
-
-
 let new_channel connection =
   Connection.new_channel connection
   >|= (fun channel_io -> { channel_io; connection })

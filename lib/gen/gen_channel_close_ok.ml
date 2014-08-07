@@ -12,7 +12,7 @@ module Channel_close_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

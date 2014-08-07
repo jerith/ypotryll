@@ -19,3 +19,8 @@ let send_method_async channel payload =
 
 let send_method_sync channel payload =
   Connection.send_method_sync channel.Client_impl.channel_io payload
+
+
+let close channel =
+  Connection.close_channel
+    channel.Client_impl.connection channel.Client_impl.channel_io

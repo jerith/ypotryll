@@ -13,7 +13,7 @@ module Tx_select = struct
     (90, 11);
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

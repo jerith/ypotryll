@@ -12,7 +12,7 @@ module Exchange_delete_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

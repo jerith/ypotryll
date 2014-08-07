@@ -30,7 +30,7 @@ type connection_io = {
   inch : Lwt_io.input_channel;
   ouch : Lwt_io.output_channel;
   mutable params : connection_params;
-  mutable connection_state : connection_state;
+  connection_state : connection_state ref;
 }
 
 
@@ -43,7 +43,7 @@ type channel_io = {
   push : Frame.payload option -> unit;
   send : Frame.payload -> unit Lwt.t;
   mutable expected_responses : expected_response list;
-  mutable channel_state : connection_state;
+  channel_state : connection_state ref;
 }
 
 
@@ -96,27 +96,26 @@ let get_channel_io connection channel =
   Hashtbl.find connection.channels channel
 
 
-let _set_connection_state connection expected_state new_state =
-  let current_state = connection.connection_io.connection_state in
-  if current_state = expected_state
-  then connection.connection_io.connection_state <- new_state
+let _set_state state_ref expected_state new_state =
+  if !state_ref = expected_state
+  then state_ref := new_state
   else failwith (
       "Can't transition to state " ^ (string_of_state new_state)
-      ^ " from " ^ (string_of_state current_state) ^ ".")
+      ^ " from " ^ (string_of_state !state_ref) ^ ".")
 
 
-let set_connection_state connection = function
+let set_state state_ref = function
   | Opening -> failwith "Can't transition to state Opening."
-  | Open -> _set_connection_state connection Opening Open
-  | Closing -> _set_connection_state connection Open Closing
-  | Closed -> _set_connection_state connection Closing Closed
+  | Open -> _set_state state_ref Opening Open
+  | Closing -> _set_state state_ref Open Closing
+  | Closed -> _set_state state_ref Closing Closed
 
 
 let create_connection_io server port log_section =
   lwt addr = gethostbyname server in
   Lwt_io.open_connection (Unix.ADDR_INET (addr, port))
   >>= fun (inch, ouch) ->
-  let connection_state = Opening in
+  let connection_state = ref Opening in
   let connection_io =
     { inch; ouch; params = default_params; connection_state; log_section }
   in
@@ -144,8 +143,71 @@ let process_channel_method channel_io payload =
 
 
 let process_channel_frame connection channel_io = function
-  | Frame.Method payload -> process_channel_method channel_io payload; return_unit
+  | Frame.Heartbeat -> failwith "Heartbeat frame on channel > 0."
+  | Frame.Method payload ->
+    process_channel_method channel_io payload; return_unit
   | frame_payload -> channel_io.push (Some frame_payload); return_unit
+
+
+let kill_channel connection channel_io =
+  Hashtbl.remove connection.channels channel_io.channel;
+  channel_io.push None;
+  let kill_expected (_, waker) =
+    wakeup_exn waker (Failure "Channel closed.")
+  in
+  List.iter kill_expected channel_io.expected_responses
+
+
+let kill_connection connection msg_opt =
+  let sleeping = is_sleeping (waiter_of_wakener connection.finished) in
+  let state = !(connection.connection_io.connection_state) in
+  begin match sleeping, msg_opt, state with
+    | false, _, _ -> ()
+    | true, Some msg, _ -> wakeup_exn connection.finished (Failure msg)
+    | true, None, Closed -> wakeup connection.finished ()
+    | true, None, _ ->
+      wakeup_exn connection.finished (Failure "Connection closed by peer.")
+  end;
+  let maybe_kill_channel channel channel_io =
+    match channel with
+    | 0 -> () (* Channel 0 is special. *)
+    | _ -> kill_channel connection channel_io
+  in
+  Hashtbl.iter maybe_kill_channel connection.channels
+
+
+let process_connection_close connection channel_io payload =
+  let { Connection_close.reply_code; reply_text } = payload in
+  set_state connection.connection_io.connection_state Closing;
+  channel_io.send (Frame.Method (Connection_close_ok.make_t ()))
+  >>= fun () ->
+  set_state connection.connection_io.connection_state Closed;
+  let conn_io = connection.connection_io in
+  kill_connection connection
+    (Some (Printf.sprintf "Connection error %d: %s" reply_code reply_text));
+  Lwt_io.close conn_io.inch <&> Lwt_io.close conn_io.ouch
+
+
+let process_channel_0_method connection channel_io = function
+  | `Connection_close payload ->
+    process_connection_close connection channel_io payload
+  | payload -> process_channel_method channel_io payload; return_unit
+
+
+let process_channel_0_frame connection channel_io = function
+  | Frame.Heartbeat -> return_unit (* TODO: Heartbeat *)
+  | Frame.Header _ | Frame.Body _ -> failwith "Content frame on channel 0."
+  | Frame.Method payload ->
+    process_channel_0_method connection channel_io payload
+
+
+let process_frame connection channel payload =
+    let channel_io = get_channel_io connection channel in
+    log_debug connection.connection_io "<<<[%d] %s"
+      channel_io.channel (Frame.dump_payload payload) >>
+    match channel with
+    | 0 -> process_channel_0_frame connection channel_io payload
+    | _ -> process_channel_frame connection channel_io payload
 
 
 let rec process_frames connection str =
@@ -153,20 +215,8 @@ let rec process_frames connection str =
   match frame with
   | None -> return str
   | Some (channel, payload) ->
-    let channel_io = get_channel_io connection channel in
-    log_debug connection.connection_io "<<<[%d] %s"
-      channel_io.channel (Frame.dump_payload payload) >>
-    process_channel_frame connection channel_io payload >>
+    process_frame connection channel payload >>
     process_frames connection str
-
-
-let kill_connection connection =
-  begin match connection.connection_io.connection_state with
-    | Opening | Open | Closing ->
-      wakeup_exn connection.finished (Failure "Connection closed by peer.")
-    | Closed -> wakeup connection.finished ()
-  end;
-  log_info connection.connection_io "Connection closed."
 
 
 let listen connection =
@@ -175,21 +225,21 @@ let listen connection =
     begin
       try_lwt
         Lwt_io.read ~count:1024 connection.connection_io.inch
-      with
-      | Lwt_io.Channel_closed _ -> return ""
+      with Lwt_io.Channel_closed _ -> return ""
     end
     >>= fun input ->
     debug_dump "Received" connection.connection_io input >>
-    if String.length input = 0 (* EOF from server. *)
-    then kill_connection connection
-    else begin
+    match String.length input with
+    | 0 ->
+      kill_connection connection None;
+      log_info connection.connection_io "Connection closed."
+    | _ ->
       Buffer.add_string buffer input;
       process_frames connection (Buffer.contents buffer)
       >>= fun remaining_data ->
       Buffer.reset buffer;
       Buffer.add_string buffer remaining_data;
       listen' buffer
-    end
   in
   listen' (Buffer.create 0)
 
@@ -199,7 +249,10 @@ let create_channel connection channel channel_state =
   let send frame_payload =
     log_debug connection.connection_io ">>>[%d] %s"
       channel (Frame.dump_payload frame_payload) >>
-    connection.connection_send (channel, frame_payload)
+    match Hashtbl.mem connection.channels channel with
+    | false -> failwith "Channel closed."
+    | true ->
+      connection.connection_send (channel, frame_payload)
   in
   Hashtbl.add connection.channels channel
     { channel; stream; push; send; expected_responses = []; channel_state }
@@ -216,6 +269,7 @@ let send_method_sync channel_io payload =
   channel_io.expected_responses <-
     channel_io.expected_responses @ [(responses, waker)];
   send_method_async channel_io payload >>
+  Lwt_io.printlf "???" >>
   waiter
 
 
@@ -350,7 +404,7 @@ let rec setup_connection connection state =
   | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
   >>= function
   | Connected ->
-    set_connection_state connection Open;
+    set_state connection.connection_io.connection_state Open;
     log_info connection.connection_io "Connection open."
   | state -> setup_connection connection state
 
@@ -377,24 +431,14 @@ let connect ~server ?(port=5672) ?log_section () =
   let connection =
     { connection_io; connection_send; channels; finished }
   in
-  create_channel connection 0 Open;
-  create_channel connection 1 Open;
+  create_channel connection 0 (ref Open);
   ignore_result (listen connection);
   setup_connection connection Connection_start >>
   return connection
 
 
-let new_channel connection =
-  let channel = next_channel connection.channels in
-  create_channel connection channel Opening;
-  let channel_io = get_channel_io connection channel in
-  send_method_sync channel_io (Channel_open.make_t ())
-  >|= (fun _ -> channel_io.channel_state <- Open) >>
-  return channel_io
-
-
 let close_connection connection =
-  set_connection_state connection Closing;
+  set_state connection.connection_io.connection_state Closing;
   let channel_io = get_channel_io connection 0 in
   let close_method =
     Connection_close.make_t
@@ -402,6 +446,27 @@ let close_connection connection =
   in
   send_method_sync channel_io close_method
   >>= fun _ ->
-  set_connection_state connection Closed;
+  set_state connection.connection_io.connection_state Closed;
   let conn_io = connection.connection_io in
   Lwt_io.close conn_io.inch <&> Lwt_io.close conn_io.ouch
+
+
+let new_channel connection =
+  let channel = next_channel connection.channels in
+  create_channel connection channel (ref Opening);
+  let channel_io = get_channel_io connection channel in
+  send_method_sync channel_io (Channel_open.make_t ())
+  >|= (fun _ -> set_state channel_io.channel_state Open) >>
+  return channel_io
+
+
+let close_channel connection channel_io =
+  set_state channel_io.channel_state Closing;
+  let close_method =
+    Channel_close.make_t
+      ~reply_code:200 ~reply_text:"Ok" ~class_id:0 ~method_id:0 ()
+  in
+  send_method_sync channel_io close_method
+  >|= fun _ ->
+  set_state channel_io.channel_state Closed;
+  kill_channel connection channel_io

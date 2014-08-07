@@ -13,7 +13,7 @@ module Tx_rollback = struct
     (90, 31);
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

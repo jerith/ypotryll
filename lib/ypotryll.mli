@@ -23,9 +23,11 @@ module Channel : sig
 
   val get_channel_number : t -> int
 
-  val get_frame_payload : t -> Frame.payload option Lwt.t
+  val close : t -> unit Lwt.t
 
   (* TEMP *)
+
+  val get_frame_payload : t -> Frame.payload option Lwt.t
 
   val send_method_async : t -> method_payload -> unit Lwt.t
 

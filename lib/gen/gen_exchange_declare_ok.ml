@@ -12,7 +12,7 @@ module Exchange_declare_ok = struct
   let responses = [
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

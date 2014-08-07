@@ -150,7 +150,7 @@ module Method_module = struct
 
   let fmt_method_record ppf (spec, cls, meth) =
     match meth.Method.fields with
-    | [] -> Format.fprintf ppf "type record = ()"
+    | [] -> Format.fprintf ppf "type record = unit"
     | fields -> fmt_list_in_vbox ppf "type record = {" "}"
                   (fmt_method_record_field spec) fields
 

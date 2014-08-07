@@ -13,7 +13,7 @@ module Tx_commit = struct
     (90, 21);
   ]
 
-  type record = ()
+  type record = unit
 
   let arguments = [
   ]

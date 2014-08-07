@@ -46,7 +46,9 @@ let tests =
       );
 
     "test_bad_tag" >:: (fun ctx ->
-        let spec_channel = channel_of_string ctx (valid_amqp_tag ^ "<foo bar=\"baz\"/></amqp>") in
+        let spec_channel =
+          channel_of_string ctx (valid_amqp_tag ^ "<foo bar=\"baz\"/></amqp>")
+        in
         assert_raises
           (Failure "bad tag: <foo bar=\"baz\">")
           (fun () -> Spec_parser.parse_spec_from_channel spec_channel)

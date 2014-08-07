@@ -165,7 +165,8 @@ module Field = struct
   }
 
   let make name domain data_type label reserved =
-    { name; domain; data_type; label; reserved; docs = []; rules = []; asserts = [] }
+    { name; domain; data_type; label; reserved;
+      docs = []; rules = []; asserts = [] }
 
   let add_doc me item =
     { me with docs = item :: me.docs }
@@ -224,7 +225,8 @@ module Method = struct
 
   let make name index synchronous content label deprecated =
     { name; index; synchronous; content; label; deprecated;
-      docs = []; rules = []; chassis = []; responses = []; fields = []; asserts = [] }
+      docs = []; rules = []; chassis = []; responses = []; fields = [];
+      asserts = [] }
 
   let add_doc me item =
     { me with docs = item :: me.docs }
@@ -294,7 +296,8 @@ module Class = struct
     { me with fields = item :: me.fields }
 
   let fmt ppf me =
-    Format.fprintf ppf "@[<hv 4><class %s (%s) %d@ label=%S@ %a@ %a@ %a@ %a@ %a>@]"
+    Format.fprintf ppf
+      "@[<hv 4><class %s (%s) %d@ label=%S@ %a@ %a@ %a@ %a@ %a>@]"
       me.name me.handler me.index me.label
       Doc.fmt_list me.docs
       Chassis.fmt_list me.chassis

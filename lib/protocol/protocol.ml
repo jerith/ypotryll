@@ -58,14 +58,16 @@ module Amqp_table = struct
       | 'T' -> Timestamp (PU.consume_long_long buf)
       | 'F' -> Field_table (consume_table buf)
       | 'V' -> No_value
-      | field_type -> failwith (Printf.sprintf "Unknown field type %C" field_type)
+      | field_type ->
+        failwith (Printf.sprintf "Unknown field type %C" field_type)
     in
     name, table_field
 
   and consume_table_entries buf =
-    if PU.Parse_buf.length buf = 0
-    then []
-    else let table_entry = consume_table_entry buf in
+    match PU.Parse_buf.length buf with
+    | 0 -> []
+    | _ ->
+      let table_entry = consume_table_entry buf in
       table_entry :: consume_table_entries buf
 
   and consume_table buf =
@@ -77,8 +79,9 @@ module Amqp_table = struct
 
   let rec add_table_entry buf (name, value) =
     PU.add_short_str buf name;
+    let int_bool = function true -> 1 | false -> 0 in
     match value with
-    | Boolean value -> PU.add_char buf 't'; PU.add_octet buf (if value then 1 else 0)
+    | Boolean value -> PU.add_char buf 't'; PU.add_octet buf (int_bool value)
     | Shortshort_int value -> PU.add_char buf 'b'; PU.add_octet buf value
     | Shortshort_uint value -> PU.add_char buf 'B'; PU.add_octet buf value
     | Short_int value -> PU.add_char buf 'U'; PU.add_short buf value
@@ -110,25 +113,26 @@ module Amqp_table = struct
 
   and dump_field_entry (name, field_value) =
     match field_value with
-    | Boolean value         -> Printf.sprintf "<Boolean %s=%b>" name value
-    | Shortshort_int value  -> Printf.sprintf "<Shortshort_int %s=%d>" name value
-    | Shortshort_uint value -> Printf.sprintf "<Shortshort_uint %s=%d>" name value
-    | Short_int value       -> Printf.sprintf "<Short_int %s=%d>" name value
-    | Short_uint value      -> Printf.sprintf "<Short_uint %s=%d>" name value
-    | Long_int value        -> Printf.sprintf "<Long_int %s=%d>" name value
-    | Long_uint value       -> Printf.sprintf "<Long_uint %s=%d>" name value
-    | Longlong_int value    -> Printf.sprintf "<Longlong_int %s=%d>" name value
-    | Longlong_uint value   -> Printf.sprintf "<Longlong_uint %s=%d>" name value
-    | Float value           -> Printf.sprintf "<Float %s=%f>" name value
-    | Double value          -> Printf.sprintf "<Double %s=%f>" name value
-    (* | Decimal value         -> "???" *)
-    | Short_string value    -> Printf.sprintf "<Short_string %s=%S>" name value
-    | Long_string value     -> Printf.sprintf "<Long_string %s=%S>" name value
-    (* | Field_array value     -> "???" *)
-    | Timestamp value       -> Printf.sprintf "<Timestamp %s=%d>" name value
-    | Field_table value     -> Printf.sprintf "<Field_table %s=%s>"
-                                 name (dump_field_table value)
-    | No_value              -> Printf.sprintf "<No_value %s>" name
+    | Boolean value -> Printf.sprintf "<Boolean %s=%b>" name value
+    | Shortshort_int value -> Printf.sprintf "<Shortshort_int %s=%d>" name value
+    | Shortshort_uint value ->
+      Printf.sprintf "<Shortshort_uint %s=%d>" name value
+    | Short_int value -> Printf.sprintf "<Short_int %s=%d>" name value
+    | Short_uint value -> Printf.sprintf "<Short_uint %s=%d>" name value
+    | Long_int value -> Printf.sprintf "<Long_int %s=%d>" name value
+    | Long_uint value -> Printf.sprintf "<Long_uint %s=%d>" name value
+    | Longlong_int value -> Printf.sprintf "<Longlong_int %s=%d>" name value
+    | Longlong_uint value -> Printf.sprintf "<Longlong_uint %s=%d>" name value
+    | Float value -> Printf.sprintf "<Float %s=%f>" name value
+    | Double value -> Printf.sprintf "<Double %s=%f>" name value
+    (* | Decimal value -> "???" *)
+    | Short_string value -> Printf.sprintf "<Short_string %s=%S>" name value
+    | Long_string value -> Printf.sprintf "<Long_string %s=%S>" name value
+    (* | Field_array value -> "???" *)
+    | Timestamp value -> Printf.sprintf "<Timestamp %s=%d>" name value
+    | Field_table value ->
+      Printf.sprintf "<Field_table %s=%s>" name (dump_field_table value)
+    | No_value -> Printf.sprintf "<No_value %s>" name
 
 end
 

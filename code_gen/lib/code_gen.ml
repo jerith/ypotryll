@@ -1,5 +1,6 @@
 
-let generated_header = "(* This file is generated. See the code_gen dir for details. *)"
+let generated_header =
+  "(* This file is generated. See the code_gen dir for details. *)"
 
 let gen_ml_filename name =
   let gen_dir = Filename.concat "lib" "gen" in

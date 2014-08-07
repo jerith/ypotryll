@@ -45,18 +45,18 @@ let fmt_tag name (attrs, _children) =
   Printf.sprintf "<%s%s>" name (fmt_attrs attrs)
 
 let swallow_element = function
+  | D text when String.trim text = "" -> ()
   | D text ->
-    if String.trim text = ""
-    then ()
-    else failwith (Printf.sprintf "Unexpected text: %S" text)
-  | E (name, elem) -> failwith (Printf.sprintf "bad tag: %s" (fmt_tag name elem))
+    failwith (Printf.sprintf "Unexpected text: %S" text)
+  | E (name, elem) ->
+    failwith (Printf.sprintf "bad tag: %s" (fmt_tag name elem))
 
 let consume_children children =
   ignore (List.map swallow_element children)
 
 let assert_no_attrs = function
   | [] -> ()
-  | attrs -> failwith ("Expected empty attr list, got <" ^ (fmt_attrs attrs) ^ ">")
+  | attrs -> failwith ("Expected no attrs, got <" ^ (fmt_attrs attrs) ^ ">")
 
 
 let parse_doc (attrs, children) =
@@ -77,8 +77,8 @@ let parse_constant (attrs, children) =
   let open Constant in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -90,8 +90,8 @@ let parse_rule (attrs, children) =
   let open Rule in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -112,10 +112,10 @@ let parse_domain (attrs, children) =
   let open Domain in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | E ("rule", elem) :: elems -> fill (add_rule me (parse_rule elem)) elems
-    | E ("assert", elem) :: elems -> fill (add_assert me (parse_assert elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | E ("rule", e) :: es -> fill (add_rule me (parse_rule e)) es
+    | E ("assert", e) :: es -> fill (add_assert me (parse_assert e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -137,10 +137,10 @@ let parse_field (attrs, children) =
   let open Field in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | E ("rule", elem) :: elems -> fill (add_rule me (parse_rule elem)) elems
-    | E ("assert", elem) :: elems -> fill (add_assert me (parse_assert elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | E ("rule", e) :: es -> fill (add_rule me (parse_rule e)) es
+    | E ("assert", e) :: es -> fill (add_assert me (parse_assert e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -162,13 +162,13 @@ let parse_method (attrs, children) =
   let open Method in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | E ("rule", elem) :: elems -> fill (add_rule me (parse_rule elem)) elems
-    | E ("chassis", elem) :: elems -> fill (add_chassis me (parse_chassis elem)) elems
-    | E ("response", elem) :: elems -> fill (add_response me (parse_response elem)) elems
-    | E ("field", elem) :: elems -> fill (add_field me (parse_field elem)) elems
-    | E ("assert", elem) :: elems -> fill (add_assert me (parse_assert elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | E ("rule", e) :: es -> fill (add_rule me (parse_rule e)) es
+    | E ("chassis", e) :: es -> fill (add_chassis me (parse_chassis e)) es
+    | E ("response", e) :: es -> fill (add_response me (parse_response e)) es
+    | E ("field", e) :: es -> fill (add_field me (parse_field e)) es
+    | E ("assert", e) :: es -> fill (add_assert me (parse_assert e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -182,12 +182,12 @@ let parse_class (attrs, children) =
   let open Class in
   let rec fill me = function
     | [] -> me
-    | E ("doc", elem) :: elems -> fill (add_doc me (parse_doc elem)) elems
-    | E ("chassis", elem) :: elems -> fill (add_chassis me (parse_chassis elem)) elems
-    | E ("method", elem) :: elems -> fill (add_method me (parse_method elem)) elems
-    | E ("rule", elem) :: elems -> fill (add_rule me (parse_rule elem)) elems
-    | E ("field", elem) :: elems -> fill (add_field me (parse_field elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("doc", e) :: es -> fill (add_doc me (parse_doc e)) es
+    | E ("chassis", e) :: es -> fill (add_chassis me (parse_chassis e)) es
+    | E ("method", e) :: es -> fill (add_method me (parse_method e)) es
+    | E ("rule", e) :: es -> fill (add_rule me (parse_rule e)) es
+    | E ("field", e) :: es -> fill (add_field me (parse_field e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
@@ -202,21 +202,21 @@ let parse_amqp (attrs, children) =
   let open Spec in
   let rec fill me = function
     | [] -> me
-    | E ("constant", elem) :: elems -> fill (add_constant me (parse_constant elem)) elems
-    | E ("domain", elem) :: elems -> fill (add_domain me (parse_domain elem)) elems
-    | E ("class", elem) :: elems -> fill (add_class me (parse_class elem)) elems
-    | elem :: elems -> swallow_element elem; fill me elems
+    | E ("constant", e) :: es -> fill (add_constant me (parse_constant e)) es
+    | E ("domain", e) :: es -> fill (add_domain me (parse_domain e)) es
+    | E ("class", e) :: es -> fill (add_class me (parse_class e)) es
+    | e :: es -> swallow_element e; fill me es
   in
   fill me (List.rev children)
 
 let parse_spec (_dtd, tree) =
   match tree with
-  | E ("amqp", elem) -> parse_amqp elem
+  | E ("amqp", e) -> parse_amqp e
   | _ -> failwith "Root element is not <amqp> tag. Is this an AMQP spec?"
 
 let parse_spec_from_channel input =
   try
     parse_spec (in_tree (Xmlm.make_input (`Channel input)))
-  with
-  | Xmlm.Error ((x, y), err) -> failwith (
-      Printf.sprintf "XML error at line %d char %d: %s" x y (Xmlm.error_message err))
+  with Xmlm.Error ((x, y), err) ->
+    failwith (Printf.sprintf "XML error at line %d char %d: %s"
+                x y (Xmlm.error_message err))

@@ -27,20 +27,22 @@ let fmt_module_type ppf module_name fmt_func =
   let start = "module type " ^ module_name ^ " = sig" in
   fmt_in_vbox ppf 2 start fmt_func (Some "end")
 
-let name_to_ocaml = String.map (function
-    | '-' -> '_'
-    | c -> c
-  )
+let name_to_ocaml = String.map (function '-' -> '_' | c -> c)
 
-let map_methods spec func =
-  List.rev (List.fold_left (fun acc cls -> List.fold_left (fun acc meth ->
-      func (spec, cls, meth) :: acc
-    ) acc cls.Class.methods) [] spec.Spec.classes)
+let map_methods spec f =
+  let map_cls_methods cls =
+    List.map (fun meth -> f (spec, cls, meth)) cls.Class.methods
+  in
+  let map_and_collect acc cls =
+    List.rev_append (map_cls_methods cls) acc
+  in
+  List.rev (List.fold_left map_and_collect [] spec.Spec.classes)
 
-let iter_methods spec func =
-  List.iter (fun cls -> List.iter (fun meth ->
-      func (spec, cls, meth)
-    ) cls.Class.methods) spec.Spec.classes
+let iter_methods spec f =
+  let iter_cls_methods cls =
+    List.iter (fun meth -> f (spec, cls, meth)) cls.Class.methods
+  in
+  List.iter iter_cls_methods spec.Spec.classes
 
 let make_method_name cls meth =
   name_to_ocaml (Printf.sprintf "%s_%s" cls.Class.name meth.Method.name)
@@ -52,10 +54,8 @@ let make_field_name field =
 
 let rec get_constant_value name = function
   | [] -> failwith ("Undefined constant: " ^ name)
-  | const :: constants ->
-    if const.Constant.name = name
-    then const.Constant.value
-    else get_constant_value name constants
+  | const :: _ when const.Constant.name = name -> const.Constant.value
+  | _ :: constants -> get_constant_value name constants
 
 let ocaml_type_from_amqp_type = function
   | "bit" -> "bool"
@@ -91,10 +91,9 @@ let reserved_value_for_ocaml_type = function
 let types_from_domain spec domain_name =
   let rec inner = function
     | [] -> failwith ("Domain not found: " ^ domain_name)
-    | domain :: domains ->
-      if domain.Domain.name <> domain_name
-      then inner domains
-      else (ocaml_type_from_amqp_type domain.Domain.data_type, domain.Domain.data_type)
+    | dom :: domains when dom.Domain.name <> domain_name -> inner domains
+    | dom :: _ ->
+      (ocaml_type_from_amqp_type dom.Domain.data_type, dom.Domain.data_type)
   in
   inner spec.Spec.domains
 
@@ -131,10 +130,8 @@ module Method_module = struct
 
   let rec find_method_for_name name = function
     | [] -> failwith ("No method found for name: " ^ name)
-    | meth :: methods ->
-      if meth.Method.name = name
-      then meth
-      else find_method_for_name name methods
+    | meth :: _ when meth.Method.name = name -> meth
+    | _ :: methods -> find_method_for_name name methods
 
   let fmt_method_response cls ppf response =
     let meth = find_method_for_name response.Response.name cls.Class.methods in
@@ -177,8 +174,7 @@ module Method_module = struct
     in
     fmt_function ppf "let t_to_list payload =@," (fun ppf ->
         fmt_list_in_vbox ppf "[" "]"
-          (fmt_argument_field spec fmt_arg) meth.Method.fields
-      )
+          (fmt_argument_field spec fmt_arg) meth.Method.fields)
 
   (* t_from_list *)
 
@@ -197,24 +193,23 @@ module Method_module = struct
              (fun ppf field -> Format.fprintf ppf "%s;" (make_field_name field))
              fields);
         Format.pp_print_cut ppf ();
-        Format.fprintf ppf "| _ -> failwith \"Unexpected fields.\""
-      )
+        Format.fprintf ppf "| _ -> failwith \"Unexpected fields.\"")
 
   (* make_t *)
 
   let make_arg field =
-    if field.Field.reserved
-    then ""
-    else "~" ^ make_field_name field ^ " "
+    match field.Field.reserved with
+    | true -> ""
+    | false -> "~" ^ make_field_name field ^ " "
 
   let fmt_record_entry spec ppf field =
     let name = make_field_name field in
-    if field.Field.reserved
-    then
+    match field.Field.reserved with
+    | false -> Format.fprintf ppf "%s;" name
+    | true ->
       let ocaml_type, _, _ = types_from_field spec field in
       let value = reserved_value_for_ocaml_type ocaml_type in
       Format.fprintf ppf "%s = %s;" name value
-    else Format.fprintf ppf "%s;" name
 
   let fmt_make_t ppf (spec, cls, meth) =
     let params = match meth.Method.fields with
@@ -242,8 +237,7 @@ module Method_module = struct
         fmt_line ppf fmt_argument_list (spec, cls, meth);
         fmt_line ppf fmt_t_to_list (spec, cls, meth);
         fmt_line ppf fmt_t_from_list (spec, cls, meth);
-        fmt_line ppf fmt_make_t (spec, cls, meth);
-      );
+        fmt_line ppf fmt_make_t (spec, cls, meth));
     Format.fprintf ppf "@."
 
   let make_method_text spec cls meth =
@@ -261,37 +255,48 @@ end
 
 module Method_module_wrapper = struct
 
+  let fmt_parse_method ppf module_name =
+    fmt_function ppf "let parse_method buf =" (fun ppf ->
+        Format.fprintf ppf
+          "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
+          module_name)
+
+  let fmt_build_method ppf module_name =
+    fmt_function ppf "let build_method = function" (fun ppf ->
+        Format.fprintf ppf
+          "@,| `%s payload -> string_of_list (t_to_list payload)" module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_dump_method ppf module_name =
+    fmt_function ppf "let dump_method = function" (fun ppf ->
+        Format.fprintf ppf
+          "@,| `%s payload -> dump_list (t_to_list payload)" module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_list_of_t ppf module_name =
+    fmt_function ppf "let list_of_t = function" (fun ppf ->
+        Format.fprintf ppf "@,| `%s payload -> t_to_list payload" module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
   let fmt_method_text ppf (spec, cls, meth) =
     let method_name = make_method_name cls meth in
     let module_name = String.capitalize method_name in
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
-    let fmt_function ppf = fmt_line_str ppf ""; fmt_function ppf in
     fmt_module ppf module_name (fun ppf ->
         Format.fprintf ppf "@,%s@,%s@,include Gen_%s.%s"
           "open Generated_method_types" "open Protocol.Method_utils"
           method_name module_name;
-        fmt_line ppf (fun ppf -> Format.fprintf ppf "type t = [`%s of record]") module_name;
+        fmt_line ppf (fun ppf ->
+            Format.fprintf ppf "type t = [`%s of record]") module_name;
         fmt_line_str ppf "let buf_to_list = buf_to_list arguments";
-        fmt_line_str ppf "let string_of_list = string_of_list class_id method_id";
+        fmt_line_str ppf
+          "let string_of_list = string_of_list class_id method_id";
         fmt_line_str ppf "let dump_list = dump_list name class_id method_id";
-        fmt_function ppf "let parse_method buf =" (fun ppf ->
-            Format.fprintf ppf
-              "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
-              module_name);
-        fmt_function ppf "let build_method = function" (fun ppf ->
-            Format.fprintf ppf
-              "@,| `%s payload -> string_of_list (t_to_list payload)@,| _ -> assert false"
-              module_name);
-        fmt_function ppf "let dump_method = function" (fun ppf ->
-            Format.fprintf ppf
-              "@,| `%s payload -> dump_list (t_to_list payload)@,| _ -> assert false"
-              module_name);
-        fmt_function ppf "let list_of_t = function" (fun ppf ->
-            Format.fprintf ppf
-              "@,| `%s payload -> t_to_list payload@,| _ -> assert false"
-              module_name);
-      )
+        fmt_line ppf fmt_parse_method module_name;
+        fmt_line ppf fmt_build_method module_name;
+        fmt_line ppf fmt_dump_method module_name;
+        fmt_line ppf fmt_list_of_t module_name)
 
   let build (spec, cls, meth) =
     Format.fprintf Format.str_formatter "%a" fmt_method_text (spec, cls, meth);
@@ -303,13 +308,15 @@ module Method_parser_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
     Format.fprintf ppf "@,| (%d, %d) -> %s.parse_method"
-      cls.Class.index meth.Method.index (String.capitalize (make_method_name cls meth))
+      cls.Class.index meth.Method.index
+      (String.capitalize (make_method_name cls meth))
 
   let fmt_builder_list ppf spec =
     fmt_function ppf "let parse_method = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
-        Format.fprintf ppf "@,| (class_id, method_id) ->@,%s"
-          "  failwith (Printf.sprintf \"Unknown method: (%d, %d)\" class_id method_id)")
+        Format.fprintf ppf "@,| (class_id, method_id) ->@,  %s"
+          (Printf.sprintf "failwith (Printf.sprintf %S class_id method_id)"
+             "Unknown method: (%d, %d)"))
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
@@ -381,7 +388,8 @@ end
 module Frame_constants = struct
 
   let fmt_frame_end ppf spec =
-    Format.fprintf ppf "let frame_end = %d" (get_constant_value "frame-end" spec.Spec.constants)
+    Format.fprintf ppf "let frame_end = %d"
+      (get_constant_value "frame-end" spec.Spec.constants)
 
   let fmt_frame_type ppf () =
     (* Not a function, but it looks like one. *)
@@ -394,11 +402,16 @@ module Frame_constants = struct
   let fmt_byte_to_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
     fmt_function ppf "let byte_to_frame_type = function" (fun ppf ->
-        Format.fprintf ppf "@,| %d -> Method_frame" (get_constant "frame-method");
-        Format.fprintf ppf "@,| %d -> Header_frame" (get_constant "frame-header");
-        Format.fprintf ppf "@,| %d -> Body_frame" (get_constant "frame-body");
-        Format.fprintf ppf "@,| %d -> Heartbeat_frame" (get_constant "frame-heartbeat");
-        Format.fprintf ppf "@,| i -> failwith (Printf.sprintf %S i)" "Unexpected frame type: %d")
+        Format.fprintf ppf "@,| %d -> Method_frame"
+          (get_constant "frame-method");
+        Format.fprintf ppf "@,| %d -> Header_frame"
+          (get_constant "frame-header");
+        Format.fprintf ppf "@,| %d -> Body_frame"
+          (get_constant "frame-body");
+        Format.fprintf ppf "@,| %d -> Heartbeat_frame"
+          (get_constant "frame-heartbeat");
+        Format.fprintf ppf "@,| i -> failwith (Printf.sprintf %S i)"
+          "Unexpected frame type: %d")
 
   let fmt_emit_frame_type ppf spec =
     let get_constant name = get_constant_value name spec.Spec.constants in
@@ -409,7 +422,8 @@ module Frame_constants = struct
           (get_constant "frame-header");
         Format.fprintf ppf "@,| Body_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-body");
-        Format.fprintf ppf "@,| Heartbeat_frame -> String.make 1 (char_of_int %d)"
+        Format.fprintf ppf
+          "@,| Heartbeat_frame -> String.make 1 (char_of_int %d)"
           (get_constant "frame-heartbeat"))
 
   let fmt_frame_constants ppf spec =

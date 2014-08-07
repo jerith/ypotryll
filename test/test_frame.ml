@@ -7,14 +7,15 @@ let tests =
   "test_frame" >::: [
 
     "test_round_trip_connection_start_ok" >:: (fun ctx ->
+       let open Protocol.Amqp_table in
         let
           fields = (`Connection_start_ok {
             Connection_start_ok.client_properties = [
-              "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
-              "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
-              "platform", Protocol.Amqp_table.Long_string "OCaml";
-              "product", Protocol.Amqp_table.Long_string "ypotryll";
-              "version", Protocol.Amqp_table.Long_string "0.0.1";
+              "copyright", Long_string "Copyright (C) 2014 jerith";
+              "information", Long_string "Licensed under the MIT license.";
+              "platform", Long_string "OCaml";
+              "product", Long_string "ypotryll";
+              "version", Long_string "0.0.1";
             ];
             Connection_start_ok.mechanism = "PLAIN";
             Connection_start_ok.response = "\000guest\000guest";

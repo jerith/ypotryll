@@ -13,5 +13,7 @@ oUnit-anon.cache
 setup.data
 setup.log
 
+.mascot
+
 *.byte
 *.native

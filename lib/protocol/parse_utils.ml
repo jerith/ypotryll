@@ -1,5 +1,5 @@
 
-module Parse_buf = struct
+module Gen_buf = struct
   type t = {
     mutable str : string;
     mutable bits : int;
@@ -13,6 +13,11 @@ module Parse_buf = struct
 
   let length buf =
     String.length buf.str
+end
+
+
+module Parse_buf = struct
+  include Gen_buf
 
   let advance buf length =
     let str = String.sub buf.str length ((String.length buf.str) - length) in
@@ -40,26 +45,11 @@ module Parse_buf = struct
     let value = (int_of_char buf.str.[0]) land (1 lsl buf.bits) in
     buf.bits <- buf.bits + 1;
     value <> 0
-
 end
 
 
 module Build_buf = struct
-  (* Pretty much the same as Parse_buf, but for building. *)
-
-  type t = {
-    mutable str : string;
-    mutable bits : int;
-  }
-
-  let from_string str =
-    { str; bits = 0 }
-
-  let to_string buf =
-    buf.str
-
-  let length buf =
-    String.length buf.str
+  include Gen_buf
 
   let clear_bits buf =
     buf.bits <- 0
@@ -80,7 +70,6 @@ module Build_buf = struct
       buf.str.[pos] <- char_of_int value
     end;
     buf.bits <- buf.bits + 1
-
 end
 
 

@@ -15,27 +15,7 @@ module Field_type = struct
 end
 
 module Amqp_table = struct
-  type field =
-    (* TODO: overflows? *)
-    | (* t *) Boolean of bool
-    | (* b *) Shortshort_int of int
-    | (* B *) Shortshort_uint of int
-    | (* U *) Short_int of int
-    | (* u *) Short_uint of int
-    | (* I *) Long_int of int
-    | (* i *) Long_uint of int
-    | (* L *) Longlong_int of int
-    | (* l *) Longlong_uint of int
-    | (* f *) Float of float
-    | (* d *) Double of float
-    (* | (\* D *\) Decimal of ??? *)
-    | (* s *) Short_string of string
-    | (* S *) Long_string of string
-    (* | (\* A *\) Field_array of ??? *)
-    | (* T *) Timestamp of int
-    | (* F *) Field_table of table
-    | (* V *) No_value
-  and table = (string * field) list
+  open Ypotryll_field_types.Table
 
   let rec consume_table_entry buf =
     let name = PU.consume_short_str buf in
@@ -134,6 +114,9 @@ module Amqp_table = struct
       Printf.sprintf "<Field_table %s=%s>" name (dump_field_table value)
     | No_value -> Printf.sprintf "<No_value %s>" name
 
+  let make_list () =
+    ([] : field list)
+
 end
 
 module Amqp_field = struct
@@ -148,7 +131,7 @@ module Amqp_field = struct
     | Shortstring of string
     | Longstring of string
     | Timestamp of int
-    | Table of Amqp_table.table
+    | Table of Ypotryll_field_types.Table.t
 
   (* amqp_field parsers *)
 

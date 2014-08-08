@@ -1,4 +1,68 @@
 # OASIS_START
-# DO NOT EDIT (digest: 0e7be8a2fb79f05c1c90e161851155db)
+# DO NOT EDIT (digest: e5cb9b8d039cc2342002888e69cbe081)
+Ypotryll_field_types
+Ypotryll_types
 Ypotryll
+gen/Ypotryll_methods
+Parse_utils
+Protocol
+gen/Generated_method_types
+gen/Generated_frame_constants
+Frame
+Connection
 # OASIS_STOP
+# YPOTRYLL_GEN_START
+gen/Gen_basic_ack
+gen/Gen_basic_cancel
+gen/Gen_basic_cancel_ok
+gen/Gen_basic_consume
+gen/Gen_basic_consume_ok
+gen/Gen_basic_deliver
+gen/Gen_basic_get
+gen/Gen_basic_get_empty
+gen/Gen_basic_get_ok
+gen/Gen_basic_publish
+gen/Gen_basic_qos
+gen/Gen_basic_qos_ok
+gen/Gen_basic_recover
+gen/Gen_basic_recover_async
+gen/Gen_basic_recover_ok
+gen/Gen_basic_reject
+gen/Gen_basic_return
+gen/Gen_channel_close
+gen/Gen_channel_close_ok
+gen/Gen_channel_flow
+gen/Gen_channel_flow_ok
+gen/Gen_channel_open
+gen/Gen_channel_open_ok
+gen/Gen_connection_close
+gen/Gen_connection_close_ok
+gen/Gen_connection_open
+gen/Gen_connection_open_ok
+gen/Gen_connection_secure
+gen/Gen_connection_secure_ok
+gen/Gen_connection_start
+gen/Gen_connection_start_ok
+gen/Gen_connection_tune
+gen/Gen_connection_tune_ok
+gen/Gen_exchange_declare
+gen/Gen_exchange_declare_ok
+gen/Gen_exchange_delete
+gen/Gen_exchange_delete_ok
+gen/Gen_queue_bind
+gen/Gen_queue_bind_ok
+gen/Gen_queue_declare
+gen/Gen_queue_declare_ok
+gen/Gen_queue_delete
+gen/Gen_queue_delete_ok
+gen/Gen_queue_purge
+gen/Gen_queue_purge_ok
+gen/Gen_queue_unbind
+gen/Gen_queue_unbind_ok
+gen/Gen_tx_commit
+gen/Gen_tx_commit_ok
+gen/Gen_tx_rollback
+gen/Gen_tx_rollback_ok
+gen/Gen_tx_select
+gen/Gen_tx_select_ok
+# YPOTRYLL_GEN_STOP

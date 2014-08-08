@@ -3,7 +3,6 @@ open Lwt
 
 
 type connection = Connection.t
-type method_payload = Generated_method_types.method_payload
 
 
 type channel = {
@@ -47,5 +46,15 @@ let send_method_sync channel payload =
 
 
 let close_channel channel =
-  Connection.close_channel
-    channel.connection channel.channel_io
+  Connection.close_channel channel.connection channel.channel_io
+
+
+module Methods = struct
+  module Exchange = struct
+    let declare channel ~exchange ~type_ ~passive ~durable ~no_wait ~arguments () =
+      send_method_sync channel (Ypotryll_methods.Exchange_declare.make_t ~exchange ~type_ ~passive ~durable ~no_wait ~arguments ())
+      >|= function
+      | `Exchange_declare_ok payload -> payload
+      | _ -> assert false
+  end
+end

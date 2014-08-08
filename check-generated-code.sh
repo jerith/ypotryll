@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Delete all existing generated code.
-rm -f lib/gen/*.ml
-
 # Recreate generated code.
-code_gen/code_gen.byte < amqp0-9-1.xml
+./regenerate-code.sh
 
 # Check that git detects no differences.
 git status  # For the CI log.

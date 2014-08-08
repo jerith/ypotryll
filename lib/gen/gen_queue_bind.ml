@@ -19,7 +19,7 @@ module Queue_bind = struct
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);
     no_wait : bool (* no-wait : bit *);
-    arguments : Amqp_table.table (* table : table *);
+    arguments : Ypotryll_field_types.Table.t (* table : table *);
   }
 
   let arguments = [

@@ -21,7 +21,7 @@ module Basic_consume = struct
     no_ack : bool (* no-ack : bit *);
     exclusive : bool (* bit : bit *);
     no_wait : bool (* no-wait : bit *);
-    arguments : Amqp_table.table (* table : table *);
+    arguments : Ypotryll_field_types.Table.t (* table : table *);
   }
 
   let arguments = [

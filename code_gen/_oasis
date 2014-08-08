@@ -11,11 +11,16 @@ Library ypotryll_code_gen
   Install:      false
   Path:         lib
   Modules:      Amqp_spec, Spec_parser, Module_builder
-  BuildDepends: xmlm, unix
+  BuildDepends: xmlm, unix,lwt, lwt.syntax, lwt.unix
 
 Executable ypotryll_code_gen
   Path:         lib
   MainIs:       code_gen.ml
+  BuildDepends: ypotryll_code_gen
+
+Executable ypotryll_update_mllib
+  Path:         lib
+  MainIs:       update_mllib.ml
   BuildDepends: ypotryll_code_gen
 
 Executable test_ypotryll_code_gen

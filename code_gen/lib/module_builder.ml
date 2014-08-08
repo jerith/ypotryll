@@ -65,7 +65,7 @@ let ocaml_type_from_amqp_type = function
   | "octet" -> "int"
   | "short" -> "int"
   | "shortstr" -> "string"
-  | "table" -> "Amqp_table.table"
+  | "table" -> "Ypotryll_field_types.Table.t"
   | "timestamp" -> "int"
   | data_type -> failwith ("Unexpected AMQP field type: " ^ data_type)
 
@@ -85,7 +85,7 @@ let reserved_value_for_ocaml_type = function
   | "bool" -> Printf.sprintf "%B" false
   | "int" -> Printf.sprintf "%d" 0
   | "string" -> Printf.sprintf "%S" ""
-  | "Amqp_table.table" -> "[]"
+  | "Ypotryll_field_types.Table.t" -> "[]"
   | ocaml_type -> failwith ("Unexpected OCaml type: " ^ ocaml_type)
 
 let types_from_domain spec domain_name =
@@ -258,8 +258,8 @@ module Method_module_wrapper = struct
   let fmt_parse_method ppf module_name =
     fmt_function ppf "let parse_method buf =" (fun ppf ->
         Format.fprintf ppf
-          "@,(`%s (t_from_list (buf_to_list buf)) :> method_payload)"
-          module_name)
+          "@,(`%s (t_from_list (buf_to_list buf)) :> %s)"
+          module_name "Ypotryll_types.method_payload")
 
   let fmt_build_method ppf module_name =
     fmt_function ppf "let build_method = function" (fun ppf ->
@@ -284,8 +284,8 @@ module Method_module_wrapper = struct
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     fmt_module ppf module_name (fun ppf ->
-        Format.fprintf ppf "@,%s@,%s@,include Gen_%s.%s"
-          "open Generated_method_types" "open Protocol.Method_utils"
+        Format.fprintf ppf "@,%s@,include Gen_%s.%s"
+          "open Protocol.Method_utils"
           method_name module_name;
         fmt_line ppf (fun ppf ->
             Format.fprintf ppf "type t = [`%s of record]") module_name;
@@ -366,18 +366,19 @@ module Method_module_type = struct
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
     fmt_module_type ppf "Method" (fun ppf ->
-        Format.fprintf ppf "@,type t@,open Generated_method_types";
+        Format.fprintf ppf "@,type t";
         fmt_line_str ppf "val name : string";
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
         fmt_line_str ppf "val synchronous : bool";
         fmt_line_str ppf "val responses : (int * int) list";
         fmt_line_str ppf (
-          "val parse_method : Parse_utils.Parse_buf.t -> method_payload");
+          "val parse_method : Parse_utils.Parse_buf.t ->"
+          ^ " Ypotryll_types.method_payload");
         fmt_line_str ppf
-          "val build_method : method_payload -> string";
+          "val build_method : Ypotryll_types.method_payload -> string";
         fmt_line_str ppf
-          "val dump_method : method_payload -> string")
+          "val dump_method : Ypotryll_types.method_payload -> string")
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_method_type ();

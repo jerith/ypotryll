@@ -22,7 +22,7 @@ module Exchange_declare = struct
     reserved_2 : bool (* reserved : bit *);
     reserved_3 : bool (* reserved : bit *);
     no_wait : bool (* no-wait : bit *);
-    arguments : Amqp_table.table (* table : table *);
+    arguments : Ypotryll_field_types.Table.t (* table : table *);
   }
 
   let arguments = [

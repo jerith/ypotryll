@@ -1,6 +1,6 @@
 open Lwt
 
-open Generated_methods
+open Ypotryll_methods
 
 
 type connection_params = {
@@ -34,7 +34,7 @@ type connection_io = {
 }
 
 
-type expected_response = (int * int) list * Generated_method_types.method_payload Lwt.u
+type expected_response = (int * int) list * Ypotryll_types.method_payload Lwt.u
 
 
 type channel_io = {
@@ -277,11 +277,11 @@ let send_method_sync channel_io payload =
 
 
 let client_properties = [
-  "copyright", Protocol.Amqp_table.Long_string "Copyright (C) 2014 jerith";
-  "information", Protocol.Amqp_table.Long_string "Licensed under the MIT license.";
-  "platform", Protocol.Amqp_table.Long_string "OCaml";
-  "product", Protocol.Amqp_table.Long_string "ypotryll";
-  "version", Protocol.Amqp_table.Long_string "0.0.1";
+  "copyright", Ypotryll_types.Table.Long_string "Copyright (C) 2014 jerith";
+  "information", Ypotryll_types.Table.Long_string "Licensed under the MIT license.";
+  "platform", Ypotryll_types.Table.Long_string "OCaml";
+  "product", Ypotryll_types.Table.Long_string "ypotryll";
+  "version", Ypotryll_types.Table.Long_string "0.0.1";
 ]
 
 

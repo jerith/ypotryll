@@ -1,8 +1,8 @@
 # OASIS_START
-# DO NOT EDIT (digest: b50da47c10e8da5f2c8d7d11f9801547)
+# DO NOT EDIT (digest: 97d598c45f617fee331527da60038e8c)
 version = "0.0.1"
 description = "AMQP client library"
-requires = "lwt lwt.syntax lwt.unix ypotryll_gen_code"
+requires = "lwt lwt.syntax lwt.unix"
 archive(byte) = "ypotryll.cma"
 archive(byte, plugin) = "ypotryll.cma"
 archive(native) = "ypotryll.cmxa"

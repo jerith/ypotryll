@@ -13,7 +13,7 @@ module Connection_start_ok = struct
   ]
 
   type record = {
-    client_properties : Amqp_table.table (* peer-properties : table *);
+    client_properties : Ypotryll_field_types.Table.t (* peer-properties : table *);
     mechanism : string (* shortstr : shortstr *);
     response : string (* longstr : longstr *);
     locale : string (* shortstr : shortstr *);

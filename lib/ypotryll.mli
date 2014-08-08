@@ -1,7 +1,9 @@
 
 type connection
 type channel
-type method_payload = Generated_method_types.method_payload
+
+
+open Ypotryll_types
 
 
 val connect : server:string -> ?port:int -> ?log_section:Lwt_log.section
@@ -24,3 +26,11 @@ val get_frame_payload : channel -> Frame.payload option Lwt.t
 val send_method_async : channel -> method_payload -> unit Lwt.t
 
 val send_method_sync : channel -> method_payload -> method_payload Lwt.t
+
+
+module Methods : sig
+  module Exchange : sig
+    val declare :  channel -> exchange:string -> type_:string -> passive:bool -> durable:bool -> no_wait:bool -> arguments:Table.t -> unit -> Ypotryll_methods.Exchange_declare_ok.record Lwt.t
+
+  end
+end

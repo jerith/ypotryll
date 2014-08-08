@@ -20,7 +20,7 @@ let write_module_file method_module =
   write_to_file filename method_module.text
 
 let write_generated_methods_file spec =
-  let filename = gen_ml_filename "generated_methods" in
+  let filename = gen_ml_filename "ypotryll_methods" in
   write_to_file filename (String.concat "\n\n\n" [
       Module_builder.build_method_module_type ();
       String.concat "\n\n\n" (Module_builder.build_method_wrappers spec);

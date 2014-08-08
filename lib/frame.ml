@@ -1,10 +1,9 @@
 
 module FC = Generated_frame_constants
-module MTypes = Generated_method_types
 
 
 type payload =
-  | Method of MTypes.method_payload
+  | Method of Ypotryll_types.method_payload
   | Header of string
   | Body of string
   | Heartbeat
@@ -29,8 +28,8 @@ open Parse_utils
 
 
 let method_info payload =
-  let (module M : Generated_methods.Method) =
-    Generated_methods.module_for payload
+  let (module M : Ypotryll_methods.Method) =
+    Ypotryll_methods.module_for payload
   in
   {
     name = M.name;
@@ -45,8 +44,8 @@ let method_info payload =
 
 
 let dump_method payload =
-  let (module M : Generated_methods.Method) =
-    Generated_methods.module_for payload
+  let (module M : Ypotryll_methods.Method) =
+    Ypotryll_methods.module_for payload
   in
   M.dump_method payload
 
@@ -63,7 +62,7 @@ let dump_payload = function
 
 let parse_method_args buf class_id method_id =
   try
-    Generated_methods.parse_method (class_id, method_id) buf
+    Ypotryll_methods.parse_method (class_id, method_id) buf
   with Not_found ->
     failwith (Printf.sprintf "Unknown method (%d, %d) with payload: %S"
                 class_id method_id (consume_str buf (Parse_buf.length buf)))
@@ -113,7 +112,7 @@ let make_method channel method_payload =
 
 
 let build_method_payload payload =
-  let (module P : Generated_methods.Method) = Generated_methods.module_for payload in
+  let (module P : Ypotryll_methods.Method) = Ypotryll_methods.module_for payload in
   P.build_method payload
 
 

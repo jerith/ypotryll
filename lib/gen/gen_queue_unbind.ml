@@ -18,7 +18,7 @@ module Queue_unbind = struct
     queue : string (* queue-name : shortstr *);
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);
-    arguments : Amqp_table.table (* table : table *);
+    arguments : Ypotryll_field_types.Table.t (* table : table *);
   }
 
   let arguments = [

@@ -21,7 +21,7 @@ module Queue_declare = struct
     exclusive : bool (* bit : bit *);
     auto_delete : bool (* bit : bit *);
     no_wait : bool (* no-wait : bit *);
-    arguments : Amqp_table.table (* table : table *);
+    arguments : Ypotryll_field_types.Table.t (* table : table *);
   }
 
   let arguments = [

@@ -16,7 +16,7 @@ module Connection_start = struct
   type record = {
     version_major : int (* octet : octet *);
     version_minor : int (* octet : octet *);
-    server_properties : Amqp_table.table (* peer-properties : table *);
+    server_properties : Ypotryll_field_types.Table.t (* peer-properties : table *);
     mechanisms : string (* longstr : longstr *);
     locales : string (* longstr : longstr *);
   }

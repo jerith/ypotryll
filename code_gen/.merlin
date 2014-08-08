@@ -1,4 +1,5 @@
-PKG xmlm oUnit
+PKG xmlm lwt lwt.unix lwt.syntax oUnit
+EXT lwt
 
 S lib
 S test

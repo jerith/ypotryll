@@ -1,25 +1,24 @@
 open OUnit2
 
-open Generated_methods
-
 
 let tests =
   "test_frame" >::: [
 
     "test_round_trip_connection_start_ok" >:: (fun ctx ->
-       let open Protocol.Amqp_table in
+       let open Ypotryll_types.Table in
         let
           fields = (`Connection_start_ok {
-            Connection_start_ok.client_properties = [
-              "copyright", Long_string "Copyright (C) 2014 jerith";
-              "information", Long_string "Licensed under the MIT license.";
-              "platform", Long_string "OCaml";
-              "product", Long_string "ypotryll";
-              "version", Long_string "0.0.1";
-            ];
-            Connection_start_ok.mechanism = "PLAIN";
-            Connection_start_ok.response = "\000guest\000guest";
-            Connection_start_ok.locale = "en_US";
+           Ypotryll_methods.Connection_start_ok.
+             client_properties = [
+             "copyright", Long_string "Copyright (C) 2014 jerith";
+             "information", Long_string "Licensed under the MIT license.";
+             "platform", Long_string "OCaml";
+             "product", Long_string "ypotryll";
+             "version", Long_string "0.0.1";
+           ];
+           mechanism = "PLAIN";
+           response = "\000guest\000guest";
+           locale = "en_US";
           })
         in
         let wire = Frame.build_frame (Frame.make_method 0 fields) in

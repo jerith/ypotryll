@@ -4,11 +4,7 @@ open Lwt
 
 type connection = Connection.t
 
-
-type channel = {
-  channel_io : Connection.channel_io;
-  connection : Connection.t;
-}
+type channel = Connection.channel
 
 
 let connect = Connection.connect
@@ -22,31 +18,38 @@ let wait_for_shutdown connection =
 
 let open_channel connection =
   Connection.new_channel connection
-  >|= (fun channel_io -> { channel_io; connection })
+  >|= (fun channel_io -> { Connection.channel_io; connection })
 
 
 let get_connection channel =
-  channel.connection
+  channel.Connection.connection
+
+
+let get_io channel =
+  channel.Connection.channel_io
 
 
 let get_channel_number channel =
-  channel.channel_io.Connection.channel
+  (get_io channel).Connection.channel
 
 
 let get_frame_payload channel =
-  Lwt_stream.get channel.channel_io.Connection.stream
+  Lwt_stream.get (get_io channel).Connection.stream
 
 
 let send_method_async channel payload =
-  Connection.send_method_async channel.channel_io payload
+  Connection.send_method_async (get_io channel) payload
 
 
 let send_method_sync channel payload =
-  Connection.send_method_sync channel.channel_io payload
+  Connection.send_method_sync (get_io channel) payload
 
 
 let close_channel channel =
-  Connection.close_channel channel.connection channel.channel_io
+  Connection.close_channel (get_connection channel) (get_io channel)
+
+
+module Classes = Generated_caller_modules
 
 
 module Methods = struct

@@ -36,11 +36,17 @@ let write_generated_frame_constants_file spec =
   let filename = gen_ml_filename "generated_frame_constants" in
   write_to_file filename (Module_builder.build_frame_constants spec)
 
+let write_caller_modules_file spec =
+  let filename = gen_ml_filename "generated_caller_modules" in
+  let caller_modules = Method_call_builder.build_class_caller_modules spec in
+  write_to_file filename (String.concat "\n\n\n" caller_modules)
+
 let write_all_files channel =
   let spec = Spec_parser.parse_spec_from_channel channel in
   List.iter write_module_file (Module_builder.build_methods spec);
   write_generated_methods_file spec;
   write_generated_types_file spec;
-  write_generated_frame_constants_file spec
+  write_generated_frame_constants_file spec;
+  write_caller_modules_file spec
 
 let () = write_all_files stdin

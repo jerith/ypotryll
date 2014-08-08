@@ -55,6 +55,12 @@ type t = {
 }
 
 
+type channel = {
+  channel_io : channel_io;
+  connection : t;
+}
+
+
 let default_params = {
   locale = "en_US";
   channel_max = 0;

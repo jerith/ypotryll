@@ -1,6 +1,6 @@
 
 type connection
-type channel
+type channel = Connection.channel
 
 
 open Ypotryll_types
@@ -26,6 +26,9 @@ val get_frame_payload : channel -> Frame.payload option Lwt.t
 val send_method_async : channel -> method_payload -> unit Lwt.t
 
 val send_method_sync : channel -> method_payload -> method_payload Lwt.t
+
+
+module Classes : module type of Generated_caller_modules
 
 
 module Methods : sig

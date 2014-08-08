@@ -27,6 +27,7 @@ let do_stuff client =
     lwt channel = Ypotryll.open_channel client in
     (* ignore_result (catch_frames channel); *)
     exchange_declare channel "foo" "direct" >>
+    Ypotryll.Classes.Channel.flow_ok channel ~active:true () >>
     Ypotryll.close_channel channel >>
     exchange_declare channel "foo" "direct"
   finally Ypotryll.close_connection client

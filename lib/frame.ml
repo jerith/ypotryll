@@ -88,7 +88,7 @@ let consume_frame str =
     let buf = Parse_buf.from_string str in
     let frame_type = consume_frame_type buf in
     let channel = consume_short buf in
-    let size = consume_long buf in
+    let size = consume_size buf in
     if Parse_buf.length buf <= size
     then (None, str)
     else begin

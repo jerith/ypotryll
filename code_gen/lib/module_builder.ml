@@ -59,14 +59,14 @@ let rec get_constant_value name = function
 
 let ocaml_type_from_amqp_type = function
   | "bit" -> "bool"
-  | "long" -> "int"
-  | "longlong" -> "int"
+  | "long" -> "int32"
+  | "longlong" -> "int64"
   | "longstr" -> "string"
   | "octet" -> "int"
   | "short" -> "int"
   | "shortstr" -> "string"
   | "table" -> "Ypotryll_field_types.Table.t"
-  | "timestamp" -> "int"
+  | "timestamp" -> "int64"
   | data_type -> failwith ("Unexpected AMQP field type: " ^ data_type)
 
 let amqp_field_type_from_type = function
@@ -84,6 +84,8 @@ let amqp_field_type_from_type = function
 let reserved_value_for_ocaml_type = function
   | "bool" -> Printf.sprintf "%B" false
   | "int" -> Printf.sprintf "%d" 0
+  | "int32" -> Printf.sprintf "%dl" 0
+  | "int64" -> Printf.sprintf "%dL" 0
   | "string" -> Printf.sprintf "%S" ""
   | "Ypotryll_field_types.Table.t" -> "[]"
   | ocaml_type -> failwith ("Unexpected OCaml type: " ^ ocaml_type)

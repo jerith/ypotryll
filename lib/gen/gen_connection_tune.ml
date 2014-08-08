@@ -15,7 +15,7 @@ module Connection_tune = struct
 
   type record = {
     channel_max : int (* short : short *);
-    frame_max : int (* long : long *);
+    frame_max : int32 (* long : long *);
     heartbeat : int (* short : short *);
   }
 

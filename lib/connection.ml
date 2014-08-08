@@ -328,7 +328,6 @@ let failwith_wrong_frame expected payload =
   failwith ("Expected " ^ expected ^ ", got: " ^ Frame.dump_payload payload)
 
 let process_connection_start channel_io frame_payload =
-  (* TODO: Assert channel 0 *)
   let body = match frame_payload with
     | Frame.Method (`Connection_start body) -> body
     | _ -> failwith_wrong_frame "Connection_start" frame_payload
@@ -359,7 +358,6 @@ let choose_heartbeat body =
 
 
 let process_connection_tune channel_io frame_payload =
-  (* TODO: Assert channel 0 *)
   let body = match frame_payload with
     | Frame.Method (`Connection_tune body) -> body
     | _ -> failwith_wrong_frame "Connection_tune" frame_payload
@@ -380,7 +378,6 @@ let process_connection_tune channel_io frame_payload =
 
 
 let process_connection_open channel_io frame_payload =
-  (* TODO: Assert channel 0 *)
   let _ = match frame_payload with
     | Frame.Method (`Connection_open_ok body) -> body
     | _ -> failwith_wrong_frame "Connection_open_ok" frame_payload

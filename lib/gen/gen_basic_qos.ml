@@ -14,7 +14,7 @@ module Basic_qos = struct
   ]
 
   type record = {
-    prefetch_size : int (* long : long *);
+    prefetch_size : int32 (* long : long *);
     prefetch_count : int (* short : short *);
     global : bool (* bit : bit *);
   }

@@ -14,8 +14,8 @@ module Queue_declare_ok = struct
 
   type record = {
     queue : string (* queue-name : shortstr *);
-    message_count : int (* message-count : long *);
-    consumer_count : int (* long : long *);
+    message_count : int32 (* message-count : long *);
+    consumer_count : int32 (* long : long *);
   }
 
   let arguments = [

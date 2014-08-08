@@ -91,18 +91,6 @@ let consume_short buf =
   let low = consume_byte buf in
   (high lsl 8) + low
 
-let consume_long buf =
-  (* TODO: Figure out how to handle potential overflows. *)
-  let high = consume_short buf in
-  let low = consume_short buf in
-  (high lsl 16) + low
-
-let consume_long_long buf =
-  (* TODO: Figure out how to handle potential overflows. *)
-  let high = consume_long buf in
-  let low = consume_long buf in
-  (high lsl 32) + low
-
 
 let consume_int32 buf =
   let high = Int32.of_int (consume_short buf) in
@@ -114,18 +102,29 @@ let consume_int64 buf =
   let low = Int64.of_int32 (consume_int32 buf) in
   Int64.add (Int64.shift_left high 32) low
 
+
+let consume_long = consume_int32
+
+let consume_long_long = consume_int64
+
+
 let consume_float buf =
   Int32.float_of_bits (consume_int32 buf)
 
 let consume_double buf =
   Int64.float_of_bits (consume_int64 buf)
 
+
+let consume_size buf =
+  Int32.to_int (consume_int32 buf)
+
+
 let consume_short_str buf =
   let size = consume_byte buf in
   consume_str buf size
 
 let consume_long_str buf =
-  let size = consume_long buf in
+  let size = consume_size buf in
   consume_str buf size
 
 
@@ -142,25 +141,21 @@ let add_short buf value =
   add_octet buf (value lsr 8);
   add_octet buf (value land 0xff)
 
-let add_long buf value =
-  add_short buf (value lsr 16);
-  add_short buf (value land 0xffff)
-
-let add_long_long buf value =
-  add_long buf (value lsr 32);
-  add_long buf (value land 0xffffffff)
-
 let add_int32 buf value =
-  let high = Int32.(to_int (shift_right value 16)) in
-  let low = Int32.(to_int (logand value (of_int 0xFFFF))) in
+  let high = Int32.(to_int (shift_right_logical value 16)) in
+  let low = Int32.(to_int (logand value 0xFFFFl)) in
   add_short buf high;
   add_short buf low
 
 let add_int64 buf value =
-  let high = Int64.(to_int32 (shift_right value 32)) in
-  let low = Int64.(to_int32 (logand value (of_int 0xFFFFFFFF))) in
+  let high = Int64.(to_int32 (shift_right_logical value 32)) in
+  let low = Int64.(to_int32 (logand value 0xFFFFFFFFL)) in
   add_int32 buf high;
   add_int32 buf low
+
+let add_long = add_int32
+
+let add_long_long = add_int64
 
 let add_float buf value =
   add_int32 buf (Int32.bits_of_float value)
@@ -173,5 +168,5 @@ let add_short_str buf value =
   Build_buf.add_str buf value
 
 let add_long_str buf value =
-  add_long buf (String.length value);
+  add_long buf (Int32.of_int (String.length value));
   Build_buf.add_str buf value

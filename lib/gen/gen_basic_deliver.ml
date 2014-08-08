@@ -14,7 +14,7 @@ module Basic_deliver = struct
 
   type record = {
     consumer_tag : string (* consumer-tag : shortstr *);
-    delivery_tag : int (* delivery-tag : longlong *);
+    delivery_tag : int64 (* delivery-tag : longlong *);
     redelivered : bool (* redelivered : bit *);
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);

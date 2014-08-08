@@ -13,11 +13,11 @@ module Basic_get_ok = struct
   ]
 
   type record = {
-    delivery_tag : int (* delivery-tag : longlong *);
+    delivery_tag : int64 (* delivery-tag : longlong *);
     redelivered : bool (* redelivered : bit *);
     exchange : string (* exchange-name : shortstr *);
     routing_key : string (* shortstr : shortstr *);
-    message_count : int (* message-count : long *);
+    message_count : int32 (* message-count : long *);
   }
 
   let arguments = [

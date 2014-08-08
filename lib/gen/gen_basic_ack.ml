@@ -13,7 +13,7 @@ module Basic_ack = struct
   ]
 
   type record = {
-    delivery_tag : int (* delivery-tag : longlong *);
+    delivery_tag : int64 (* delivery-tag : longlong *);
     multiple : bool (* bit : bit *);
   }
 

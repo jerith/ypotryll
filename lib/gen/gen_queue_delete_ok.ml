@@ -13,7 +13,7 @@ module Queue_delete_ok = struct
   ]
 
   type record = {
-    message_count : int (* message-count : long *);
+    message_count : int32 (* message-count : long *);
   }
 
   let arguments = [

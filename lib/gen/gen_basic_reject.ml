@@ -13,7 +13,7 @@ module Basic_reject = struct
   ]
 
   type record = {
-    delivery_tag : int (* delivery-tag : longlong *);
+    delivery_tag : int64 (* delivery-tag : longlong *);
     requeue : bool (* bit : bit *);
   }
 

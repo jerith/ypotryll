@@ -37,8 +37,7 @@ type file_state =
   | Footer
 
 
-let update_content modules inch =
-  let inst = Lwt_io.read_lines inch in
+let update_content modules inst =
   let oust, push = Lwt_stream.create () in
   let rec process_lines state =
     Lwt_stream.get inst >>= fun line_opt ->
@@ -64,11 +63,18 @@ let update_content modules inch =
   process_lines Header
 
 
+let write_lines_to_file filename lines =
+  let write_to_file ouch =
+    join (List.map (fun line -> Lwt_io.write ouch (line ^ "\n")) lines)
+  in
+  Lwt_io.with_file ~mode:Lwt_io.output filename write_to_file
+
+
 let update_file modules filename =
-  let write_lines lines ch = Lwt_io.write_lines ch lines in
-  Lwt_io.with_file ~mode:Lwt_io.input filename (update_content modules)
-  >>= fun lines ->
-  Lwt_io.with_file ~mode:Lwt_io.output filename (write_lines lines)
+  return (Lwt_io.lines_of_file filename)
+  >>= update_content modules
+  >>= Lwt_stream.to_list (* To consume all input before overwriting file. *)
+  >>= write_lines_to_file filename
 
 
 let lwt_main () =

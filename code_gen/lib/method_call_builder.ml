@@ -27,13 +27,48 @@ module Class_caller_module = struct
     fmt_function ppf ("let " ^ function_top ^ " =") (fun ppf ->
         Format.fprintf ppf "@,let payload = Ypotryll_methods.%s.make_t %s in"
           module_name params;
-        Format.fprintf ppf "@,Connection.send_method_async channel.Connection.channel_io payload")
+        Format.fprintf ppf
+          "@,Connection.%s channel.Connection.channel_io payload"
+          "send_method_async")
+
+  let fmt_sync_method_call fmt_return_line ppf (spec, cls, meth) =
+    let module_name = String.capitalize (make_method_name cls meth) in
+    let function_name = name_to_ocaml meth.Method.name in
+    let params = match meth.Method.fields with
+      | [] -> ""
+      | fields -> String.concat "" (List.map make_arg fields)
+    in
+    let params = params ^ "()" in
+    let function_top = function_name ^ " channel " ^ params in
+    fmt_function ppf ("let " ^ function_top ^ " =") (fun ppf ->
+        Format.fprintf ppf "@,let open Lwt in";
+        Format.fprintf ppf "@,let payload = Ypotryll_methods.%s.make_t %s in"
+          module_name params;
+        Format.fprintf ppf
+          "@,Connection.%s channel.Connection.channel_io payload"
+          "send_method_sync";
+        Format.fprintf ppf "@,>|= function";
+        List.iter (fmt_return_line ppf cls) meth.Method.responses;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_return_line ppf cls resp =
+    let resp_name = name_to_ocaml resp.Response.name in
+    let class_name = String.capitalize (name_to_ocaml cls.Class.name) in
+    let payload_type = class_name ^ "_" ^ resp_name in
+    Format.fprintf ppf "@,| `%s payload -> payload" payload_type
+
+  let fmt_return_line_multi ppf cls resp =
+    let resp_name = name_to_ocaml resp.Response.name in
+    let class_name = String.capitalize (name_to_ocaml cls.Class.name) in
+    let payload_type = class_name ^ "_" ^ resp_name in
+    Format.fprintf ppf "@,| `%s payload -> `%s payload"
+      payload_type (String.capitalize resp_name)
 
   let fmt_caller_function ppf (spec, cls, meth) =
     match meth.Method.responses with
     | [] -> fmt_async_method_call ppf (spec, cls, meth)
-    | [_] -> Format.fprintf ppf "(* TODO: %s *)" meth.Method.name
-    | _ -> Format.fprintf ppf "(* TODO: %s *)" meth.Method.name
+    | [_] -> fmt_sync_method_call fmt_return_line ppf (spec, cls, meth)
+    | _ -> fmt_sync_method_call fmt_return_line_multi ppf (spec, cls, meth)
 
   let fmt_caller_module ppf (spec, cls) =
     let module_name = String.capitalize cls.Class.name in

@@ -151,9 +151,13 @@ module Method_module_wrapper = struct
 
   let fmt_parse_method ppf module_name =
     fmt_function ppf "let parse_method buf =" (fun ppf ->
-        Format.fprintf ppf
-          "@,(`%s (t_from_list (buf_to_list buf)) :> %s)"
-          module_name "Ypotryll_types.method_payload")
+        Format.fprintf ppf "@,`%s (t_from_list (buf_to_list buf))" module_name)
+
+  (* let fmt_parse_method ppf module_name = *)
+  (*   fmt_function ppf "let parse_method buf =" (fun ppf -> *)
+  (*       Format.fprintf ppf *)
+  (*         "@,(`%s (t_from_list (buf_to_list buf)) :> %s)" *)
+  (*         module_name "Ypotryll_types.method_payload") *)
 
   let fmt_build_method ppf module_name =
     fmt_function ppf "let build_method = function" (fun ppf ->

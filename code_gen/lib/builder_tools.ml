@@ -33,7 +33,11 @@ let fmt_module_type ppf module_name fmt_func =
   fmt_in_vbox ppf 2 start fmt_func (Some "end")
 
 
-let name_to_ocaml = String.map (function '-' -> '_' | c -> c)
+let name_to_ocaml name =
+  match String.map (function '-' -> '_' | c -> c) name with
+  | "type" -> "type_"
+  | "open" -> "open_"
+  | name -> name
 
 
 let map_methods spec f =
@@ -58,9 +62,7 @@ let make_method_name cls meth =
 
 
 let make_field_name field =
-  match name_to_ocaml field.Field.name with
-  | "type" -> "type_"
-  | name -> name
+  name_to_ocaml field.Field.name
 
 
 let rec get_constant_value name = function

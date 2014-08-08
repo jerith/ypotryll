@@ -3,19 +3,37 @@
 
 module Channel = struct
 
-  (* TODO: open *)
+  let open_ channel () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Channel_open.make_t () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Channel_open_ok payload -> payload
+    | _ -> assert false
 
   let open_ok channel () =
     let payload = Ypotryll_methods.Channel_open_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: flow *)
+  let flow channel ~active () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Channel_flow.make_t ~active () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Channel_flow_ok payload -> payload
+    | _ -> assert false
 
   let flow_ok channel ~active () =
     let payload = Ypotryll_methods.Channel_flow_ok.make_t ~active () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: close *)
+  let close channel ~reply_code ~reply_text ~class_id ~method_id () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Channel_close.make_t ~reply_code ~reply_text ~class_id ~method_id () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Channel_close_ok payload -> payload
+    | _ -> assert false
 
   let close_ok channel () =
     let payload = Ypotryll_methods.Channel_close_ok.make_t () in
@@ -25,13 +43,25 @@ end
 
 module Exchange = struct
 
-  (* TODO: declare *)
+  let declare channel ~exchange ~type_ ~passive ~durable ~no_wait ~arguments () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Exchange_declare.make_t ~exchange ~type_ ~passive ~durable ~no_wait ~arguments () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Exchange_declare_ok payload -> payload
+    | _ -> assert false
 
   let declare_ok channel () =
     let payload = Ypotryll_methods.Exchange_declare_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: delete *)
+  let delete channel ~exchange ~if_unused ~no_wait () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Exchange_delete.make_t ~exchange ~if_unused ~no_wait () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Exchange_delete_ok payload -> payload
+    | _ -> assert false
 
   let delete_ok channel () =
     let payload = Ypotryll_methods.Exchange_delete_ok.make_t () in
@@ -41,31 +71,61 @@ end
 
 module Queue = struct
 
-  (* TODO: declare *)
+  let declare channel ~queue ~passive ~durable ~exclusive ~auto_delete ~no_wait ~arguments () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Queue_declare.make_t ~queue ~passive ~durable ~exclusive ~auto_delete ~no_wait ~arguments () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Queue_declare_ok payload -> payload
+    | _ -> assert false
 
   let declare_ok channel ~queue ~message_count ~consumer_count () =
     let payload = Ypotryll_methods.Queue_declare_ok.make_t ~queue ~message_count ~consumer_count () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: bind *)
+  let bind channel ~queue ~exchange ~routing_key ~no_wait ~arguments () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Queue_bind.make_t ~queue ~exchange ~routing_key ~no_wait ~arguments () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Queue_bind_ok payload -> payload
+    | _ -> assert false
 
   let bind_ok channel () =
     let payload = Ypotryll_methods.Queue_bind_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: unbind *)
+  let unbind channel ~queue ~exchange ~routing_key ~arguments () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Queue_unbind.make_t ~queue ~exchange ~routing_key ~arguments () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Queue_unbind_ok payload -> payload
+    | _ -> assert false
 
   let unbind_ok channel () =
     let payload = Ypotryll_methods.Queue_unbind_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: purge *)
+  let purge channel ~queue ~no_wait () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Queue_purge.make_t ~queue ~no_wait () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Queue_purge_ok payload -> payload
+    | _ -> assert false
 
   let purge_ok channel ~message_count () =
     let payload = Ypotryll_methods.Queue_purge_ok.make_t ~message_count () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: delete *)
+  let delete channel ~queue ~if_unused ~if_empty ~no_wait () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Queue_delete.make_t ~queue ~if_unused ~if_empty ~no_wait () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Queue_delete_ok payload -> payload
+    | _ -> assert false
 
   let delete_ok channel ~message_count () =
     let payload = Ypotryll_methods.Queue_delete_ok.make_t ~message_count () in
@@ -75,19 +135,37 @@ end
 
 module Basic = struct
 
-  (* TODO: qos *)
+  let qos channel ~prefetch_size ~prefetch_count ~global () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Basic_qos.make_t ~prefetch_size ~prefetch_count ~global () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Basic_qos_ok payload -> payload
+    | _ -> assert false
 
   let qos_ok channel () =
     let payload = Ypotryll_methods.Basic_qos_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: consume *)
+  let consume channel ~queue ~consumer_tag ~no_local ~no_ack ~exclusive ~no_wait ~arguments () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Basic_consume.make_t ~queue ~consumer_tag ~no_local ~no_ack ~exclusive ~no_wait ~arguments () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Basic_consume_ok payload -> payload
+    | _ -> assert false
 
   let consume_ok channel ~consumer_tag () =
     let payload = Ypotryll_methods.Basic_consume_ok.make_t ~consumer_tag () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: cancel *)
+  let cancel channel ~consumer_tag ~no_wait () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Basic_cancel.make_t ~consumer_tag ~no_wait () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Basic_cancel_ok payload -> payload
+    | _ -> assert false
 
   let cancel_ok channel ~consumer_tag () =
     let payload = Ypotryll_methods.Basic_cancel_ok.make_t ~consumer_tag () in
@@ -105,7 +183,14 @@ module Basic = struct
     let payload = Ypotryll_methods.Basic_deliver.make_t ~consumer_tag ~delivery_tag ~redelivered ~exchange ~routing_key () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: get *)
+  let get channel ~queue ~no_ack () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Basic_get.make_t ~queue ~no_ack () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Basic_get_ok payload -> `Get_ok payload
+    | `Basic_get_empty payload -> `Get_empty payload
+    | _ -> assert false
 
   let get_ok channel ~delivery_tag ~redelivered ~exchange ~routing_key ~message_count () =
     let payload = Ypotryll_methods.Basic_get_ok.make_t ~delivery_tag ~redelivered ~exchange ~routing_key ~message_count () in
@@ -139,19 +224,37 @@ end
 
 module Tx = struct
 
-  (* TODO: select *)
+  let select channel () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Tx_select.make_t () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Tx_select_ok payload -> payload
+    | _ -> assert false
 
   let select_ok channel () =
     let payload = Ypotryll_methods.Tx_select_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: commit *)
+  let commit channel () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Tx_commit.make_t () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Tx_commit_ok payload -> payload
+    | _ -> assert false
 
   let commit_ok channel () =
     let payload = Ypotryll_methods.Tx_commit_ok.make_t () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: rollback *)
+  let rollback channel () =
+    let open Lwt in
+    let payload = Ypotryll_methods.Tx_rollback.make_t () in
+    Connection.send_method_sync channel.Connection.channel_io payload
+    >|= function
+    | `Tx_rollback_ok payload -> payload
+    | _ -> assert false
 
   let rollback_ok channel () =
     let payload = Ypotryll_methods.Tx_rollback_ok.make_t () in

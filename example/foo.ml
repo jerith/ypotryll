@@ -16,10 +16,19 @@ open Lwt
 
 
 let exchange_declare channel exchange type_ =
-    Ypotryll.Methods.Exchange.declare channel
-      ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false ~arguments:[] ()
+  Ypotryll.Methods.Exchange.declare channel
+    ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false ~arguments:[]
+    ()
   >>= fun _ ->
   Lwt_io.printlf "Exchange created: %s" exchange
+
+
+let queue_declare channel queue =
+  Ypotryll.Methods.Queue.declare channel
+    ~queue ~passive:false ~durable:false ~exclusive:false ~auto_delete:false
+    ~no_wait:false ~arguments:[] ()
+  >>= fun { Ypotryll_methods.Queue_declare_ok.queue } ->
+  Lwt_io.printlf "queue created: %s" queue
 
 
 let do_stuff client =
@@ -27,7 +36,7 @@ let do_stuff client =
     lwt channel = Ypotryll.open_channel client in
     (* ignore_result (catch_frames channel); *)
     exchange_declare channel "foo" "direct" >>
-    Ypotryll.Classes.Channel.flow_ok channel ~active:true () >>
+    queue_declare channel "" >>
     Ypotryll.close_channel channel >>
     exchange_declare channel "foo" "direct"
   finally Ypotryll.close_connection client

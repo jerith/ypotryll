@@ -28,12 +28,4 @@ val send_method_async : channel -> method_payload -> unit Lwt.t
 val send_method_sync : channel -> method_payload -> method_payload Lwt.t
 
 
-module Classes : module type of Generated_caller_modules
-
-
-module Methods : sig
-  module Exchange : sig
-    val declare :  channel -> exchange:string -> type_:string -> passive:bool -> durable:bool -> no_wait:bool -> arguments:Table.t -> unit -> Ypotryll_methods.Exchange_declare_ok.record Lwt.t
-
-  end
-end
+module Methods : module type of Generated_caller_modules

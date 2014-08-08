@@ -49,15 +49,4 @@ let close_channel channel =
   Connection.close_channel (get_connection channel) (get_io channel)
 
 
-module Classes = Generated_caller_modules
-
-
-module Methods = struct
-  module Exchange = struct
-    let declare channel ~exchange ~type_ ~passive ~durable ~no_wait ~arguments () =
-      send_method_sync channel (Ypotryll_methods.Exchange_declare.make_t ~exchange ~type_ ~passive ~durable ~no_wait ~arguments ())
-      >|= function
-      | `Exchange_declare_ok payload -> payload
-      | _ -> assert false
-  end
-end
+module Methods = Generated_caller_modules

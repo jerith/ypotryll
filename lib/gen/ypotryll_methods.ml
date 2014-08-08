@@ -35,7 +35,7 @@ module Connection_start = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_start (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_start (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_start payload -> string_of_list (t_to_list payload)
@@ -64,7 +64,7 @@ module Connection_start_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_start_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_start_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_start_ok payload -> string_of_list (t_to_list payload)
@@ -93,7 +93,7 @@ module Connection_secure = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_secure (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_secure (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_secure payload -> string_of_list (t_to_list payload)
@@ -122,7 +122,7 @@ module Connection_secure_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_secure_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_secure_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_secure_ok payload -> string_of_list (t_to_list payload)
@@ -151,7 +151,7 @@ module Connection_tune = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_tune (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_tune (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_tune payload -> string_of_list (t_to_list payload)
@@ -180,7 +180,7 @@ module Connection_tune_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_tune_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_tune_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_tune_ok payload -> string_of_list (t_to_list payload)
@@ -209,7 +209,7 @@ module Connection_open = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_open (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_open (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_open payload -> string_of_list (t_to_list payload)
@@ -238,7 +238,7 @@ module Connection_open_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_open_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_open_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_open_ok payload -> string_of_list (t_to_list payload)
@@ -267,7 +267,7 @@ module Connection_close = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_close (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_close (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_close payload -> string_of_list (t_to_list payload)
@@ -296,7 +296,7 @@ module Connection_close_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Connection_close_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Connection_close_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Connection_close_ok payload -> string_of_list (t_to_list payload)
@@ -325,7 +325,7 @@ module Channel_open = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_open (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_open (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_open payload -> string_of_list (t_to_list payload)
@@ -354,7 +354,7 @@ module Channel_open_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_open_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_open_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_open_ok payload -> string_of_list (t_to_list payload)
@@ -383,7 +383,7 @@ module Channel_flow = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_flow (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_flow (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_flow payload -> string_of_list (t_to_list payload)
@@ -412,7 +412,7 @@ module Channel_flow_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_flow_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_flow_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_flow_ok payload -> string_of_list (t_to_list payload)
@@ -441,7 +441,7 @@ module Channel_close = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_close (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_close (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_close payload -> string_of_list (t_to_list payload)
@@ -470,7 +470,7 @@ module Channel_close_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Channel_close_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Channel_close_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Channel_close_ok payload -> string_of_list (t_to_list payload)
@@ -499,7 +499,7 @@ module Exchange_declare = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Exchange_declare (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Exchange_declare (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Exchange_declare payload -> string_of_list (t_to_list payload)
@@ -528,7 +528,7 @@ module Exchange_declare_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Exchange_declare_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Exchange_declare_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Exchange_declare_ok payload -> string_of_list (t_to_list payload)
@@ -557,7 +557,7 @@ module Exchange_delete = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Exchange_delete (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Exchange_delete (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Exchange_delete payload -> string_of_list (t_to_list payload)
@@ -586,7 +586,7 @@ module Exchange_delete_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Exchange_delete_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Exchange_delete_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Exchange_delete_ok payload -> string_of_list (t_to_list payload)
@@ -615,7 +615,7 @@ module Queue_declare = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_declare (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_declare (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_declare payload -> string_of_list (t_to_list payload)
@@ -644,7 +644,7 @@ module Queue_declare_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_declare_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_declare_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_declare_ok payload -> string_of_list (t_to_list payload)
@@ -673,7 +673,7 @@ module Queue_bind = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_bind (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_bind (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_bind payload -> string_of_list (t_to_list payload)
@@ -702,7 +702,7 @@ module Queue_bind_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_bind_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_bind_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_bind_ok payload -> string_of_list (t_to_list payload)
@@ -731,7 +731,7 @@ module Queue_unbind = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_unbind (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_unbind (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_unbind payload -> string_of_list (t_to_list payload)
@@ -760,7 +760,7 @@ module Queue_unbind_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_unbind_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_unbind_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_unbind_ok payload -> string_of_list (t_to_list payload)
@@ -789,7 +789,7 @@ module Queue_purge = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_purge (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_purge (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_purge payload -> string_of_list (t_to_list payload)
@@ -818,7 +818,7 @@ module Queue_purge_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_purge_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_purge_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_purge_ok payload -> string_of_list (t_to_list payload)
@@ -847,7 +847,7 @@ module Queue_delete = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_delete (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_delete (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_delete payload -> string_of_list (t_to_list payload)
@@ -876,7 +876,7 @@ module Queue_delete_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Queue_delete_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Queue_delete_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Queue_delete_ok payload -> string_of_list (t_to_list payload)
@@ -905,7 +905,7 @@ module Basic_qos = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_qos (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_qos (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_qos payload -> string_of_list (t_to_list payload)
@@ -934,7 +934,7 @@ module Basic_qos_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_qos_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_qos_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_qos_ok payload -> string_of_list (t_to_list payload)
@@ -963,7 +963,7 @@ module Basic_consume = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_consume (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_consume (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_consume payload -> string_of_list (t_to_list payload)
@@ -992,7 +992,7 @@ module Basic_consume_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_consume_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_consume_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_consume_ok payload -> string_of_list (t_to_list payload)
@@ -1021,7 +1021,7 @@ module Basic_cancel = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_cancel (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_cancel (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_cancel payload -> string_of_list (t_to_list payload)
@@ -1050,7 +1050,7 @@ module Basic_cancel_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_cancel_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_cancel_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_cancel_ok payload -> string_of_list (t_to_list payload)
@@ -1079,7 +1079,7 @@ module Basic_publish = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_publish (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_publish (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_publish payload -> string_of_list (t_to_list payload)
@@ -1108,7 +1108,7 @@ module Basic_return = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_return (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_return (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_return payload -> string_of_list (t_to_list payload)
@@ -1137,7 +1137,7 @@ module Basic_deliver = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_deliver (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_deliver (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_deliver payload -> string_of_list (t_to_list payload)
@@ -1166,7 +1166,7 @@ module Basic_get = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_get (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_get (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_get payload -> string_of_list (t_to_list payload)
@@ -1195,7 +1195,7 @@ module Basic_get_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_get_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_get_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_get_ok payload -> string_of_list (t_to_list payload)
@@ -1224,7 +1224,7 @@ module Basic_get_empty = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_get_empty (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_get_empty (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_get_empty payload -> string_of_list (t_to_list payload)
@@ -1253,7 +1253,7 @@ module Basic_ack = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_ack (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_ack (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_ack payload -> string_of_list (t_to_list payload)
@@ -1282,7 +1282,7 @@ module Basic_reject = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_reject (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_reject (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_reject payload -> string_of_list (t_to_list payload)
@@ -1311,7 +1311,7 @@ module Basic_recover_async = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_recover_async (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_recover_async (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_recover_async payload -> string_of_list (t_to_list payload)
@@ -1340,7 +1340,7 @@ module Basic_recover = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_recover (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_recover (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_recover payload -> string_of_list (t_to_list payload)
@@ -1369,7 +1369,7 @@ module Basic_recover_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Basic_recover_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Basic_recover_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Basic_recover_ok payload -> string_of_list (t_to_list payload)
@@ -1398,7 +1398,7 @@ module Tx_select = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_select (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_select (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_select payload -> string_of_list (t_to_list payload)
@@ -1427,7 +1427,7 @@ module Tx_select_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_select_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_select_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_select_ok payload -> string_of_list (t_to_list payload)
@@ -1456,7 +1456,7 @@ module Tx_commit = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_commit (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_commit (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_commit payload -> string_of_list (t_to_list payload)
@@ -1485,7 +1485,7 @@ module Tx_commit_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_commit_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_commit_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_commit_ok payload -> string_of_list (t_to_list payload)
@@ -1514,7 +1514,7 @@ module Tx_rollback = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_rollback (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_rollback (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_rollback payload -> string_of_list (t_to_list payload)
@@ -1543,7 +1543,7 @@ module Tx_rollback_ok = struct
   let dump_list = dump_list name class_id method_id
 
   let parse_method buf =
-    (`Tx_rollback_ok (t_from_list (buf_to_list buf)) :> Ypotryll_types.method_payload)
+    `Tx_rollback_ok (t_from_list (buf_to_list buf))
 
   let build_method = function
     | `Tx_rollback_ok payload -> string_of_list (t_to_list payload)

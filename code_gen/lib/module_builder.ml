@@ -147,17 +147,144 @@ module Method_module = struct
 end
 
 
+module Content_module = struct
+
+  (* stuff for building content modules *)
+
+  type t = {
+    name : string;
+    text : string;
+  }
+
+  let fmt_content_constants ppf cls =
+    Format.fprintf ppf
+      "@[<v>let %s = %S@;let %s = %d@]"
+      "name" cls.Class.name
+      "class_id" cls.Class.index
+
+  (* type record *)
+
+  let fmt_content_record_field spec ppf field =
+    let ocaml_type, domain, _ = types_from_field spec field in
+    Format.fprintf ppf "%s : %s option (* %s *);"
+      (make_field_name field) ocaml_type domain
+
+  let fmt_content_record ppf (spec, cls) =
+    match cls.Class.fields with
+    | [] -> Format.fprintf ppf "type record = unit"
+    | fields -> fmt_list_in_vbox ppf "type record = {" "}"
+                  (fmt_content_record_field spec) fields
+
+  (* property list *)
+
+  let fmt_property_field spec fmt_arg ppf field =
+    let _, _, amqp_type = types_from_field spec field in
+    Format.fprintf ppf "%S, %s;" field.Field.name
+      (fmt_arg amqp_type (make_field_name field))
+
+  let fmt_property_list ppf (spec, cls) =
+    let fmt_arg amqp_type name = Printf.sprintf "Field_type.%s" amqp_type in
+    fmt_list_in_vbox ppf "let properties = [" "]"
+      (fmt_property_field spec fmt_arg) cls.Class.fields
+
+  (* t_to_list *)
+
+  let fmt_t_to_list ppf (spec, cls) =
+    let fmt_arg amqp_type name =
+      Printf.sprintf "maybe (fun x -> Amqp_field.%s x) payload.%s"
+        amqp_type name
+    in
+    fmt_function ppf "let t_to_list payload =@," (fun ppf ->
+        fmt_list_in_vbox ppf "[" "]"
+          (fmt_property_field spec fmt_arg) cls.Class.fields)
+
+  (* t_from_list *)
+
+  let fmt_t_from_list ppf (spec, cls) =
+    let fmt_arg amqp_type name =
+      Printf.sprintf "((None | Some (Amqp_field.%s _)) as %s)" amqp_type name
+    in
+    let fmt_field ppf field =
+      let _, _, amqp_type = types_from_field spec field in
+      let name = make_field_name field in
+      Format.fprintf ppf
+        "%s = maybe (function Amqp_field.%s x -> x | _ -> assert false) %s;"
+        name amqp_type name
+    in
+    fmt_function ppf "let t_from_list fields =" (fun ppf ->
+        Format.fprintf ppf "@,match fields with@,";
+        fmt_list_in_vbox ppf "| [" "] "
+          (fmt_property_field spec fmt_arg) cls.Class.fields;
+        (match cls.Class.fields with
+         | [] -> Format.fprintf ppf "-> ()"
+         | fields ->
+           fmt_list_in_vbox ppf "-> {" "}"
+             fmt_field fields);
+        Format.pp_print_cut ppf ();
+        Format.fprintf ppf "| _ -> failwith \"Unexpected fields.\"")
+
+  (* make_t *)
+
+  (* let make_arg field = *)
+  (*   match field.Field.reserved with *)
+  (*   | true -> "" *)
+  (*   | false -> "~" ^ make_field_name field ^ " " *)
+
+  (* let fmt_record_entry spec ppf field = *)
+  (*   let name = make_field_name field in *)
+  (*   match field.Field.reserved with *)
+  (*   | false -> Format.fprintf ppf "%s;" name *)
+  (*   | true -> *)
+  (*     let ocaml_type, _, _ = types_from_field spec field in *)
+  (*     let value = reserved_value_for_ocaml_type ocaml_type in *)
+  (*     Format.fprintf ppf "%s = %s;" name value *)
+
+  (* let fmt_make_t ppf (spec, cls, meth) = *)
+  (*   let params = match meth.Method.fields with *)
+  (*     | [] -> "" *)
+  (*     | fields -> String.concat "" (List.map make_arg fields) *)
+  (*   in *)
+  (*   fmt_function ppf ("let make_t " ^ params ^ "() =") (fun ppf -> *)
+  (*       Format.pp_print_cut ppf (); *)
+  (*       let constructor = "`" ^ String.capitalize (make_method_name cls meth) in *)
+  (*       match meth.Method.fields with *)
+  (*         | [] -> Format.fprintf ppf "%s ()" constructor *)
+  (*         | fields -> fmt_list_in_vbox ppf (constructor ^ " {") "}" *)
+  (*                       (fmt_record_entry spec) fields) *)
+
+  (* content module *)
+
+  let fmt_module_text ppf (spec, cls) =
+    let module_name = String.capitalize (name_to_ocaml cls.Class.name) in
+    let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
+    fmt_module ppf module_name (fun ppf ->
+        Format.fprintf ppf "@,open Protocol";
+        fmt_line ppf fmt_content_constants cls;
+        fmt_line ppf fmt_content_record (spec, cls);
+        fmt_line ppf fmt_property_list (spec, cls);
+        fmt_line ppf fmt_t_to_list (spec, cls);
+        fmt_line ppf fmt_t_from_list (spec, cls));
+        (* fmt_line ppf fmt_make_t (spec, cls, meth)); *)
+    Format.fprintf ppf "@."
+
+  let make_module_text spec cls =
+    Format.fprintf Format.str_formatter "%a" fmt_module_text (spec, cls);
+    Format.flush_str_formatter ()
+
+  let build (spec, cls) =
+    let module_name = name_to_ocaml cls.Class.name in
+    {
+      name = module_name;
+      text = make_module_text spec cls;
+    }
+end
+
+
 module Method_module_wrapper = struct
 
   let fmt_parse_method ppf module_name =
     fmt_function ppf "let parse_method buf =" (fun ppf ->
         Format.fprintf ppf "@,`%s (t_from_list (buf_to_list buf))" module_name)
-
-  (* let fmt_parse_method ppf module_name = *)
-  (*   fmt_function ppf "let parse_method buf =" (fun ppf -> *)
-  (*       Format.fprintf ppf *)
-  (*         "@,(`%s (t_from_list (buf_to_list buf)) :> %s)" *)
-  (*         module_name "Ypotryll_types.method_payload") *)
 
   let fmt_build_method ppf module_name =
     fmt_function ppf "let build_method = function" (fun ppf ->
@@ -341,6 +468,11 @@ end
 
 let build_methods spec =
   map_methods spec Method_module.build
+
+let build_contents spec =
+  let is_content_class cls = cls.Class.fields <> [] in
+  let content_classes = List.filter is_content_class spec.Spec.classes in
+  List.map (fun cls -> Content_module.build (spec, cls)) content_classes
 
 let build_method_wrappers spec =
   map_methods spec Method_module_wrapper.build

@@ -169,6 +169,11 @@ module Amqp_field = struct
 end
 
 
+let maybe f = function
+  | None -> None
+  | Some value -> Some (f value)
+
+
 (*****************************************************************************)
 
 

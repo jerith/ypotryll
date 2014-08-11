@@ -14,10 +14,15 @@ let write_to_file filename data =
   close fd;
   assert (written = String.length data)
 
-let write_module_file method_module =
+let write_method_module_file method_module =
   let open Module_builder.Method_module in
   let filename = gen_ml_filename ("gen_" ^ method_module.name) in
   write_to_file filename method_module.text
+
+let write_content_module_file content_module =
+  let open Module_builder.Content_module in
+  let filename = gen_ml_filename ("gen_content_" ^ content_module.name) in
+  write_to_file filename content_module.text
 
 let write_generated_methods_file spec =
   let filename = gen_ml_filename "ypotryll_methods" in
@@ -43,7 +48,8 @@ let write_caller_modules_file spec =
 
 let write_all_files channel =
   let spec = Spec_parser.parse_spec_from_channel channel in
-  List.iter write_module_file (Module_builder.build_methods spec);
+  List.iter write_method_module_file (Module_builder.build_methods spec);
+  List.iter write_content_module_file (Module_builder.build_contents spec);
   write_generated_methods_file spec;
   write_generated_types_file spec;
   write_generated_frame_constants_file spec;

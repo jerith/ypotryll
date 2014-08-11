@@ -73,6 +73,21 @@ let parse_method_payload buf =
   parse_method_args buf class_id method_id
 
 
+(* let parse_header_props buf class_id size = *)
+(*   try *)
+(*     Ypotryll_methods.parse_header class_id size buf *)
+(*   with Not_found -> *)
+(*     failwith (Printf.sprintf "Unknown content class %d with payload: %S" *)
+(*                 class_id (consume_str buf (Parse_buf.length buf))) *)
+
+
+(* let parse_header_payload buf = *)
+(*   let class_id = consume_short buf in *)
+(*   let _weight = consume_short buf in *)
+(*   let size = consume_long_long buf in *)
+(*   parse_header_props buf class_id size *)
+
+
 let consume_frame_type buf =
   Generated_frame_constants.byte_to_frame_type (consume_byte buf)
 

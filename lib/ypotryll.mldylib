@@ -46,6 +46,7 @@ gen/Gen_connection_start
 gen/Gen_connection_start_ok
 gen/Gen_connection_tune
 gen/Gen_connection_tune_ok
+gen/Gen_content_basic
 gen/Gen_exchange_declare
 gen/Gen_exchange_declare_ok
 gen/Gen_exchange_delete

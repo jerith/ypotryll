@@ -65,10 +65,11 @@ module Class_caller_module = struct
       payload_type (String.capitalize resp_name)
 
   let fmt_caller_function ppf (spec, cls, meth) =
-    match meth.Method.responses with
-    | [] -> fmt_async_method_call ppf (spec, cls, meth)
-    | [_] -> fmt_sync_method_call fmt_return_line ppf (spec, cls, meth)
-    | _ -> fmt_sync_method_call fmt_return_line_multi ppf (spec, cls, meth)
+    match meth.Method.content, meth.Method.responses with
+    | false, [] -> fmt_async_method_call ppf (spec, cls, meth)
+    | false, [_] -> fmt_sync_method_call fmt_return_line ppf (spec, cls, meth)
+    | false, _ -> fmt_sync_method_call fmt_return_line_multi ppf (spec, cls, meth)
+    | true, responses -> Format.fprintf ppf "(* TODO: %s %d *)" meth.Method.name (List.length responses)
 
   let fmt_caller_module ppf (spec, cls) =
     let module_name = String.capitalize cls.Class.name in

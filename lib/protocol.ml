@@ -114,9 +114,6 @@ module Amqp_table = struct
       Printf.sprintf "<Field_table %s=%s>" name (dump_field_table value)
     | No_value -> Printf.sprintf "<No_value %s>" name
 
-  let make_list () =
-    ([] : field list)
-
 end
 
 module Amqp_field = struct
@@ -187,6 +184,65 @@ module Method_utils = struct
     PU.add_short buf class_id;
     PU.add_short buf method_id;
     List.iter (Amqp_field.add_field buf) payload;
+    PU.Build_buf.to_string buf
+
+  let dump_list name class_id method_id payload =
+    let args = String.concat "; " (List.map Amqp_field.dump_field payload) in
+    Printf.sprintf "<Method %s (%d, %d) [%s]>" name class_id method_id args
+end
+
+
+module Header_utils = struct
+
+  type property = string * Amqp_field.t option
+
+  let rec _parse_property_flags collected_props properties buf =
+    let flags = PU.consume_short buf in
+    let rec parse_bits collected_props i properties =
+      match i, flags land (1 lsl i) <> 0, properties with
+      | 0, false, [] -> List.rev collected_props
+      | 0, false, _ :: _ ->
+        failwith "End of property flags, but not properties."
+      | 0, true, [] -> failwith "End of properties, but not property flags."
+      | 0, true, props -> _parse_property_flags collected_props props buf
+      | i, flag, [] -> parse_bits collected_props (i - 1) []
+      | i, flag, prop :: props ->
+        parse_bits ((flag, prop) :: collected_props) (i -1) props
+    in
+    parse_bits collected_props 15 properties
+
+  let parse_properties properties buf =
+    let flagged_properties = _parse_property_flags [] properties buf in
+    let consume_property (flag, (name, field_type)) =
+      match field_type with
+      | Field_type.Bit -> (name, Some (Amqp_field.Bit flag))
+      | _ ->
+        match flag with
+        | true -> (name, Some (Amqp_field.consume_field buf field_type))
+        | false -> (name, None)
+    in
+    List.map consume_property flagged_properties
+
+  let rec _build_property_flags buf flags bit props =
+    match bit, props with
+    | _, [] -> PU.add_short buf flags
+    | 0, props ->
+      PU.add_short buf (flags lor 1); _build_property_flags buf 0 15 props
+    | i, (_, None) :: props -> _build_property_flags buf flags (i - 1) props
+    | i, (_, Some (Amqp_field.Bit false)) :: props ->
+      _build_property_flags buf flags (i - 1) props
+    | i, (_, Some _) :: props ->
+      _build_property_flags buf (flags lor (1 lsl bit)) (i - 1) props
+
+  let build_properties payload =
+    let buf = PU.Build_buf.from_string "" in
+    _build_property_flags buf 0 15 payload;
+    let add_property = function
+      | (_ : string), None -> ()
+      | (_ : string), Some (Amqp_field.Bit _) -> ()
+      | (name : string), Some field -> Amqp_field.add_field buf (name, field)
+    in
+    List.iter add_property payload;
     PU.Build_buf.to_string buf
 
   let dump_list name class_id method_id payload =

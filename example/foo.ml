@@ -1,6 +1,8 @@
 
 open Lwt
 
+open Ypotryll.Methods
+
 
 (* let callback channel frame_payload = *)
 (*   Lwt_io.printlf "Received frame: %s" (Frame.dump_payload frame_payload) *)
@@ -16,7 +18,7 @@ open Lwt
 
 
 let exchange_declare channel exchange type_ =
-  Ypotryll.Methods.Exchange.declare channel
+  Exchange.declare channel
     ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false ~arguments:[]
     ()
   >>= fun _ ->
@@ -24,7 +26,7 @@ let exchange_declare channel exchange type_ =
 
 
 let queue_declare channel queue =
-  Ypotryll.Methods.Queue.declare channel
+  Queue.declare channel
     ~queue ~passive:false ~durable:false ~exclusive:false ~auto_delete:false
     ~no_wait:false ~arguments:[] ()
   >>= fun { Ypotryll_methods.Queue_declare_ok.queue } ->
@@ -37,6 +39,8 @@ let do_stuff client =
     (* ignore_result (catch_frames channel); *)
     exchange_declare channel "foo" "direct" >>
     queue_declare channel "" >>
+    (* Basic.publish channel ~exchange:"foo" ~routing_key:"bar" ~mandatory:true *)
+    (*   ~immediate:true () >> *)
     Ypotryll.close_channel channel >>
     exchange_declare channel "foo" "direct"
   finally Ypotryll.close_connection client

@@ -31,7 +31,7 @@ let assert_strings_equal = assert_equal ~printer:(Printf.sprintf "%S")
 
 let assert_ints_equal = assert_equal ~printer:(Printf.sprintf "%d")
 
-let assert_chars_equal = assert_equal ~printer:(Printf.sprintf "'%c'")
+let assert_chars_equal = assert_equal ~printer:(Printf.sprintf "%C")
 
 let assert_bools_equal = assert_equal ~printer:(Printf.sprintf "%B")
 

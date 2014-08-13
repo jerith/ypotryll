@@ -8,6 +8,7 @@ module Channel_open = struct
   let class_id = 20
   let method_id = 10
   let synchronous = true
+  let content = false
 
   let responses = [
     (20, 11);

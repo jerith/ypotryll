@@ -14,11 +14,12 @@ module Method_module = struct
 
   let fmt_method_constants ppf (cls, meth) =
     Format.fprintf ppf
-      "@[<v>let %s = %S@;let %s = %d@;let %s = %d@;let %s = %B@]"
+      "@[<v>let %s = %S@;let %s = %d@;let %s = %d@;let %s = %B@;let %s = %B@]"
       "name" (cls.Class.name ^ "." ^ meth.Method.name)
       "class_id" cls.Class.index
       "method_id" meth.Method.index
       "synchronous" meth.Method.synchronous
+      "content" meth.Method.content
 
   (* method responses *)
 
@@ -497,6 +498,7 @@ module Method_module_type = struct
         fmt_line_str ppf "val class_id : int";
         fmt_line_str ppf "val method_id : int";
         fmt_line_str ppf "val synchronous : bool";
+        fmt_line_str ppf "val content : bool";
         fmt_line_str ppf "val responses : (int * int) list";
         fmt_line_str ppf (
           "val parse_method : Parse_utils.Parse_buf.t ->"

@@ -8,6 +8,7 @@ module Basic_reject = struct
   let class_id = 60
   let method_id = 90
   let synchronous = false
+  let content = false
 
   let responses = [
   ]

@@ -12,6 +12,8 @@ module type Method = sig
 
   val synchronous : bool
 
+  val content : bool
+
   val responses : (int * int) list
 
   val parse_method : Parse_utils.Parse_buf.t -> Ypotryll_types.method_payload

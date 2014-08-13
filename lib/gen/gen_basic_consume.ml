@@ -8,6 +8,7 @@ module Basic_consume = struct
   let class_id = 60
   let method_id = 20
   let synchronous = true
+  let content = false
 
   let responses = [
     (60, 21);

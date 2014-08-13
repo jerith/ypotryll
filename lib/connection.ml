@@ -34,7 +34,8 @@ type connection_io = {
 }
 
 
-type expected_response = (int * int) list * Ypotryll_types.method_payload Lwt.u
+type expected_response =
+  (int * int) list * Ypotryll_types.method_payload Lwt.u
 
 
 type channel_io = {
@@ -69,9 +70,11 @@ let default_params = {
 }
 
 
-let log_debug connection_io = Lwt_log.debug_f ~section:connection_io.log_section
+let log_debug connection_io =
+  Lwt_log.debug_f ~section:connection_io.log_section
 
-let log_info connection_io = Lwt_log.info_f ~section:connection_io.log_section
+let log_info connection_io =
+  Lwt_log.info_f ~section:connection_io.log_section
 
 
 let debug_dump verb connection_io data =
@@ -126,7 +129,7 @@ let create_connection_io server port log_section =
     { inch; ouch; params = default_params; connection_state; log_section }
   in
   write_data connection_io "AMQP\x00\x00\x09\x01" >>
-  log_debug connection_io ">>> %S" "AMQP\x00\x00\x09\x01" >>
+  log_debug connection_io "\x1b[36m>>>\x1b[0m %S" "AMQP\x00\x00\x09\x01" >>
   return connection_io
 
 
@@ -209,7 +212,7 @@ let process_channel_0_frame connection channel_io = function
 
 let process_frame connection channel payload =
     let channel_io = get_channel_io connection channel in
-    log_debug connection.connection_io "<<<[%d] %s"
+    log_debug connection.connection_io "\x1b[34m<<<[%d]\x1b[0m %s"
       channel_io.channel (Frame.dump_payload payload) >>
     match channel with
     | 0 -> process_channel_0_frame connection channel_io payload
@@ -253,7 +256,7 @@ let listen connection =
 let create_channel connection channel channel_state =
   let stream, push = Lwt_stream.create () in
   let send frame_payload =
-    log_debug connection.connection_io ">>>[%d] %s"
+    log_debug connection.connection_io "\x1b[36m>>>[%d]\x1b[0m %s"
       channel (Frame.dump_payload frame_payload) >>
     match Hashtbl.mem connection.channels channel with
     | false -> failwith "Channel closed."
@@ -282,19 +285,22 @@ let send_method_sync channel_io payload =
   channel_io.expected_responses <-
     channel_io.expected_responses @ [(responses, waker)];
   send_method_async channel_io payload >>
-  Lwt_io.printlf "???" >>
   waiter
 
 
 (* Connection setup *)
 
 
+let long_string value =
+  Ypotryll_types.Table.Long_string value
+
+
 let client_properties = [
-  "copyright", Ypotryll_types.Table.Long_string "Copyright (C) 2014 jerith";
-  "information", Ypotryll_types.Table.Long_string "Licensed under the MIT license.";
-  "platform", Ypotryll_types.Table.Long_string "OCaml";
-  "product", Ypotryll_types.Table.Long_string "ypotryll";
-  "version", Ypotryll_types.Table.Long_string "0.0.1";
+  "copyright", long_string "Copyright (C) 2014 jerith";
+  "information", long_string "Licensed under the MIT license.";
+  "platform", long_string "OCaml";
+  "product", long_string "ypotryll";
+  "version", long_string "0.0.1";
 ]
 
 
@@ -309,7 +315,8 @@ type protocol_setup_state =
 let str_rpartition str ch =
   try
     let pos = String.rindex str ch in
-    (String.sub str 0 pos, Some (String.sub str (pos + 1) ((String.length str) - pos - 1)))
+    (String.sub str 0 pos,
+     Some (String.sub str (pos + 1) ((String.length str) - pos - 1)))
   with
   | Not_found -> (str, None)
 
@@ -327,7 +334,8 @@ let choose_auth_mechanism body =
   let mechanisms = split_string body.Connection_start.mechanisms in
   if List.mem "PLAIN" mechanisms
   then "PLAIN"
-  else failwith ("PLAIN not found in mechanisms: " ^ String.concat " " mechanisms)
+  else failwith
+      ("PLAIN not found in mechanisms: " ^ String.concat " " mechanisms)
 
 
 let choose_locale body =
@@ -349,7 +357,8 @@ let process_connection_start channel_io frame_payload =
   let response = "\000guest\000guest" in
   let locale = choose_locale body in
   let frame_ok =
-    Connection_start_ok.make_t ~client_properties ~mechanism ~response ~locale ()
+    Connection_start_ok.make_t
+      ~client_properties ~mechanism ~response ~locale ()
   in
   send_method_async channel_io frame_ok
   (* If we support auth mechanisms other than PLAIN in the future, we'll need
@@ -385,7 +394,7 @@ let process_connection_tune channel_io frame_payload =
   send_method_async channel_io frame_ok
   (* Send connection.open *)
   >> let virtual_host = "/" in
-  (* This is a sync method, but we're using an explicit state machine instead. *)
+  (* This is a sync method, but we're using an explicit state machine. *)
   send_method_async channel_io (Connection_open.make_t ~virtual_host ())
   >> return Connection_open
 
@@ -410,8 +419,9 @@ let rec setup_connection connection state =
   let channel_io = get_channel_io connection 0 in
   Lwt_stream.get channel_io.stream
   >>= function
-  | None -> return ()
-  | Some frame_payload -> process_setup_frame_payload channel_io frame_payload state
+  | None -> return_unit
+  | Some frame_payload ->
+    process_setup_frame_payload channel_io frame_payload state
   >>= function
   | Connected ->
     set_state connection.connection_io.connection_state Open;
@@ -480,3 +490,47 @@ let close_channel connection channel_io =
   >|= fun _ ->
   set_state channel_io.channel_state Closed;
   kill_channel connection channel_io
+
+
+let rec _collect_content_body channel_stream collected = function
+  | 0L -> return (Some collected)
+  | size ->
+    Lwt_stream.peek channel_stream >>= function
+    | None -> return_none
+    | Some Frame.Heartbeat -> assert false
+    | Some (Frame.Method _) -> return_none (* Methods interrupt content. *)
+    | Some (Frame.Header _) ->
+      failwith "Expected body frame, got header frame."
+    | Some (Frame.Body content) ->
+      Lwt_stream.junk channel_stream >>
+      _collect_content_body channel_stream (collected ^ content)
+        Int64.(sub size (of_int (String.length content)))
+
+let _get_method_content channel_stream =
+  Lwt_stream.get channel_stream >>= function
+  | None -> return_none
+  | Some Frame.Heartbeat -> assert false
+  | Some (Frame.Method _) ->
+    failwith "Expected header frame, got method frame."
+  | Some (Frame.Body _) ->
+    failwith "Expected header frame, got body frame."
+  | Some (Frame.Header (size, payload)) ->
+    _collect_content_body channel_stream "" size >>= function
+    | None -> return_none
+    | Some content -> return (Some (payload, content))
+
+
+let get_method_with_content channel_stream =
+  Lwt_stream.get channel_stream >>= function
+  | None -> return_none
+  | Some Frame.Heartbeat -> assert false
+  | Some (Frame.Header _ | Frame.Body _) ->
+    failwith "Expected method frame, got content frame."
+  | Some (Frame.Method payload) ->
+    match (Frame.method_info payload).Frame.content with
+    | false -> return (Some (payload, None))
+    | true ->
+      _get_method_content channel_stream >>= function
+      | None -> return_none
+      | Some (properties, content) ->
+        return (Some (payload, Some (properties, content)))

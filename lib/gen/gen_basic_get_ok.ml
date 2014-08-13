@@ -8,6 +8,7 @@ module Basic_get_ok = struct
   let class_id = 60
   let method_id = 71
   let synchronous = true
+  let content = true
 
   let responses = [
   ]

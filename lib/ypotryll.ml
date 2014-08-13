@@ -1,4 +1,3 @@
-
 open Lwt
 
 
@@ -35,6 +34,10 @@ let get_channel_number channel =
 
 let get_frame_payload channel =
   Lwt_stream.get (get_io channel).Connection.stream
+
+
+let get_method_with_content channel =
+  Connection.get_method_with_content (get_io channel).Connection.stream
 
 
 let send_method_async channel payload =

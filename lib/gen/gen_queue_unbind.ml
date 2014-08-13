@@ -8,6 +8,7 @@ module Queue_unbind = struct
   let class_id = 50
   let method_id = 50
   let synchronous = true
+  let content = false
 
   let responses = [
     (50, 51);

@@ -8,6 +8,7 @@ module Basic_publish = struct
   let class_id = 60
   let method_id = 40
   let synchronous = false
+  let content = true
 
   let responses = [
   ]

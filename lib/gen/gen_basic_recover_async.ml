@@ -8,6 +8,7 @@ module Basic_recover_async = struct
   let class_id = 60
   let method_id = 100
   let synchronous = false
+  let content = false
 
   let responses = [
   ]

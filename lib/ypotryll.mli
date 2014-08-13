@@ -1,4 +1,3 @@
-
 type connection
 type channel = Connection.channel
 
@@ -18,6 +17,9 @@ val open_channel : connection -> channel Lwt.t
 val get_channel_number : channel -> int
 
 val close_channel : channel -> unit Lwt.t
+
+val get_method_with_content : channel
+  -> (method_payload * (header_payload * string) option) option Lwt.t
 
 (* TEMP? *)
 

@@ -16,6 +16,7 @@ type method_info = {
   class_id : int;
   method_id : int;
   synchronous : bool;
+  content : bool;
   responses : (int * int) list;
 }
 
@@ -35,6 +36,7 @@ let method_info payload =
     class_id = M.class_id;
     method_id = M.method_id;
     synchronous = M.synchronous;
+    content = M.content;
     responses = M.responses;
   }
 

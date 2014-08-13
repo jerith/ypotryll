@@ -8,6 +8,7 @@ module Basic_cancel = struct
   let class_id = 60
   let method_id = 30
   let synchronous = true
+  let content = false
 
   let responses = [
     (60, 31);

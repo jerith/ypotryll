@@ -8,6 +8,7 @@ module Channel_flow_ok = struct
   let class_id = 20
   let method_id = 21
   let synchronous = false
+  let content = false
 
   let responses = [
   ]

@@ -8,6 +8,7 @@ module Tx_select = struct
   let class_id = 90
   let method_id = 10
   let synchronous = true
+  let content = false
 
   let responses = [
     (90, 11);

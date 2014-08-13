@@ -8,6 +8,7 @@ module Basic_recover_ok = struct
   let class_id = 60
   let method_id = 111
   let synchronous = true
+  let content = false
 
   let responses = [
   ]

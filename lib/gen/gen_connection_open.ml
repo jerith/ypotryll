@@ -8,6 +8,7 @@ module Connection_open = struct
   let class_id = 10
   let method_id = 40
   let synchronous = true
+  let content = false
 
   let responses = [
     (10, 41);

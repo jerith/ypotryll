@@ -8,6 +8,7 @@ module Queue_delete_ok = struct
   let class_id = 50
   let method_id = 41
   let synchronous = true
+  let content = false
 
   let responses = [
   ]

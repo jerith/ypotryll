@@ -8,6 +8,7 @@ module Connection_close_ok = struct
   let class_id = 10
   let method_id = 51
   let synchronous = true
+  let content = false
 
   let responses = [
   ]

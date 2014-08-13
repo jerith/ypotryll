@@ -8,6 +8,7 @@ module Queue_declare = struct
   let class_id = 50
   let method_id = 10
   let synchronous = true
+  let content = false
 
   let responses = [
     (50, 11);

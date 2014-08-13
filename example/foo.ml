@@ -3,17 +3,27 @@ open Lwt
 open Ypotryll.Methods
 
 
-(* let callback channel frame_payload = *)
-(*   Lwt_io.printlf "Received frame: %s" (Frame.dump_payload frame_payload) *)
+let printlf_pink format =
+  Lwt_io.printlf ("\x1b[35m" ^^ format ^^ "\x1b[0m")
 
 
-(* let rec catch_frames channel = *)
-(*   Ypotryll.get_frame_payload channel *)
-(*   >>= function *)
-(*   | None -> return () *)
-(*   | Some frame_payload -> *)
-(*     callback (Ypotryll.get_channel_number channel) frame_payload >> *)
-(*     catch_frames channel *)
+let callback channel payload content =
+  printlf_pink "Received method: %s"
+    (Frame.dump_method payload) >>
+  match content with
+  | None -> return_unit
+  | Some (header, body) ->
+    printlf_pink "Received content: %s \x1b[31m%S"
+      (Frame.dump_header ((Int64.of_int (String.length body)), header)) body
+
+
+let rec catch_frames channel =
+  Ypotryll.get_method_with_content channel
+  >>= function
+  | None -> return_unit
+  | Some (payload, content) ->
+    callback (Ypotryll.get_channel_number channel) payload content >>
+    catch_frames channel
 
 
 let exchange_declare channel exchange type_ =
@@ -21,7 +31,7 @@ let exchange_declare channel exchange type_ =
     ~exchange ~type_ ~passive:false ~durable:false ~no_wait:false ~arguments:[]
     ()
   >>= fun _ ->
-  Lwt_io.printlf "Exchange created: %s" exchange
+  printlf_pink "Exchange created: %s" exchange
 
 
 let queue_declare channel queue =
@@ -29,20 +39,49 @@ let queue_declare channel queue =
     ~queue ~passive:false ~durable:false ~exclusive:false ~auto_delete:false
     ~no_wait:false ~arguments:[] ()
   >>= fun { Ypotryll_methods.Queue_declare_ok.queue } ->
-  Lwt_io.printlf "queue created: %s" queue
+  printlf_pink "queue created: %s" queue >>
+  return queue
+
+
+let queue_bind channel queue exchange routing_key =
+  Queue.bind channel
+    ~queue ~exchange ~routing_key ~no_wait:false ~arguments:[] ()
+  >>= fun _ ->
+  printlf_pink "queue bound to exchange: %s <- %s : %s"
+    queue exchange routing_key
+
+
+let basic_publish channel exchange routing_key content =
+  Basic.publish channel ~exchange ~routing_key ~mandatory:true
+    ~immediate:false (Ypotryll_contents.Basic.make_t ()) content
+
+
+let basic_consume channel queue consumer_tag =
+  Basic.consume channel
+    ~queue ~consumer_tag ~no_local:false ~no_ack:false ~exclusive:false
+    ~no_wait:false ~arguments:[] ()
+  >>= fun { Ypotryll_methods.Basic_consume_ok.consumer_tag } ->
+  printlf_pink "consumer created: %s" consumer_tag >>
+  return consumer_tag
 
 
 let do_stuff client =
   try_lwt
     lwt channel = Ypotryll.open_channel client in
-    (* ignore_result (catch_frames channel); *)
+    ignore_result (catch_frames channel);
     exchange_declare channel "foo" "direct" >>
-    queue_declare channel "" >>
-    Basic.publish channel ~exchange:"foo" ~routing_key:"bar" ~mandatory:true
-      ~immediate:false (Ypotryll_contents.Basic.make_t ()) "stuff" >>
-    Lwt_unix.sleep 1. >>
-    Ypotryll.close_channel channel >>
-    exchange_declare channel "foo" "direct"
+    queue_declare channel ""
+    >>= fun queue_name ->
+    queue_bind channel queue_name "foo" "bar" >>
+    Lwt_unix.sleep 0.1 >>
+    basic_publish channel "foo" "bar" "thing1" >>
+    Lwt_unix.sleep 0.1 >>
+    basic_consume channel queue_name ""
+    >>= fun consumer_tag ->
+    Lwt_unix.sleep 0.1 >>
+    basic_publish channel "foo" "bar" "thing2" >>
+    Lwt_unix.sleep 0.1 >>
+    Ypotryll.close_channel channel
   finally Ypotryll.close_connection client
 
 
@@ -50,7 +89,7 @@ let lwt_main =
   lwt client = Ypotryll.connect ~server:"localhost" () in
   try_lwt
     do_stuff client <&> Ypotryll.wait_for_shutdown client
-  with Failure text -> Lwt_io.printlf "exception: %S" text >> return ()
+  with Failure text -> Lwt_io.printlf "exception: %S" text >> return_unit
 
 
 let () = Lwt_main.run lwt_main

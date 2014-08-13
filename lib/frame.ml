@@ -1,10 +1,9 @@
-
 module FC = Generated_frame_constants
 
 
 type payload =
   | Method of Ypotryll_types.method_payload
-  | Header of string
+  | Header of (int64 * Ypotryll_types.header_payload)
   | Body of string
   | Heartbeat
 
@@ -50,9 +49,16 @@ let dump_method payload =
   M.dump_method payload
 
 
+let dump_header (size, payload) =
+  let (module M : Ypotryll_contents.Header) =
+    Ypotryll_contents.module_for payload
+  in
+  M.dump_header (size, payload)
+
+
 let dump_payload = function
   | Method payload -> dump_method payload
-  | Header payload -> Printf.sprintf "<Header %S>" payload
+  | Header payload -> dump_header payload
   | Body payload -> Printf.sprintf "<Body %S>" payload
   | Heartbeat -> "<Heartbeat>"
 
@@ -73,19 +79,19 @@ let parse_method_payload buf =
   parse_method_args buf class_id method_id
 
 
-(* let parse_header_props buf class_id size = *)
-(*   try *)
-(*     Ypotryll_methods.parse_header class_id size buf *)
-(*   with Not_found -> *)
-(*     failwith (Printf.sprintf "Unknown content class %d with payload: %S" *)
-(*                 class_id (consume_str buf (Parse_buf.length buf))) *)
+let parse_header_props buf class_id =
+  try
+    Ypotryll_contents.parse_header class_id buf
+  with Not_found ->
+    failwith (Printf.sprintf "Unknown content class %d with payload: %S"
+                class_id (consume_str buf (Parse_buf.length buf)))
 
 
-(* let parse_header_payload buf = *)
-(*   let class_id = consume_short buf in *)
-(*   let _weight = consume_short buf in *)
-(*   let size = consume_long_long buf in *)
-(*   parse_header_props buf class_id size *)
+let parse_header_payload buf =
+  let class_id = consume_short buf in
+  let _weight = consume_short buf in
+  let size = consume_long_long buf in
+  (size, parse_header_props buf class_id)
 
 
 let consume_frame_type buf =
@@ -109,8 +115,10 @@ let consume_frame str =
     else begin
       let payload_buf = consume_buf buf size in
       let frame = match frame_type with
-        | FC.Method_frame -> (channel, Method (parse_method_payload payload_buf))
-        | FC.Header_frame -> (channel, Header (consume_payload_str payload_buf))
+        | FC.Method_frame ->
+          (channel, Method (parse_method_payload payload_buf))
+        | FC.Header_frame ->
+          (channel, Header (parse_header_payload payload_buf))
         | FC.Body_frame -> (channel, Body (consume_payload_str payload_buf))
         | FC.Heartbeat_frame -> (channel, Heartbeat)
       in
@@ -122,20 +130,25 @@ let consume_frame str =
     end
 
 
-let make_method channel method_payload =
-  (channel, Method method_payload)
-
-
 let build_method_payload payload =
-  let (module P : Ypotryll_methods.Method) = Ypotryll_methods.module_for payload in
+  let (module P : Ypotryll_methods.Method) =
+    Ypotryll_methods.module_for payload
+  in
   P.build_method payload
+
+
+let build_header_payload (size, payload) =
+  let (module P : Ypotryll_contents.Header) =
+    Ypotryll_contents.module_for payload
+  in
+  P.build_header (size, payload)
 
 
 let build_frame (channel, payload) =
   let buf = Build_buf.from_string "" in
   let frame_type, payload_str = match payload with
     | Method payload -> FC.Method_frame, build_method_payload payload
-    | Header payload -> FC.Header_frame, payload
+    | Header payload -> FC.Header_frame, build_header_payload payload
     | Body payload -> FC.Body_frame, payload
     | Heartbeat -> FC.Heartbeat_frame, ""
   in

@@ -93,4 +93,22 @@ module Basic = struct
         reserved = maybe (function Amqp_field.Shortstring x -> x | _ -> assert false) reserved;
       }
     | _ -> failwith "Unexpected fields."
+
+  let make_t ?content_type ?content_encoding ?headers ?delivery_mode ?priority ?correlation_id ?reply_to ?expiration ?message_id ?timestamp ?type_ ?user_id ?app_id ?reserved () =
+    `Basic {
+      content_type;
+      content_encoding;
+      headers;
+      delivery_mode;
+      priority;
+      correlation_id;
+      reply_to;
+      expiration;
+      message_id;
+      timestamp;
+      type_;
+      user_id;
+      app_id;
+      reserved;
+    }
 end

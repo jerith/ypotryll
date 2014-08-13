@@ -57,6 +57,16 @@ let iter_methods spec f =
   List.iter iter_cls_methods spec.Spec.classes
 
 
+let map_content_classes spec f =
+  let is_content_class cls = cls.Class.fields <> [] in
+  List.map (fun cls -> f (spec, cls))
+    (List.filter is_content_class spec.Spec.classes)
+
+
+let iter_content_classes spec f =
+  ignore (map_content_classes spec f)
+
+
 let make_method_name cls meth =
   name_to_ocaml (Printf.sprintf "%s_%s" cls.Class.name meth.Method.name)
 

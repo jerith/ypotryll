@@ -56,3 +56,8 @@ type method_payload = [
   | `Tx_rollback of Gen_tx_rollback.Tx_rollback.record
   | `Tx_rollback_ok of Gen_tx_rollback_ok.Tx_rollback_ok.record
 ]
+
+
+type header_payload = [
+  | `Basic of Gen_basic.Basic.record
+]

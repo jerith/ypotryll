@@ -1,4 +1,3 @@
-
 let generated_header =
   "(* This file is generated. See the code_gen dir for details. *)"
 
@@ -21,7 +20,7 @@ let write_method_module_file method_module =
 
 let write_content_module_file content_module =
   let open Module_builder.Content_module in
-  let filename = gen_ml_filename ("gen_content_" ^ content_module.name) in
+  let filename = gen_ml_filename ("gen_" ^ content_module.name) in
   write_to_file filename content_module.text
 
 let write_generated_methods_file spec =
@@ -33,9 +32,20 @@ let write_generated_methods_file spec =
       Module_builder.build_module_for_method spec;
     ])
 
+let write_generated_contents_file spec =
+  let filename = gen_ml_filename "ypotryll_contents" in
+  write_to_file filename (String.concat "\n\n\n" [
+      Module_builder.build_content_module_type ();
+      String.concat "\n\n\n" (Module_builder.build_content_wrappers spec);
+      Module_builder.build_header_parsers spec;
+      Module_builder.build_module_for_content spec;
+    ])
+
 let write_generated_types_file spec =
   let filename = gen_ml_filename "generated_method_types" in
-  write_to_file filename (Module_builder.build_method_types spec ^ "\n")
+  write_to_file filename (String.concat "\n\n\n" [
+      Module_builder.build_method_types spec;
+      Module_builder.build_content_types spec ^ "\n"])
 
 let write_generated_frame_constants_file spec =
   let filename = gen_ml_filename "generated_frame_constants" in
@@ -51,6 +61,7 @@ let write_all_files channel =
   List.iter write_method_module_file (Module_builder.build_methods spec);
   List.iter write_content_module_file (Module_builder.build_contents spec);
   write_generated_methods_file spec;
+  write_generated_contents_file spec;
   write_generated_types_file spec;
   write_generated_frame_constants_file spec;
   write_caller_modules_file spec

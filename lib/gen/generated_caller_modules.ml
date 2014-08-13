@@ -171,11 +171,20 @@ module Basic = struct
     let payload = Ypotryll_methods.Basic_cancel_ok.make_t ~consumer_tag () in
     Connection.send_method_async channel.Connection.channel_io payload
 
-  (* TODO: publish 0 *)
+  let publish channel ~exchange ~routing_key ~mandatory ~immediate properties content =
+    let payload = Ypotryll_methods.Basic_publish.make_t ~exchange ~routing_key ~mandatory ~immediate () in
+    Connection.send_method_async channel.Connection.channel_io payload >>
+    Connection.send_content channel.Connection.channel_io properties content
 
-  (* TODO: return 0 *)
+  let return channel ~reply_code ~reply_text ~exchange ~routing_key properties content =
+    let payload = Ypotryll_methods.Basic_return.make_t ~reply_code ~reply_text ~exchange ~routing_key () in
+    Connection.send_method_async channel.Connection.channel_io payload >>
+    Connection.send_content channel.Connection.channel_io properties content
 
-  (* TODO: deliver 0 *)
+  let deliver channel ~consumer_tag ~delivery_tag ~redelivered ~exchange ~routing_key properties content =
+    let payload = Ypotryll_methods.Basic_deliver.make_t ~consumer_tag ~delivery_tag ~redelivered ~exchange ~routing_key () in
+    Connection.send_method_async channel.Connection.channel_io payload >>
+    Connection.send_content channel.Connection.channel_io properties content
 
   let get channel ~queue ~no_ack () =
     let open Lwt in
@@ -186,7 +195,10 @@ module Basic = struct
     | `Basic_get_empty payload -> `Get_empty payload
     | _ -> assert false
 
-  (* TODO: get-ok 0 *)
+  let get_ok channel ~delivery_tag ~redelivered ~exchange ~routing_key ~message_count properties content =
+    let payload = Ypotryll_methods.Basic_get_ok.make_t ~delivery_tag ~redelivered ~exchange ~routing_key ~message_count () in
+    Connection.send_method_async channel.Connection.channel_io payload >>
+    Connection.send_content channel.Connection.channel_io properties content
 
   let get_empty channel () =
     let payload = Ypotryll_methods.Basic_get_empty.make_t () in

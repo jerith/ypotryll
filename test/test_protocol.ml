@@ -47,7 +47,7 @@ let some_short value =
 
 
 let parse_props properties buf_str =
-  Header_utils.parse_properties properties (mk_pbuf buf_str 0)
+  Header_utils.buf_to_list properties (mk_pbuf buf_str 0)
 
 let build_props properties =
   Header_utils.build_properties properties

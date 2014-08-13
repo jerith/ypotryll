@@ -268,6 +268,13 @@ let send_method_async channel_io payload =
   channel_io.send (Frame.Method payload)
 
 
+let send_content channel_io payload content =
+  channel_io.send
+    (Frame.Header (Int64.of_int (String.length content), payload)) >>
+  (* TODO: Split big content frames. *)
+  channel_io.send (Frame.Body content)
+
+
 let send_method_sync channel_io payload =
   (* TODO: Figure out what to do with no-wait=true methods. *)
   let { Frame.responses } = Frame.method_info payload in

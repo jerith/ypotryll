@@ -1,4 +1,3 @@
-
 open Lwt
 
 open Ypotryll.Methods
@@ -39,8 +38,9 @@ let do_stuff client =
     (* ignore_result (catch_frames channel); *)
     exchange_declare channel "foo" "direct" >>
     queue_declare channel "" >>
-    (* Basic.publish channel ~exchange:"foo" ~routing_key:"bar" ~mandatory:true *)
-    (*   ~immediate:true () >> *)
+    Basic.publish channel ~exchange:"foo" ~routing_key:"bar" ~mandatory:true
+      ~immediate:false (Ypotryll_contents.Basic.make_t ()) "stuff" >>
+    Lwt_unix.sleep 1. >>
     Ypotryll.close_channel channel >>
     exchange_declare channel "foo" "direct"
   finally Ypotryll.close_connection client

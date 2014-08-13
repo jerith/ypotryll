@@ -225,32 +225,27 @@ module Content_module = struct
 
   (* make_t *)
 
-  (* let make_arg field = *)
-  (*   match field.Field.reserved with *)
-  (*   | true -> "" *)
-  (*   | false -> "~" ^ make_field_name field ^ " " *)
+  let make_prop field =
+    "?" ^ make_field_name field ^ " "
 
-  (* let fmt_record_entry spec ppf field = *)
-  (*   let name = make_field_name field in *)
-  (*   match field.Field.reserved with *)
-  (*   | false -> Format.fprintf ppf "%s;" name *)
-  (*   | true -> *)
-  (*     let ocaml_type, _, _ = types_from_field spec field in *)
-  (*     let value = reserved_value_for_ocaml_type ocaml_type in *)
-  (*     Format.fprintf ppf "%s = %s;" name value *)
+  let fmt_record_entry spec ppf field =
+    let name = make_field_name field in
+    match field.Field.reserved with
+    | false -> Format.fprintf ppf "%s;" name
+    | true ->
+      let ocaml_type, _, _ = types_from_field spec field in
+      let value = reserved_value_for_ocaml_type ocaml_type in
+      Format.fprintf ppf "%s = %s;" name value
 
-  (* let fmt_make_t ppf (spec, cls, meth) = *)
-  (*   let params = match meth.Method.fields with *)
-  (*     | [] -> "" *)
-  (*     | fields -> String.concat "" (List.map make_arg fields) *)
-  (*   in *)
-  (*   fmt_function ppf ("let make_t " ^ params ^ "() =") (fun ppf -> *)
-  (*       Format.pp_print_cut ppf (); *)
-  (*       let constructor = "`" ^ String.capitalize (make_method_name cls meth) in *)
-  (*       match meth.Method.fields with *)
-  (*         | [] -> Format.fprintf ppf "%s ()" constructor *)
-  (*         | fields -> fmt_list_in_vbox ppf (constructor ^ " {") "}" *)
-  (*                       (fmt_record_entry spec) fields) *)
+  let fmt_make_t ppf (spec, cls) =
+    let params = String.concat "" (List.map make_prop cls.Class.fields) in
+    fmt_function ppf ("let make_t " ^ params ^ "() =") (fun ppf ->
+        Format.pp_print_cut ppf ();
+        let constructor =
+          "`" ^ String.capitalize (name_to_ocaml cls.Class.name)
+        in
+        fmt_list_in_vbox ppf (constructor ^ " {") "}"
+          (fmt_record_entry spec) cls.Class.fields)
 
   (* content module *)
 
@@ -263,8 +258,8 @@ module Content_module = struct
         fmt_line ppf fmt_content_record (spec, cls);
         fmt_line ppf fmt_property_list (spec, cls);
         fmt_line ppf fmt_t_to_list (spec, cls);
-        fmt_line ppf fmt_t_from_list (spec, cls));
-        (* fmt_line ppf fmt_make_t (spec, cls, meth)); *)
+        fmt_line ppf fmt_t_from_list (spec, cls);
+        fmt_line ppf fmt_make_t (spec, cls));
     Format.fprintf ppf "@."
 
   let make_module_text spec cls =
@@ -329,6 +324,57 @@ module Method_module_wrapper = struct
 end
 
 
+module Content_module_wrapper = struct
+
+  let fmt_parse_header ppf module_name =
+    fmt_function ppf "let parse_header buf =" (fun ppf ->
+        Format.fprintf ppf "@,`%s (t_from_list (buf_to_list buf))" module_name)
+
+  let fmt_build_header ppf module_name =
+    fmt_function ppf "let build_header = function" (fun ppf ->
+        Format.fprintf ppf
+          "@,| size, `%s payload -> string_of_list size (t_to_list payload)"
+          module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_dump_header ppf module_name =
+    fmt_function ppf "let dump_header = function" (fun ppf ->
+        Format.fprintf ppf
+          "@,| size, `%s payload -> dump_list size (t_to_list payload)"
+          module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_list_of_t ppf module_name =
+    fmt_function ppf "let list_of_t = function" (fun ppf ->
+        Format.fprintf ppf "@,| `%s payload -> t_to_list payload" module_name;
+        Format.fprintf ppf "@,| _ -> assert false")
+
+  let fmt_module_text ppf (spec, cls) =
+    let class_name = name_to_ocaml cls.Class.name in
+    let module_name = String.capitalize class_name in
+    let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
+    let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
+    fmt_module ppf module_name (fun ppf ->
+        Format.fprintf ppf "@,%s@,include Gen_%s.%s"
+          "open Protocol.Header_utils"
+          class_name module_name;
+        fmt_line ppf (fun ppf ->
+            Format.fprintf ppf "type t = [`%s of record]") module_name;
+        fmt_line_str ppf "let buf_to_list = buf_to_list properties";
+        fmt_line_str ppf
+          "let string_of_list = string_of_list class_id";
+        fmt_line_str ppf "let dump_list = dump_list name class_id";
+        fmt_line ppf fmt_parse_header module_name;
+        fmt_line ppf fmt_build_header module_name;
+        fmt_line ppf fmt_dump_header module_name;
+        fmt_line ppf fmt_list_of_t module_name)
+
+  let build (spec, cls) =
+    Format.fprintf Format.str_formatter "%a" fmt_module_text (spec, cls);
+    Format.flush_str_formatter ()
+end
+
+
 module Method_parser_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
@@ -349,16 +395,53 @@ module Method_parser_list = struct
 end
 
 
+module Header_parser_list = struct
+
+  let fmt_builder ppf (spec, cls) =
+    Format.fprintf ppf "@,| %d -> %s.parse_header"
+      cls.Class.index (String.capitalize (name_to_ocaml cls.Class.name))
+
+  let fmt_builder_list ppf spec =
+    fmt_function ppf "let parse_header = function" (fun ppf ->
+        iter_content_classes spec (fmt_builder ppf);
+        Format.fprintf ppf "@,| class_id ->@,  %s"
+          (Printf.sprintf "failwith (Printf.sprintf %S class_id)"
+             "Unknown content class: %d"))
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
+    Format.flush_str_formatter ()
+end
+
+
 module Module_for_method_list = struct
 
   let fmt_builder ppf (spec, cls, meth) =
+    let module_name = String.capitalize (make_method_name cls meth) in
     Format.fprintf ppf "@,| `%s _ -> (module %s : Method)"
-      (String.capitalize (make_method_name cls meth))
-      (String.capitalize (make_method_name cls meth))
+      module_name module_name
 
   let fmt_builder_list ppf spec =
     fmt_function ppf "let module_for = function" (fun ppf ->
         iter_methods spec (fmt_builder ppf);
+        Format.fprintf ppf "@.")
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_builder_list spec;
+    Format.flush_str_formatter ()
+end
+
+
+module Module_for_content_list = struct
+
+  let fmt_builder ppf (spec, cls) =
+    let module_name = String.capitalize (name_to_ocaml cls.Class.name) in
+    Format.fprintf ppf "@,| `%s _ -> (module %s : Header)"
+      module_name module_name
+
+  let fmt_builder_list ppf spec =
+    fmt_function ppf "let module_for = function" (fun ppf ->
+        iter_content_classes spec (fmt_builder ppf);
         Format.fprintf ppf "@.")
 
   let build spec =
@@ -378,6 +461,24 @@ module Method_type_list = struct
   let fmt_type_list ppf spec =
     fmt_list_in_vbox ppf "type method_payload = [" "]"
       fmt_type (map_methods spec (fun x -> x))
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_type_list spec;
+    Format.flush_str_formatter ()
+end
+
+
+module Content_type_list = struct
+
+  let fmt_type ppf (spec, cls) =
+    let class_name = name_to_ocaml cls.Class.name in
+    let module_name = String.capitalize class_name in
+    Format.fprintf ppf "| `%s of Gen_%s.%s.record"
+      module_name class_name module_name
+
+  let fmt_type_list ppf spec =
+    fmt_list_in_vbox ppf "type header_payload = [" "]"
+      fmt_type (map_content_classes spec (fun x -> x))
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_type_list spec;
@@ -407,6 +508,29 @@ module Method_module_type = struct
 
   let build spec =
     Format.fprintf Format.str_formatter "%a" fmt_method_type ();
+    Format.flush_str_formatter ()
+end
+
+
+module Content_module_type = struct
+
+  let fmt_content_type ppf () =
+    let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
+    let fmt_line_str ppf = fmt_line ppf Format.pp_print_string in
+    fmt_module_type ppf "Header" (fun ppf ->
+        Format.fprintf ppf "@,type t";
+        fmt_line_str ppf "val name : string";
+        fmt_line_str ppf "val class_id : int";
+        fmt_line_str ppf (
+          "val parse_header : Parse_utils.Parse_buf.t ->"
+          ^ " Ypotryll_types.header_payload");
+        fmt_line_str ppf
+          "val build_header : int64 * Ypotryll_types.header_payload -> string";
+        fmt_line_str ppf
+          "val dump_header : int64 * Ypotryll_types.header_payload -> string")
+
+  let build spec =
+    Format.fprintf Format.str_formatter "%a" fmt_content_type ();
     Format.flush_str_formatter ()
 end
 
@@ -470,24 +594,37 @@ let build_methods spec =
   map_methods spec Method_module.build
 
 let build_contents spec =
-  let is_content_class cls = cls.Class.fields <> [] in
-  let content_classes = List.filter is_content_class spec.Spec.classes in
-  List.map (fun cls -> Content_module.build (spec, cls)) content_classes
+  map_content_classes spec Content_module.build
 
 let build_method_wrappers spec =
   map_methods spec Method_module_wrapper.build
 
+let build_content_wrappers spec =
+  map_content_classes spec Content_module_wrapper.build
+
 let build_method_parsers spec =
   Method_parser_list.build spec
+
+let build_header_parsers spec =
+  Header_parser_list.build spec
 
 let build_module_for_method spec =
   Module_for_method_list.build spec
 
+let build_module_for_content spec =
+  Module_for_content_list.build spec
+
 let build_method_types spec =
   Method_type_list.build spec
 
+let build_content_types spec =
+  Content_type_list.build spec
+
 let build_method_module_type spec =
   Method_module_type.build spec
+
+let build_content_module_type spec =
+  Content_module_type.build spec
 
 let build_frame_constants spec =
   Frame_constants.build spec

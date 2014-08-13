@@ -1,6 +1,10 @@
 open OUnit2
 
 
+let make_method channel method_payload =
+  (channel, Frame.Method method_payload)
+
+
 let tests =
   "test_frame" >::: [
 
@@ -21,7 +25,7 @@ let tests =
            locale = "en_US";
           })
         in
-        let wire = Frame.build_frame (Frame.make_method 0 fields) in
+        let wire = Frame.build_frame (make_method 0 fields) in
         let frame_opt, str_left = Frame.consume_frame wire in
         assert_equal ~printer:(Printf.sprintf "%S") "" str_left;
         match frame_opt with

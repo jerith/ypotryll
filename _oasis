@@ -13,7 +13,7 @@ Library ypotryll
                    gen/Generated_frame_constants, Frame, Connection,
                    gen/Generated_caller_modules
   Modules:         Ypotryll_field_types, Ypotryll_types, Ypotryll,
-                   gen/Ypotryll_methods
+                   gen/Ypotryll_methods, gen/Ypotryll_contents
   BuildDepends:    lwt, lwt.syntax, lwt.unix
 
 Executable foo

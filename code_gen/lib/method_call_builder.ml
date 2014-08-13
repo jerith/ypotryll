@@ -64,18 +64,40 @@ module Class_caller_module = struct
     Format.fprintf ppf "@,| `%s payload -> `%s payload"
       payload_type (String.capitalize resp_name)
 
+  let fmt_async_content_method_call ppf (spec, cls, meth) =
+    let module_name = String.capitalize (make_method_name cls meth) in
+    let function_name = name_to_ocaml meth.Method.name in
+    let method_params = match meth.Method.fields with
+      | [] -> ""
+      | fields -> String.concat "" (List.map make_arg fields)
+    in
+    let params = method_params ^ "properties content" in
+    let function_top = function_name ^ " channel " ^ params in
+    fmt_function ppf ("let " ^ function_top ^ " =") (fun ppf ->
+        Format.fprintf ppf "@,let payload = Ypotryll_methods.%s.make_t %s() in"
+          module_name method_params;
+        Format.fprintf ppf
+          "@,Connection.%s channel.Connection.channel_io payload >>"
+          "send_method_async";
+        Format.fprintf ppf
+          "@,Connection.%s channel.Connection.channel_io properties content"
+          "send_content")
+
   let fmt_caller_function ppf (spec, cls, meth) =
     match meth.Method.content, meth.Method.responses with
     | false, [] -> fmt_async_method_call ppf (spec, cls, meth)
     | false, [_] -> fmt_sync_method_call fmt_return_line ppf (spec, cls, meth)
-    | false, _ -> fmt_sync_method_call fmt_return_line_multi ppf (spec, cls, meth)
-    | true, responses -> Format.fprintf ppf "(* TODO: %s %d *)" meth.Method.name (List.length responses)
+    | false, _ ->
+      fmt_sync_method_call fmt_return_line_multi ppf (spec, cls, meth)
+    | true, [] -> fmt_async_content_method_call ppf (spec, cls, meth)
+    | true, responses -> failwith "Unexpected synchronous content method."
 
   let fmt_caller_module ppf (spec, cls) =
     let module_name = String.capitalize cls.Class.name in
     let fmt_line ppf = Format.fprintf ppf "@;<0 -2>@,%a" in
     fmt_module ppf module_name (fun ppf ->
-        List.iter (fun meth -> fmt_line ppf fmt_caller_function (spec, cls, meth))
+        List.iter (fun meth ->
+            fmt_line ppf fmt_caller_function (spec, cls, meth))
           cls.Class.methods)
 
   let make_module_text spec cls =

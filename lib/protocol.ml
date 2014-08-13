@@ -216,7 +216,7 @@ module Header_utils = struct
     in
     parse_bits collected_props 15 properties
 
-  let parse_properties properties buf =
+  let buf_to_list properties buf =
     let flagged_properties = _parse_property_flags [] properties buf in
     let consume_property (flag, (name, field_type)) =
       match field_type with
@@ -250,7 +250,19 @@ module Header_utils = struct
     List.iter add_property payload;
     PU.Build_buf.to_string buf
 
-  let dump_list name class_id method_id payload =
-    let args = String.concat "; " (List.map Amqp_field.dump_field payload) in
-    Printf.sprintf "<Method %s (%d, %d) [%s]>" name class_id method_id args
+  let string_of_list class_id body_size payload =
+    let buf = PU.Build_buf.from_string "" in
+    PU.add_short buf class_id;
+    PU.add_short buf 0; (* Unused "weight" field. *)
+    PU.add_int64 buf body_size;
+    PU.add_str buf (build_properties payload);
+    PU.Build_buf.to_string buf
+
+  let dump_list name class_id body_size payload =
+    let dump_field = function
+      | name, None -> Printf.sprintf "<Missing %s>" name
+      | name, Some field -> Amqp_field.dump_field (name, field)
+    in
+    let args = String.concat "; " (List.map dump_field payload) in
+    Printf.sprintf "<Header %s (%d) %Lu [%s]>" name class_id body_size args
 end

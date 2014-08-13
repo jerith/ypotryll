@@ -1,9 +1,10 @@
 # OASIS_START
-# DO NOT EDIT (digest: 58fa0cd8757db192b9600b78a70671b3)
+# DO NOT EDIT (digest: fea86a36cc0f4ecca4b89db1c7042fc6)
 Ypotryll_field_types
 Ypotryll_types
 Ypotryll
 gen/Ypotryll_methods
+gen/Ypotryll_contents
 Parse_utils
 Protocol
 gen/Generated_method_types
@@ -13,6 +14,7 @@ Connection
 gen/Generated_caller_modules
 # OASIS_STOP
 # YPOTRYLL_GEN_START
+gen/Gen_basic
 gen/Gen_basic_ack
 gen/Gen_basic_cancel
 gen/Gen_basic_cancel_ok
@@ -46,7 +48,6 @@ gen/Gen_connection_start
 gen/Gen_connection_start_ok
 gen/Gen_connection_tune
 gen/Gen_connection_tune_ok
-gen/Gen_content_basic
 gen/Gen_exchange_declare
 gen/Gen_exchange_declare_ok
 gen/Gen_exchange_delete

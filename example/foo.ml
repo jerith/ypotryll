@@ -96,7 +96,8 @@ let do_stuff client =
 
 
 let lwt_main =
-  lwt client = Ypotryll.connect ~server:"localhost" () in
+  let params = Ypotryll.make_params "guest" "guest" () in
+  lwt client = Ypotryll.connect ~server:"localhost" ~params () in
   try_lwt
     do_stuff client <&> Ypotryll.wait_for_shutdown client
   with Failure text -> Lwt_io.printlf "exception: %S" text >> return_unit

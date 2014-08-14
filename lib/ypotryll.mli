@@ -1,12 +1,16 @@
 type connection
 type channel = Connection.channel
+type connect_params = Connection.connect_params
 
 
 open Ypotryll_types
 
 
-val connect : server:string -> ?port:int -> ?log_section:Lwt_log.section
-  -> unit -> connection Lwt.t
+val make_params : username:string -> password:string -> ?virtual_host:string
+    -> unit -> connect_params
+
+val connect : server:string -> ?port:int -> params:connect_params
+  -> ?log_section:Lwt_log.section -> unit -> connection Lwt.t
 
 val close_connection : connection -> unit Lwt.t
 

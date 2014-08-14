@@ -3,6 +3,13 @@ open Lwt
 open Ypotryll_methods
 
 
+type connect_params = {
+  virtual_host : string option;
+  username : string;
+  password : string;
+}
+
+
 type connection_params = {
   locale : string;
   channel_max : int;
@@ -348,13 +355,15 @@ let choose_locale body =
 let failwith_wrong_frame expected payload =
   failwith ("Expected " ^ expected ^ ", got: " ^ Frame.dump_payload payload)
 
-let process_connection_start channel_io frame_payload =
+let process_connection_start channel_io params frame_payload =
   let body = match frame_payload with
     | Frame.Method (`Connection_start body) -> body
     | _ -> failwith_wrong_frame "Connection_start" frame_payload
   in
   let mechanism = choose_auth_mechanism body in
-  let response = "\000guest\000guest" in
+  let response =
+    Printf.sprintf "\000%s\000%s" params.username params.password
+  in
   let locale = choose_locale body in
   let frame_ok =
     Connection_start_ok.make_t
@@ -379,7 +388,7 @@ let choose_heartbeat body =
   body.Connection_tune.heartbeat
 
 
-let process_connection_tune channel_io frame_payload =
+let process_connection_tune channel_io params frame_payload =
   let body = match frame_payload with
     | Frame.Method (`Connection_tune body) -> body
     | _ -> failwith_wrong_frame "Connection_tune" frame_payload
@@ -393,13 +402,16 @@ let process_connection_tune channel_io frame_payload =
   in
   send_method_async channel_io frame_ok
   (* Send connection.open *)
-  >> let virtual_host = "/" in
+  >> let virtual_host = match params.virtual_host with
+    | None -> "/"
+    | Some virtual_host -> virtual_host
+  in
   (* This is a sync method, but we're using an explicit state machine. *)
   send_method_async channel_io (Connection_open.make_t ~virtual_host ())
   >> return Connection_open
 
 
-let process_connection_open channel_io frame_payload =
+let process_connection_open channel_io params frame_payload =
   let _ = match frame_payload with
     | Frame.Method (`Connection_open_ok body) -> body
     | _ -> failwith_wrong_frame "Connection_open_ok" frame_payload
@@ -407,26 +419,26 @@ let process_connection_open channel_io frame_payload =
   return Connected
 
 
-let process_setup_frame_payload channel_io frame_payload = function
-  | Connection_start -> process_connection_start channel_io frame_payload
+let process_setup_frame_payload channel_io params payload = function
+  | Connection_start -> process_connection_start channel_io params payload
   | Connection_secure -> failwith "Unexpected Connection_secure state."
-  | Connection_tune -> process_connection_tune channel_io frame_payload
-  | Connection_open -> process_connection_open channel_io frame_payload
+  | Connection_tune -> process_connection_tune channel_io params payload
+  | Connection_open -> process_connection_open channel_io params payload
   | Connected -> assert false
 
 
-let rec setup_connection connection state =
+let rec setup_connection connection params state =
   let channel_io = get_channel_io connection 0 in
   Lwt_stream.get channel_io.stream
   >>= function
   | None -> return_unit
   | Some frame_payload ->
-    process_setup_frame_payload channel_io frame_payload state
+    process_setup_frame_payload channel_io params frame_payload state
   >>= function
   | Connected ->
     set_state connection.connection_io.connection_state Open;
     log_info connection.connection_io "Connection open."
-  | state -> setup_connection connection state
+  | state -> setup_connection connection params state
 
 
 (* Misc *)
@@ -439,7 +451,7 @@ let next_channel channels =
 (* Stuff for outsiders *)
 
 
-let connect ~server ?(port=5672) ?log_section () =
+let connect ~server ?(port=5672) ~params ?log_section () =
   let log_section = match log_section with
     | None -> Lwt_log.Section.make "ypotryll"
     | Some log_section -> log_section
@@ -453,7 +465,7 @@ let connect ~server ?(port=5672) ?log_section () =
   in
   create_channel connection 0 (ref Open);
   ignore_result (listen connection);
-  setup_connection connection Connection_start >>
+  setup_connection connection params Connection_start >>
   return connection
 
 

@@ -5,6 +5,16 @@ type connection = Connection.t
 
 type channel = Connection.channel
 
+type connect_params = Connection.connect_params
+
+
+let make_params ~username ~password ?virtual_host () =
+  {
+    Connection.username;
+    Connection.password;
+    Connection.virtual_host;
+  }
+
 
 let connect = Connection.connect
 

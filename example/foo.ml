@@ -17,10 +17,20 @@ let callback channel payload content =
       (Frame.dump_header ((Int64.of_int (String.length body)), header)) body
 
 
+let handle_deliver channel payload (properties, body) =
+  let delivery_tag = payload.Ypotryll_methods.Basic_deliver.delivery_tag in
+  printlf_pink "dtag: %Lu" delivery_tag >>
+  Basic.ack channel ~delivery_tag ~multiple:false ()
+
+
 let rec catch_frames channel =
   Ypotryll.get_method_with_content channel
   >>= function
   | None -> return_unit
+  | Some (`Basic_deliver record as payload, Some content) ->
+    handle_deliver channel record content >>
+    callback (Ypotryll.get_channel_number channel) payload (Some content) >>
+    catch_frames channel
   | Some (payload, content) ->
     callback (Ypotryll.get_channel_number channel) payload content >>
     catch_frames channel
